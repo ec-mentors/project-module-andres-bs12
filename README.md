@@ -52,14 +52,14 @@ NutritionTracker is a Spring Boot application designed to help users log their d
 
 The database is built on PostgreSQL. Below is the domain & database model for **Sprint 1**.
 
-### 1. Class Diagram
+### 1. Class Diagram (Java / JPA Domain Model)
 
 ```mermaid
 classDiagram
     direction TB
 
     class users {
-        +Integer id PK
+        +Integer id PK (SERIAL)
         +String first_name
         +String last_name
         +String email UK
@@ -68,7 +68,7 @@ classDiagram
     }
 
     class goal {
-        +Integer id PK
+        +Integer id PK (SERIAL)
         +Integer user_id FK
         +Date start_date
         +Integer kcal
@@ -79,7 +79,7 @@ classDiagram
     }
 
     class entry {
-        +Integer id PK
+        +Integer id PK (SERIAL)
         +Integer user_id FK
         +String meal_name
         +String meal_type
@@ -95,7 +95,7 @@ classDiagram
     users "1" o-- "0..*" entry : logs ▶
 ```
 
-### 2. Entity-Relationship Diagram (ERD)
+### 2. Entity-Relationship Diagram (PostgreSQL ERD)
 
 ```mermaid
 erDiagram
@@ -140,10 +140,13 @@ erDiagram
 ## 🗄️ Database Tables & Constraints
 
 - **`users`**: Stores user profiles.
+  - `id`: `SERIAL PRIMARY KEY` (Auto-increment integer).
   - `email`: `UNIQUE` constraint for web login.
 - **`goal`**: Stores daily nutritional goals.
+  - `id`: `SERIAL PRIMARY KEY`.
   - `uk_user_goal_date`: `UNIQUE (user_id, start_date)` constraint ensures only **one goal per user per date**.
 - **`entry`**: Stores meal logs (calories, carbs, fat, protein).
+  - `id`: `SERIAL PRIMARY KEY`.
   - `meal_type`: Categorizes meals (`Breakfast`, `Lunch`, `Dinner`, `Snack`).
   - `source`: Tracks entry origin (`Manual` web UI vs future integrations).
 
