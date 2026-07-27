@@ -3,7 +3,7 @@ DROP TABLE IF EXISTS goal CASCADE;
 DROP TABLE IF EXISTS users CASCADE;
 
 CREATE TABLE users (
-    id SERIAL PRIMARY KEY,
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     first_name VARCHAR(50) NOT NULL,
     last_name VARCHAR(50) NOT NULL,
     email VARCHAR(100) UNIQUE NOT NULL,
@@ -12,8 +12,8 @@ CREATE TABLE users (
 );
 
 CREATE TABLE goal (
-    id SERIAL PRIMARY KEY,
-    user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID REFERENCES users(id) ON DELETE CASCADE,
     start_date DATE DEFAULT CURRENT_DATE,
     kcal INTEGER NOT NULL,
     carbs DECIMAL(5,2) NOT NULL,
@@ -23,8 +23,8 @@ CREATE TABLE goal (
 );
 
 CREATE TABLE entry (
-    id SERIAL PRIMARY KEY,
-    user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID REFERENCES users(id) ON DELETE CASCADE,
     meal_name VARCHAR(100) NOT NULL,
     meal_type VARCHAR(20) DEFAULT 'Snack',
     source VARCHAR(50) DEFAULT 'Manual',
@@ -38,15 +38,15 @@ CREATE TABLE entry (
 -- TEST DATA --
 
 -- USER
-INSERT INTO users (first_name, last_name, email) VALUES 
-('Andrés', 'Bejarano', 'andres@example.com');
+INSERT INTO users (id, first_name, last_name, email) VALUES 
+('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 'Andrés', 'Bejarano', 'andres@example.com');
 
 -- GOAL (One per user per date)
 INSERT INTO goal (user_id, start_date, kcal, carbs, fat, protein) VALUES 
-(1, '2026-07-01', 2000, 200.00, 70.00, 140.00);
+('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', '2026-07-01', 2000, 200.00, 70.00, 140.00);
 
 -- ENTRY
 INSERT INTO entry (user_id, meal_name, meal_type, source, kcal, carbs, fat, protein) VALUES 
-(1, 'Eggs and coffee', 'Breakfast', 'Manual', 350, 60.00, 5.00, 12.00),
-(1, 'Rice and chicken', 'Lunch', 'Manual', 650, 75.00, 12.00, 55.00),
-(1, 'Protein shake', 'Snack', 'Manual', 150, 3.00, 1.50, 30.00);
+('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 'Eggs and coffee', 'Breakfast', 'Manual', 350, 60.00, 5.00, 12.00),
+('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 'Rice and chicken', 'Lunch', 'Manual', 650, 75.00, 12.00, 55.00),
+('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 'Protein shake', 'Snack', 'Manual', 150, 3.00, 1.50, 30.00);

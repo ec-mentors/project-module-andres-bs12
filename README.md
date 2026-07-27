@@ -50,7 +50,7 @@ NutritionTracker is a Spring Boot application designed to help users log their d
 
 ## 📊 Database Architecture
 
-The database is built on PostgreSQL. Below is the domain & database model for **Sprint 1**.
+The database is built on PostgreSQL using **UUID** as Primary & Foreign Keys for enhanced security and unguessable URLs. Below is the domain & database model for **Sprint 1**.
 
 ### 1. Class Diagram (Java / JPA Domain Model)
 
@@ -59,7 +59,7 @@ classDiagram
     direction TB
 
     class users {
-        +Integer id PK (SERIAL)
+        +UUID id PK
         +String first_name
         +String last_name
         +String email UK
@@ -68,8 +68,8 @@ classDiagram
     }
 
     class goal {
-        +Integer id PK (SERIAL)
-        +Integer user_id FK
+        +UUID id PK
+        +UUID user_id FK
         +Date start_date
         +Integer kcal
         +Decimal carbs
@@ -79,8 +79,8 @@ classDiagram
     }
 
     class entry {
-        +Integer id PK (SERIAL)
-        +Integer user_id FK
+        +UUID id PK
+        +UUID user_id FK
         +String meal_name
         +String meal_type
         +String source
@@ -103,7 +103,7 @@ erDiagram
     users ||--o{ entry : "logs"
 
     users {
-        SERIAL id PK
+        UUID id PK
         VARCHAR first_name
         VARCHAR last_name
         VARCHAR email UK
@@ -112,8 +112,8 @@ erDiagram
     }
 
     goal {
-        SERIAL id PK
-        INTEGER user_id FK
+        UUID id PK
+        UUID user_id FK
         DATE start_date "UK(user_id, start_date)"
         INTEGER kcal
         DECIMAL carbs
@@ -122,8 +122,8 @@ erDiagram
     }
 
     entry {
-        SERIAL id PK
-        INTEGER user_id FK
+        UUID id PK
+        UUID user_id FK
         VARCHAR meal_name
         VARCHAR meal_type
         VARCHAR source
@@ -140,13 +140,15 @@ erDiagram
 ## 🗄️ Database Tables & Constraints
 
 - **`users`**: Stores user profiles.
-  - `id`: `SERIAL PRIMARY KEY` (Auto-increment integer).
+  - `id`: `UUID PRIMARY KEY DEFAULT gen_random_uuid()` (Globally unique identifier).
   - `email`: `UNIQUE` constraint for web login.
 - **`goal`**: Stores daily nutritional goals.
-  - `id`: `SERIAL PRIMARY KEY`.
+  - `id`: `UUID PRIMARY KEY DEFAULT gen_random_uuid()`.
+  - `user_id`: `UUID REFERENCES users(id) ON DELETE CASCADE`.
   - `uk_user_goal_date`: `UNIQUE (user_id, start_date)` constraint ensures only **one goal per user per date**.
 - **`entry`**: Stores meal logs (calories, carbs, fat, protein).
-  - `id`: `SERIAL PRIMARY KEY`.
+  - `id`: `UUID PRIMARY KEY DEFAULT gen_random_uuid()`.
+  - `user_id`: `UUID REFERENCES users(id) ON DELETE CASCADE`.
   - `meal_type`: Categorizes meals (`Breakfast`, `Lunch`, `Dinner`, `Snack`).
   - `source`: Tracks entry origin (`Manual` web UI vs future integrations).
 
