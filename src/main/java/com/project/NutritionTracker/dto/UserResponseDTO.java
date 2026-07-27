@@ -12,11 +12,11 @@ import java.util.UUID;
 @NoArgsConstructor
 @Setter
 @Getter
+// The response does not include any password
 public class UserResponseDTO {
    private UUID id;
    private String firstName;
    private String lastName;
    private String email;
    private LocalDateTime createdAt;
-
 }

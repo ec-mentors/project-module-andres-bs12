@@ -11,8 +11,8 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+// For safety reasons the server don't need any kind of id or date, it will be assign within the server
 public class UserRequestDTO {
-
 private String firstName;
 private String lastName;
 private String email;
