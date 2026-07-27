@@ -36,6 +36,11 @@ This document serves as a development and learning journal to record key concept
    - Decided to use dedicated `@Component` classes (e.g. `EntryMapper`, `GoalMapper`, `UserMapper`) to translate between Entities and DTOs.
    - Keeps the Service layer clean, readable, and decoupled from mapping logic.
 
+7. **Git Workflow: Merging `main` into a Feature Branch:**
+   - **Step 1:** Save/commit pending work on feature branch (`git add . && git commit -m "wip"` or `git stash`).
+   - **Step 2:** Update local `main` branch from GitHub (`git checkout main && git pull origin main`).
+   - **Step 3:** Switch back to feature branch and merge `main` (`git checkout <feature-branch> && git merge main --no-edit`).
+
 ---
 
 ## 📅 YYYY-MM-DD - [Day Title]
