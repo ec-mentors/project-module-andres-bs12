@@ -7,11 +7,11 @@ NutritionTracker is a Spring Boot application designed to help users log their d
 ## 🎯 Sprint 1: Back-End Roadmap (Jira Board: BE)
 
 **Sprint Duration:** July 27, 2026 – August 10, 2026  
-**Goal:** Implement core Spring Boot architecture (Entities, DTOs, Repositories, Services, Controllers, and Database Schema).
+**Goal:** Implement core Spring Boot architecture (Entities, DTOs, Mappers, Repositories, Services, Controllers, and Database Schema).
 
-> 💡 **Architectural Decision:** Using DTOs (`RequestDTO` and `ResponseDTO`) along with dedicated `@Component` Mappers (`UserMapper`, `GoalMapper`, `EntryMapper`) to decouple the public API layer from JPA database entities.
+> 💡 **Architectural Decision:** Using DTOs (`RequestDTO` and `ResponseDTO`) along with dedicated `@Component` Mappers (`UserMapper`, `GoalMapper`, `EntryMapper`) to decouple the public API payload layer from JPA database entities.
 
-### 📋 Sprint 1 Backlog & Tasks
+### 📋 Sprint 1 Backlog & Tasks (Jira Project: BE)
 
 | Issue Key | Summary | Component | Status | Due Date |
 | :--- | :--- | :--- | :---: | :---: |
@@ -24,7 +24,11 @@ NutritionTracker is a Spring Boot application designed to help users log their d
 | ↳ `BE-11` | *Create User DTO* | DTO (`UserRequestDTO`, `UserResponseDTO`) | ✅ `Done` | Jul 27, 2026 |
 | ↳ `BE-12` | *Create Goal DTO* | DTO (`GoalRequestDTO`, `GoalResponseDTO`) | ✅ `Done` | Jul 27, 2026 |
 | ↳ `BE-13` | *Create Entry DTO* | DTO (`EntryRequestDTO`, `EntryResponseDTO`) | ✅ `Done` | Jul 27, 2026 |
-| **`BE-14`** | Add repository | Repository Layer | 🔄 `In Progress` | Jul 28, 2026 |
+| **`BE-21`** | Add mappers | Mapper Layer | 🎯 `In Progress` | Jul 27, 2026 |
+| ↳ `BE-22` | *Create User Mapper* | Mapper (`UserMapper.java`) | 🎯 `In Progress` | Jul 27, 2026 |
+| ↳ `BE-23` | *Create Goal Mapper* | Mapper (`GoalMapper.java`) | 🕒 `To Do` | Jul 27, 2026 |
+| ↳ `BE-24` | *Create Entry Mapper* | Mapper (`EntryMapper.java`) | 🕒 `To Do` | Jul 27, 2026 |
+| **`BE-14`** | Add repository | Repository Layer | 🕒 `To Do` | Jul 28, 2026 |
 | ↳ `BE-15` | *Create User Repository* | JPA (`UserRepository`) | 🕒 `To Do` | Jul 28, 2026 |
 | ↳ `BE-17` | *Create Goal Repository* | JPA (`GoalRepository`) | 🕒 `To Do` | Jul 28, 2026 |
 | ↳ `BE-16` | *Create Entry Repository* | JPA (`EntryRepository`) | 🕒 `To Do` | Jul 28, 2026 |
