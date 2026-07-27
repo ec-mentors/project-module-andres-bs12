@@ -4,7 +4,7 @@ This document serves as a development and learning journal to record key concept
 
 ---
 
-## 📅 2026-07-27 - Database Architecture, JPA Entities & Constraints
+## 📅 2026-07-27 - Database Architecture, JPA Entities, DTOs & Mappers
 
 ### 💡 Key Concepts Learned
 
@@ -22,11 +22,20 @@ This document serves as a development and learning journal to record key concept
 3. **Date Mapping in Java (`java.time.LocalDate` vs `java.util.Date`):**
    - For SQL `DATE` columns (date only without time), modern Java 8+ uses **`java.time.LocalDate`** (avoiding legacy `java.util.Date`).
 
-4**JoinColumn (What does it do):**
-    -  `@JoinColumn(name = "user_id", nullable = false)
-private User user;` With join we tell I want to connect it to user using the `user_id`' of the User to connect both of them.
-    - Hibernate, when you open an entry in java, go to the postgresSql, read the code saved in the column
-    user_id, look in the table clients for the same user_id and bring it as an object User
+4. **Object-Oriented Relationships with `@ManyToOne`:**
+   - In SQL, we think in terms of Foreign Key columns (`user_id`).
+   - In Java JPA, we think in terms of Objects: `private User user;` annotated with `@ManyToOne` and `@JoinColumn(name = "user_id")`.
+   - Allows direct object navigation in Java: `goal.getUser().getFirstName()`.
+   - Does NOT create a 3rd table; it simply creates the `user_id` FK column inside the `goal` table.
+
+5. **DTO Architecture (Data Transfer Objects):**
+   - **`RequestDTO`**: Used for incoming HTTP payloads. Contains only client-editable fields, preventing users from forging IDs or timestamps.
+   - **`ResponseDTO`**: Used for outgoing HTTP responses. Excludes sensitive data (like `passwordHash`) and prevents JSON circular reference errors (`StackOverflowError`).
+
+6. **Dedicated Mapper Component Pattern:**
+   - Decided to use dedicated `@Component` classes (e.g. `EntryMapper`, `GoalMapper`, `UserMapper`) to translate between Entities and DTOs.
+   - Keeps the Service layer clean, readable, and decoupled from mapping logic.
+
 ---
 
 ## 📅 YYYY-MM-DD - [Day Title]
