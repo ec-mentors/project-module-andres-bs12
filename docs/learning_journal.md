@@ -22,12 +22,11 @@ This document serves as a development and learning journal to record key concept
 3. **Date Mapping in Java (`java.time.LocalDate` vs `java.util.Date`):**
    - For SQL `DATE` columns (date only without time), modern Java 8+ uses **`java.time.LocalDate`** (avoiding legacy `java.util.Date`).
 
-4. **Object-Oriented Relationships with `@ManyToOne`:**
-   - In SQL, we think in terms of Foreign Key columns (`user_id`).
-   - In Java JPA, we think in terms of Objects: `private User user;` annotated with `@ManyToOne` and `@JoinColumn(name = "user_id")`.
-   - Allows direct object navigation in Java: `goal.getUser().getFirstName()`.
-   - Does NOT create a 3rd table; it simply creates the `user_id` FK column inside the `goal` table.
-
+4**JoinColumn (What does it do):**
+    -  `@JoinColumn(name = "user_id", nullable = false)
+private User user;` With join we tell I want to connect it to user using the `user_id`' of the User to connect both of them.
+    - Hibernate, when you open an entry in java, go to the postgresSql, read the code saved in the column
+    user_id, look in the table clients for the same user_id and bring it as an object User
 ---
 
 ## 📅 YYYY-MM-DD - [Day Title]
