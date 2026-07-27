@@ -26,7 +26,6 @@ CREATE TABLE entry (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID REFERENCES users(id) ON DELETE CASCADE,
     meal_name VARCHAR(100) NOT NULL,
-    meal_type VARCHAR(20) DEFAULT 'Snack',
     source VARCHAR(50) DEFAULT 'Manual',
     created_on TIMESTAMP DEFAULT NOW(),
     kcal INTEGER NOT NULL,

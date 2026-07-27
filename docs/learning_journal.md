@@ -4,7 +4,7 @@ This document serves as a development and learning journal to record key concept
 
 ---
 
-## 📅 2026-07-27 - Database Architecture, JPA Entities & Constraints
+## 📅 2026-07-27 - Database Architecture, JPA Entities, DTOs & Mappers
 
 ### 💡 Key Concepts Learned
 
@@ -27,6 +27,14 @@ This document serves as a development and learning journal to record key concept
    - In Java JPA, we think in terms of Objects: `private User user;` annotated with `@ManyToOne` and `@JoinColumn(name = "user_id")`.
    - Allows direct object navigation in Java: `goal.getUser().getFirstName()`.
    - Does NOT create a 3rd table; it simply creates the `user_id` FK column inside the `goal` table.
+
+5. **DTO Architecture (Data Transfer Objects):**
+   - **`RequestDTO`**: Used for incoming HTTP payloads. Contains only client-editable fields, preventing users from forging IDs or timestamps.
+   - **`ResponseDTO`**: Used for outgoing HTTP responses. Excludes sensitive data (like `passwordHash`) and prevents JSON circular reference errors (`StackOverflowError`).
+
+6. **Dedicated Mapper Component Pattern:**
+   - Decided to use dedicated `@Component` classes (e.g. `EntryMapper`, `GoalMapper`, `UserMapper`) to translate between Entities and DTOs.
+   - Keeps the Service layer clean, readable, and decoupled from mapping logic.
 
 ---
 
