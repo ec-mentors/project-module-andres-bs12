@@ -2,13 +2,9 @@ package com.project.NutritionTracker.dto;
 
 // This is just a POJO
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
-@Getter
-@Setter
+@Data
 @NoArgsConstructor
 @AllArgsConstructor
 // For safety reasons the server don't need any kind of id or date, it will be assign within the server
