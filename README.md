@@ -6,7 +6,7 @@ NutritionTracker is a Spring Boot application designed to help users log their d
 
 ## 🎯 Sprint 1: Back-End Roadmap (Jira Board: BE)
 
-**Sprint Duration:** July 27, 2026 – July 31, 2026  
+**Sprint Duration:** July 27, 2026 – August 10, 2026  
 **Goal:** Implement core Spring Boot architecture (Entities, DTOs, Repositories, Services, Controllers, and Database Schema).
 
 > 💡 **Architectural Note:** Currently evaluating whether DTOs and Mappers/Parsers will be used for transferring data between controllers and services.
@@ -148,51 +148,3 @@ erDiagram
   - `source`: Tracks entry origin (`Manual` web UI vs future integrations).
 
 The DDL SQL script is located at [`src/main/resources/schema.sql`](src/main/resources/schema.sql).
-
----
-
-## 🎨 PlantUML Source Code
-
-```plantuml
-@startuml
-skinparam classAttributeIconSize 0
-
-class users {
-  +id : Integer
-  +first_name : String
-  +last_name : String
-  +email : String
-  +password_hash : String
-  +created_at : Timestamp
-}
-
-class goal {
-  +id : Integer
-  +user_id : Integer
-  +start_date : Date
-  +kcal : Integer
-  +carbs : Decimal
-  +fat : Decimal
-  +protein : Decimal
-  -- constraints --
-  +UK(user_id, start_date)
-}
-
-class entry {
-  +id : Integer
-  +user_id : Integer
-  +meal_name : String
-  +meal_type : String
-  +source : String
-  +created_on : Timestamp
-  +kcal : Integer
-  +carbs : Decimal
-  +fat : Decimal
-  +protein : Decimal
-}
-
-users "1" <>-- "0..*" goal : has >
-users "1" <>-- "0..*" entry : logs >
-
-@enduml
-```
