@@ -28,11 +28,14 @@ NutritionTracker is a Spring Boot application designed to help users log their d
 | ↳ `BE-22` | *Create User Mapper* | Mapper (`UserMapper.java`) | ✅ `Done` | Jul 27, 2026 |
 | ↳ `BE-23` | *Create Goal Mapper* | Mapper (`GoalMapper.java`) | ✅ `Done` | Jul 27, 2026 |
 | ↳ `BE-24` | *Create Entry Mapper* | Mapper (`EntryMapper.java`) | ✅ `Done` | Jul 27, 2026 |
-| **`BE-14`** | Add repository | Repository Layer | 🎯 `In Progress` | Jul 28, 2026 |
-| ↳ `BE-15` | *Create User Repository* | JPA (`UserRepository`) | 🎯 `In Progress` | Jul 28, 2026 |
-| ↳ `BE-17` | *Create Goal Repository* | JPA (`GoalRepository`) | 🕒 `To Do` | Jul 28, 2026 |
-| ↳ `BE-16` | *Create Entry Repository* | JPA (`EntryRepository`) | 🕒 `To Do` | Jul 28, 2026 |
-| **`BE-18`** | Add service | Service Layer | 🕒 `To Do` | Jul 28, 2026 |
+| **`BE-14`** | Add repository | Repository Layer | ✅ `Done` | Jul 28, 2026 |
+| ↳ `BE-15` | *Create User Repository* | JPA (`UserRepository`) | ✅ `Done` | Jul 28, 2026 |
+| ↳ `BE-17` | *Create Goal Repository* | JPA (`GoalRepository`) | ✅ `Done` | Jul 28, 2026 |
+| ↳ `BE-16` | *Create Entry Repository* | JPA (`EntryRepository`) | ✅ `Done` | Jul 28, 2026 |
+| **`BE-18`** | Add service | Service Layer | 🎯 `In Progress` | Jul 28, 2026 |
+| ↳ `BE-25` | *Create User Service* | Service (`UserService.java`) | 🎯 `In Progress` | Jul 28, 2026 |
+| ↳ `BE-26` | *Create Goal Service* | Service (`GoalService.java`) | 🕒 `To Do` | Jul 28, 2026 |
+| ↳ `BE-27` | *Create Entry Service* | Service (`EntryService.java`) | 🕒 `To Do` | Jul 28, 2026 |
 | **`BE-19`** | Add controller | REST Controller Layer | 🕒 `To Do` | Jul 30, 2026 |
 | **`BE-20`** | Get presentation ready | Project Delivery | 🕒 `To Do` | Jul 31, 2026 |
 
