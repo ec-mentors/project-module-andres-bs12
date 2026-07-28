@@ -24,12 +24,12 @@ NutritionTracker is a Spring Boot application designed to help users log their d
 | ↳ `BE-11` | *Create User DTO* | DTO (`UserRequestDTO`, `UserResponseDTO`) | ✅ `Done` | Jul 27, 2026 |
 | ↳ `BE-12` | *Create Goal DTO* | DTO (`GoalRequestDTO`, `GoalResponseDTO`) | ✅ `Done` | Jul 27, 2026 |
 | ↳ `BE-13` | *Create Entry DTO* | DTO (`EntryRequestDTO`, `EntryResponseDTO`) | ✅ `Done` | Jul 27, 2026 |
-| **`BE-21`** | Add mappers | Mapper Layer | 🎯 `In Progress` | Jul 27, 2026 |
-| ↳ `BE-22` | *Create User Mapper* | Mapper (`UserMapper.java`) | 🎯 `In Progress` | Jul 27, 2026 |
-| ↳ `BE-23` | *Create Goal Mapper* | Mapper (`GoalMapper.java`) | 🕒 `To Do` | Jul 27, 2026 |
-| ↳ `BE-24` | *Create Entry Mapper* | Mapper (`EntryMapper.java`) | 🕒 `To Do` | Jul 27, 2026 |
-| **`BE-14`** | Add repository | Repository Layer | 🕒 `To Do` | Jul 28, 2026 |
-| ↳ `BE-15` | *Create User Repository* | JPA (`UserRepository`) | 🕒 `To Do` | Jul 28, 2026 |
+| **`BE-21`** | Add mappers | Mapper Layer | ✅ `Done` | Jul 27, 2026 |
+| ↳ `BE-22` | *Create User Mapper* | Mapper (`UserMapper.java`) | ✅ `Done` | Jul 27, 2026 |
+| ↳ `BE-23` | *Create Goal Mapper* | Mapper (`GoalMapper.java`) | ✅ `Done` | Jul 27, 2026 |
+| ↳ `BE-24` | *Create Entry Mapper* | Mapper (`EntryMapper.java`) | ✅ `Done` | Jul 27, 2026 |
+| **`BE-14`** | Add repository | Repository Layer | 🎯 `In Progress` | Jul 28, 2026 |
+| ↳ `BE-15` | *Create User Repository* | JPA (`UserRepository`) | 🎯 `In Progress` | Jul 28, 2026 |
 | ↳ `BE-17` | *Create Goal Repository* | JPA (`GoalRepository`) | 🕒 `To Do` | Jul 28, 2026 |
 | ↳ `BE-16` | *Create Entry Repository* | JPA (`EntryRepository`) | 🕒 `To Do` | Jul 28, 2026 |
 | **`BE-18`** | Add service | Service Layer | 🕒 `To Do` | Jul 28, 2026 |
