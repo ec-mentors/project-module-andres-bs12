@@ -4,6 +4,26 @@ This document serves as a development and learning journal to record key concept
 
 ---
 
+## 📅 2026-07-28 - Spring Data JPA Repositories & Git Branching Tricks
+
+### 💡 Key Concepts Learned
+
+1. **Spring Data JPA Repositories (`JpaRepository<Entity, UUID>`):**
+   - Repositories are interfaces extending `JpaRepository<Entity, UUID>`, providing automatic CRUD methods (`save`, `findById`, `findAll`, `delete`) without writing manual SQL queries.
+   - **Derived Query Methods:** Spring Data JPA automatically generates SQL queries based on method signature names:
+     - `findByEmail(String email)` in `UserRepository`.
+     - `findByUserAndStartDate(User user, LocalDate startDate)` in `GoalRepository`.
+     - `findByUser(User user)` in `EntryRepository`.
+
+2. **Git Trick: Moving Uncommitted Work to a New Branch:**
+   - If you accidentally start writing code on `main` before creating your feature branch, **do NOT worry**. As long as you haven't committed the changes yet, running:
+     ```bash
+     git checkout -b <new-branch-name>
+     ```
+     automatically creates the new branch and safely moves all your uncommitted edits over to the new branch, leaving `main` completely clean!
+
+---
+
 ## 📅 2026-07-27 - Database Architecture, JPA Entities, DTOs & Mappers
 
 ### 💡 Key Concepts Learned
