@@ -15,12 +15,9 @@ This document serves as a development and learning journal to record key concept
      - `findByUserAndStartDate(User user, LocalDate startDate)` in `GoalRepository`.
      - `findByUser(User user)` in `EntryRepository`.
 
-2. **Git Trick: Moving Uncommitted Work to a New Branch:**
-   - If you accidentally start writing code on `main` before creating your feature branch, **do NOT worry**. As long as you haven't committed the changes yet, running:
-     ```bash
-     git checkout -b <new-branch-name>
-     ```
-     automatically creates the new branch and safely moves all your uncommitted edits over to the new branch, leaving `main` completely clean!
+2. **Git Trick: Create and Switch to a New Branch in One Single Command (`git checkout -b <branch-name>`):**
+   - The command `git checkout -b <new-branch-name>` simultaneously **creates a new branch** AND **switches your working context to it** in one single step.
+   - **Moving Uncommitted Work:** If you accidentally start writing code on `main` before creating your feature branch, **do NOT worry**. As long as you haven't committed the changes yet, running `git checkout -b <new-branch-name>` creates the new branch and safely moves all your uncommitted edits over to it in one command, leaving `main` completely clean!
 
 ---
 
