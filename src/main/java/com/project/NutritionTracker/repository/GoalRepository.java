@@ -10,7 +10,6 @@ import java.util.UUID;
 public interface GoalRepository extends JpaRepository<Goal, UUID> {
 
     // To find a goal by user and date
-    public Goal findUserAndStartDate(User user, Locale startDare);
-
+    public Goal findByUserAndStartDate(User user, Locale startDare);
 
 }
