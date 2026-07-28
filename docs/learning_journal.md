@@ -4,7 +4,7 @@ This document serves as a development and learning journal to record key concept
 
 ---
 
-## 📅 2026-07-28 - Spring Data JPA Repositories & Git Branching Tricks
+## 📅 2026-07-28 - Repositories, Service Layer & Git Branching Tricks
 
 ### 💡 Key Concepts Learned
 
@@ -18,6 +18,12 @@ This document serves as a development and learning journal to record key concept
 2. **Git Trick: Create and Switch to a New Branch in One Single Command (`git checkout -b <branch-name>`):**
    - The command `git checkout -b <new-branch-name>` simultaneously **creates a new branch** AND **switches your working context to it** in one single step.
    - **Moving Uncommitted Work:** If you accidentally start writing code on `main` before creating your feature branch, **do NOT worry**. As long as you haven't committed the changes yet, running `git checkout -b <new-branch-name>` creates the new branch and safely moves all your uncommitted edits over to it in one command, leaving `main` completely clean!
+
+3. **Spring Boot Service Layer Architecture (`@Service`):**
+   - **Orchestration:** The `@Service` class acts as the business brain connecting Mappers, Repositories, and Validation rules.
+   - **Direct `@Service` Classes:** Pragmatic design choice to create direct `@Service` classes (`UserService`, `GoalService`, `EntryService`) without unnecessary interfaces, keeping the code clean and easy to navigate.
+   - **Root vs Dependent Entities:** Root entities like `User` map directly via `mapper.toEntity(dto)`, whereas dependent entities like `Entry` and `Goal` have their parent `User` attached in the Service (`entry.setUser(user)`).
+   - **Single Query with `orElseThrow()`:** `repository.findById(id).orElseThrow(() -> new NotFoundException(...))` executes a single DB query instead of double-querying with `isPresent()`.
 
 ---
 
