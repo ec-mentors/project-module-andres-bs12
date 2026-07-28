@@ -4,7 +4,7 @@ This document serves as a development and learning journal to record key concept
 
 ---
 
-## 📅 2026-07-28 - Repositories, Service Layer & Git Branching Tricks
+## 📅 2026-07-28 - Repositories, Service Layer, REST Controllers & Git Branching
 
 ### 💡 Key Concepts Learned
 
@@ -24,6 +24,12 @@ This document serves as a development and learning journal to record key concept
    - **Direct `@Service` Classes:** Pragmatic design choice to create direct `@Service` classes (`UserService`, `GoalService`, `EntryService`) without unnecessary interfaces, keeping the code clean and easy to navigate.
    - **Root vs Dependent Entities:** Root entities like `User` map directly via `mapper.toEntity(dto)`, whereas dependent entities like `Entry` and `Goal` have their parent `User` attached in the Service (`entry.setUser(user)`).
    - **Single Query with `orElseThrow()`:** `repository.findById(id).orElseThrow(() -> new NotFoundException(...))` executes a single DB query instead of double-querying with `isPresent()`.
+
+4. **REST Controllers & `ResponseEntity` Architecture:**
+   - **`@RequestBody`:** Automatically deserializes incoming HTTP JSON payloads into Java DTO objects (`UserRequestDTO`).
+   - **`ResponseEntity` Purpose:** Allows explicit control over the entire HTTP response (Status Code, Headers, and Body JSON) instead of defaulting to `200 OK`.
+   - **`ResponseEntity.created(uri)`:** Used for resource creation (`POST`), returning HTTP status `201 Created` along with a `Location` header (`/api/users/{id}`) created via `URI.create(...)`.
+   - **`.body(created)`:** Serializes the resulting Java DTO object into JSON and places it inside the HTTP response body returned to the client.
 
 ---
 
