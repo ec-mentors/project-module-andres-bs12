@@ -7,6 +7,7 @@ import com.project.NutritionTracker.mapper.EntryMapper;
 import com.project.NutritionTracker.model.Entry;
 import com.project.NutritionTracker.model.User;
 import com.project.NutritionTracker.repository.EntryRepository;
+import com.project.NutritionTracker.repository.UserRepository;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -20,21 +21,28 @@ import java.util.UUID;
 public class EntryService {
     private final EntryMapper mapper;
     private final EntryRepository repository;
+    private final UserRepository uRepository;
 
-    public EntryService(EntryMapper mapper, EntryRepository repository) {
+    public EntryService(EntryMapper mapper, EntryRepository repository, UserRepository uRepository) {
         this.mapper = mapper;
         this.repository = repository;
+        this.uRepository = uRepository;
     }
 
-    public List<EntryResponseDTO> findByUser(User user) {
-        if (user == null) {
+    public List<EntryResponseDTO> findByUser(UUID userId) {
+        if (userId == null) {
             return List.of();
         }
+
+        User user = uRepository.findById(userId).orElseThrow(() -> new NotFoundException("User not found with id: " + userId));
+
         return repository.findByUser(user).stream().map(mapper::toResponseDTO).toList();
     }
 
-    public EntryResponseDTO createEntry(EntryRequestDTO dto, User user) {
+    public EntryResponseDTO createEntry(EntryRequestDTO dto, UUID userId) {
+        User user = uRepository.findById(userId).orElseThrow(() -> new NotFoundException("User not found with id: " + userId));
         Entry entry = mapper.toEntity(dto);
+
         entry.setUser(user);
         Entry savedEntry = repository.save(entry);
         return mapper.toResponseDTO(savedEntry);
@@ -48,11 +56,12 @@ public class EntryService {
         }
     }
 
-    public List<EntryResponseDTO> findTodayEntriesByUser(User user) {
+    public List<EntryResponseDTO> findTodayEntriesByUser(UUID userId) {
 
-        if (user == null) {
+        if (userId == null) {
             return List.of();
         }
+        User user = uRepository.findById(userId).orElseThrow(() -> new NotFoundException("User not found with id: " + userId));
 
         LocalDateTime startOfDay = LocalDate.now().atStartOfDay();
         LocalDateTime endOfDay = LocalDate.now().atTime(LocalTime.MAX);
