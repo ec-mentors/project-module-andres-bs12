@@ -3,9 +3,7 @@ package com.project.NutritionTracker.controller;
 import com.project.NutritionTracker.dto.UserRequestDTO;
 import com.project.NutritionTracker.dto.UserResponseDTO;
 import com.project.NutritionTracker.service.UserService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;

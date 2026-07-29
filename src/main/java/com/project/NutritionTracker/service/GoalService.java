@@ -7,6 +7,7 @@ import com.project.NutritionTracker.mapper.GoalMapper;
 import com.project.NutritionTracker.model.Goal;
 import com.project.NutritionTracker.model.User;
 import com.project.NutritionTracker.repository.GoalRepository;
+import com.project.NutritionTracker.repository.UserRepository;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -20,18 +21,21 @@ import java.util.UUID;
 public class GoalService {
     private final GoalMapper mapper;
     private final GoalRepository repository;
+    private final UserRepository uRepository;
 
-    public GoalService(GoalMapper mapper, GoalRepository repository) {
+    public GoalService(GoalMapper mapper, GoalRepository repository, UserRepository uRepository) {
         this.mapper = mapper;
         this.repository = repository;
+        this.uRepository = uRepository;
     }
 
 
-    public GoalResponseDTO createGoal(GoalRequestDTO dto, User user) {
+    public GoalResponseDTO createGoal(GoalRequestDTO dto, UUID userId) {
         if (dto == null) {
             return null;
         }
 
+        User user = uRepository.findById(userId).orElseThrow(() -> new NotFoundException("User not found with id: " + userId));
         Goal goal = new Goal();
 
         goal.setCarbs(dto.getCarbs());
@@ -45,7 +49,7 @@ public class GoalService {
     }
 
 
-    public GoalResponseDTO updateGoal(UUID id, GoalRequestDTO dto, User user) {
+    public GoalResponseDTO updateGoal(UUID id, GoalRequestDTO dto) {
         Goal goal = repository.findById(id).orElseThrow(() -> new NotFoundException("Goal not found"));
 
         goal.setCarbs(dto.getCarbs());
@@ -57,21 +61,26 @@ public class GoalService {
         return mapper.toResponseDTO(repository.save(goal));
     }
 
-    public GoalResponseDTO getGoalByUserAndDate(User user, LocalDate date) {
-        if (user == null) {
+    public GoalResponseDTO getGoalByUserAndDate(UUID userId, LocalDate date) {
+        if (userId == null) {
             return null;
         }
+
+        User user = uRepository.findById(userId).orElseThrow(() -> new NotFoundException("User not found with id: " + userId));
 
         Goal goal = repository.findByUserAndStartDate(user, date).orElseThrow(() -> new NotFoundException("Goal not found"));
 
         return mapper.toResponseDTO(goal);
     }
 
-    public List<GoalResponseDTO> findAllGoalsByUser(User user) {
+    public List<GoalResponseDTO> findAllGoalsByUser(UUID userId) {
 
-        if (user == null) {
+        if (userId == null) {
             return null;
         }
+
+        User user = uRepository.findById(userId).orElseThrow(() -> new NotFoundException("User not found with id: " + userId));
+
         return repository.findAllByUser(user)
                 .stream()
                 .map(mapper::toResponseDTO)
