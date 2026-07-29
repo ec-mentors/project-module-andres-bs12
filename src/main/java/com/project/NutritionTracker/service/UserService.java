@@ -8,6 +8,7 @@ import com.project.NutritionTracker.model.User;
 import com.project.NutritionTracker.repository.UserRepository;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -68,5 +69,15 @@ public class UserService {
 
             return mapper.toResponseDTO(repository.save(user));
         }
+
+        public List<UserResponseDTO> getAllUsers() {
+            var enttitiesList = repository.findAll();
+
+            return enttitiesList.stream()
+                    .map(mapper::toResponseDTO)
+                    .toList();
+        }
+
+
 }
 

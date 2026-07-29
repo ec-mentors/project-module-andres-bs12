@@ -45,7 +45,7 @@ INSERT INTO goal (user_id, start_date, kcal, carbs, fat, protein) VALUES
 ('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', '2026-07-01', 2000, 200.00, 70.00, 140.00);
 
 -- ENTRY
-INSERT INTO entry (user_id, meal_name, meal_type, source, kcal, carbs, fat, protein) VALUES 
-('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 'Eggs and coffee', 'Breakfast', 'Manual', 350, 60.00, 5.00, 12.00),
-('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 'Rice and chicken', 'Lunch', 'Manual', 650, 75.00, 12.00, 55.00),
-('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 'Protein shake', 'Snack', 'Manual', 150, 3.00, 1.50, 30.00);
+INSERT INTO entry (user_id, meal_name, source, kcal, carbs, fat, protein) VALUES 
+('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 'Eggs and coffee', 'Manual', 350, 60.00, 5.00, 12.00),
+('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 'Rice and chicken', 'Manual', 650, 75.00, 12.00, 55.00),
+('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 'Protein shake', 'Manual', 150, 3.00, 1.50, 30.00);

@@ -9,6 +9,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -32,6 +33,7 @@ public class UserController {
     }
 
     // @RequesTParam is needed because we need to receive an email. it comes from the URL after the ?
+    // http://localhost:8080/api/user/search?email=andres.postman@example.com
     @GetMapping("/search")
     public ResponseEntity<UserResponseDTO> findByEmail(@RequestParam String email) {
         UserResponseDTO user = service.findByEmail(email);
@@ -52,6 +54,11 @@ public class UserController {
         UserResponseDTO user = service.updateUser(id, dto);
 
         return ResponseEntity.ok(user);
+    }
+
+    @GetMapping()
+    public ResponseEntity<List<UserResponseDTO>> findAllUsers() {
+        return ResponseEntity.ok(service.getAllUsers());
     }
 
 }
