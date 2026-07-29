@@ -38,8 +38,8 @@ public class EntryController {
     }
 
     @DeleteMapping("/{userId}")
-    public ResponseEntity<Void> removeEntry(@PathVariable UUID userId) {
-        service.removeEntry(userId);
+    public ResponseEntity<Void> removeEntry(@PathVariable UUID entryId) {
+        service.removeEntry(entryId);
 
         return ResponseEntity.noContent().build(); // 204 no content
     }
