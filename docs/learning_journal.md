@@ -4,7 +4,32 @@ This document serves as a development and learning journal to record key concept
 
 ---
 
-## 📅 2026-07-28 - Repositories, Service Layer, REST Controllers & Git Branching
+## 📅 2026-07-29 - REST Controllers, HTTP Status Codes & Postman Testing
+
+### 💡 Key Concepts Learned
+
+1. **Spring Boot REST Controllers (`@RestController` & `@RequestMapping`):**
+   - Built dedicated controllers for all 3 domain modules: `UserController`, `GoalController`, `EntryController`.
+   - Used `@RequestMapping("/api/...")` to set clean, standardized base URL paths.
+
+2. **HTTP Verbs & REST Naming Conventions:**
+   - **`POST` (`@PostMapping`):** Resource creation (e.g. `POST /api/user`). Returns `201 Created` with a `Location` header pointing to `/api/user/{id}`.
+   - **`GET` (`@GetMapping`):** Resource retrieval. Returns `200 OK` with JSON payload. Avoided sending JSON bodies in `GET` requests; used `@PathVariable` for IDs and `@RequestParam` for query filters (e.g., `?email=...` or `?date=...`).
+   - **`PUT` (`@PutMapping`):** Resource updating. Combines `@PathVariable UUID id` and `@RequestBody DTO dto` to update records cleanly.
+   - **`DELETE` (`@DeleteMapping`):** Resource deletion. Returns `204 No Content` (`ResponseEntity.noContent().build()`) since no body payload is returned.
+
+3. **HTTP Exception Handling & Status Codes:**
+   - **`415 Unsupported Media Type`:** Triggered when Postman sends `text/plain` instead of selecting `raw -> JSON` (`Content-Type: application/json`).
+   - **`405 Method Not Allowed`:** Occurs when calling an endpoint with the wrong HTTP verb (e.g., sending `POST` to a `@GetMapping` route).
+   - **`404 Not Found`:** Returned when the URL path or resource ID does not match any route or database record.
+
+4. **JSON Naming & Mapping (CamelCase vs Snake_Case):**
+   - Jackson maps JSON keys directly to Java DTO variable names.
+   - JSON keys sent from clients must match exact DTO camelCase field names (e.g. `mealName`, not `meal_name`), preventing null value database constraint failures.
+
+---
+
+## 📅 2026-07-28 - Repositories, Service Layer & Git Branching Tricks
 
 ### 💡 Key Concepts Learned
 
@@ -24,12 +49,6 @@ This document serves as a development and learning journal to record key concept
    - **Direct `@Service` Classes:** Pragmatic design choice to create direct `@Service` classes (`UserService`, `GoalService`, `EntryService`) without unnecessary interfaces, keeping the code clean and easy to navigate.
    - **Root vs Dependent Entities:** Root entities like `User` map directly via `mapper.toEntity(dto)`, whereas dependent entities like `Entry` and `Goal` have their parent `User` attached in the Service (`entry.setUser(user)`).
    - **Single Query with `orElseThrow()`:** `repository.findById(id).orElseThrow(() -> new NotFoundException(...))` executes a single DB query instead of double-querying with `isPresent()`.
-
-4. **REST Controllers & `ResponseEntity` Architecture:**
-   - **`@RequestBody`:** Automatically deserializes incoming HTTP JSON payloads into Java DTO objects (`UserRequestDTO`).
-   - **`ResponseEntity` Purpose:** Allows explicit control over the entire HTTP response (Status Code, Headers, and Body JSON) instead of defaulting to `200 OK`.
-   - **`ResponseEntity.created(uri)`:** Used for resource creation (`POST`), returning HTTP status `201 Created` along with a `Location` header (`/api/users/{id}`) created via `URI.create(...)`.
-   - **`.body(created)`:** Serializes the resulting Java DTO object into JSON and places it inside the HTTP response body returned to the client.
 
 ---
 

@@ -36,11 +36,11 @@ NutritionTracker is a Spring Boot application designed to help users log their d
 | ↳ `BE-25` | *Create User Service* | Service (`UserService.java`) | ✅ `Done` | Jul 28, 2026 |
 | ↳ `BE-26` | *Create Goal Service* | Service (`GoalService.java`) | ✅ `Done` | Jul 28, 2026 |
 | ↳ `BE-27` | *Create Entry Service* | Service (`EntryService.java`) | ✅ `Done` | Jul 28, 2026 |
-| **`BE-19`** | Add controller | REST Controller Layer | 🎯 `In Progress` | Jul 30, 2026 |
-| ↳ `BE-28` | *Create User Controller* | REST (`UserController.java`) | 🎯 `In Progress` | Jul 30, 2026 |
-| ↳ `BE-29` | *Create Goal Controller* | REST (`GoalController.java`) | 🕒 `To Do` | Jul 30, 2026 |
-| ↳ `BE-30` | *Create Entry Controller* | REST (`EntryController.java`) | 🕒 `To Do` | Jul 30, 2026 |
-| **`BE-20`** | Get presentation ready | Project Delivery | 🕒 `To Do` | Jul 31, 2026 |
+| **`BE-19`** | Add controller | REST Controller Layer | ✅ `Done` | Jul 29, 2026 |
+| ↳ `BE-28` | *Create User Controller* | REST (`UserController.java`) | ✅ `Done` | Jul 29, 2026 |
+| ↳ `BE-29` | *Create Goal Controller* | REST (`GoalController.java`) | ✅ `Done` | Jul 29, 2026 |
+| ↳ `BE-30` | *Create Entry Controller* | REST (`EntryController.java`) | ✅ `Done` | Jul 29, 2026 |
+| **`BE-20`** | Get presentation ready | Project Delivery | 🎯 `In Progress` | Jul 31, 2026 |
 
 ---
 
