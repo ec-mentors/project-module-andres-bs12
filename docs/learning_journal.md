@@ -35,9 +35,15 @@ This document serves as a development and learning journal to record key concept
      - `fix:`, `docs:`, `chore:`, `test:` for bug fixes, documentation, build config, and testing respectively.
    - **Workflow Shortcuts:** Combined staging & committing via `git commit -am "msg"` (for tracked files) and `git add . && git commit -m "msg"` or custom Git aliases (`git config --global alias.ac '!git add -A && git commit -m'`).
 
+5. **Development vs. Production Google Token Verification (`verifyAndProcessGoogleToken`):**
+   - Implemented `processGoogleAuth(dto)` for direct development testing via Postman.
+   - Implemented `verifyAndProcessGoogleToken(googleIdToken)` using `GoogleIdTokenVerifier` (`google-api-client`) to cryptographically verify incoming Google JWT signatures, extract verified `sub` (`googleId`), `email`, `given_name`, `family_name` claims, and delegate to `processGoogleAuth(dto)`.
+   - Clarified that when connecting a future Web Frontend button, switching the controller invocation from `processGoogleAuth` to `verifyAndProcessGoogleToken` is the single change required, keeping the database service layer 100% untouched.
+
 ### 📝 Notes & AI Mentor Discussions
 - Evaluated domain lifecycle of `User` fields: verified that `email` must be retained alongside `google_id` (Google provides email for user display, notifications, and identity checks).
 - Recorded Architectural Decision Record (ADR-01) in `README.md` and created Jira tasks `BE-28` through `BE-32` directly via Jira Cloud REST API.
+- Verified end-to-end compilation with Maven (`BUILD SUCCESS`) and pushed commits to GitHub.
 
 ---
 
