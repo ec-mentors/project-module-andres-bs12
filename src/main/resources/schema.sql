@@ -4,11 +4,12 @@ DROP TABLE IF EXISTS users CASCADE;
 
 CREATE TABLE users (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    google_id VARCHAR(255) UNIQUE NOT NULL,
+    email VARCHAR(100) UNIQUE NOT NULL,
     first_name VARCHAR(50) NOT NULL,
     last_name VARCHAR(50) NOT NULL,
-    email VARCHAR(100) UNIQUE NOT NULL,
-    created_at TIMESTAMP DEFAULT NOW(),
-    google_id UNIQUE NOT NULL
+    telegram_chat_id BIGINT,
+    created_at TIMESTAMP DEFAULT NOW()
 );
 
 CREATE TABLE goal (
@@ -37,8 +38,8 @@ CREATE TABLE entry (
 -- TEST DATA --
 
 -- USER
-INSERT INTO users (id, first_name, last_name, email) VALUES 
-('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 'Andrés', 'Bejarano', 'andres@example.com');
+INSERT INTO users (id, google_id, first_name, last_name, email) VALUES
+('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11','google-uid-123456', 'Andrés', 'Bejarano', 'andres@example.com');
 
 -- GOAL (One per user per date)
 INSERT INTO goal (user_id, start_date, kcal, carbs, fat, protein) VALUES 
