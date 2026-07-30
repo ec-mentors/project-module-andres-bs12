@@ -61,12 +61,20 @@ public class UserService {
         return mapper.toResponseDTO(user);
     }
 
+    public UserResponseDTO findByGoogleId(String googleId) {
+        if (googleId == null) {
+            return null;
+        }
+
+        User user = repository.findByGoogleId(googleId).orElseThrow(() -> new NotFoundException("Id not found, Sign up"));
+
+        return mapper.toResponseDTO(user);
+    }
+
     public UserResponseDTO updateUser(UUID id, UserRequestDTO dto) {
         User user = repository.findById(id).orElseThrow(() -> new NotFoundException("User not found"));
             user.setFirstName(dto.getFirstName());
             user.setLastName(dto.getLastName());
-            user.setPasswordHash(dto.getPassword());
-
             return mapper.toResponseDTO(repository.save(user));
         }
 

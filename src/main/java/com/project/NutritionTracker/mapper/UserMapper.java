@@ -21,7 +21,7 @@ public class UserMapper {
         user.setFirstName(dto.getFirstName());
         user.setLastName(dto.getLastName());
         user.setEmail(dto.getEmail());
-        user.setPasswordHash(dto.getPassword());
+        user.setGoogleId(dto.getGoogleId());
         user.setCreatedAt(LocalDateTime.now());
 
         return user;
@@ -39,6 +39,7 @@ public class UserMapper {
         dto.setFirstName(user.getFirstName());
         dto.setLastName(user.getLastName());
         dto.setEmail(user.getEmail());
+        dto.setGoogleId(user.getGoogleId());
 
         return dto;
     }
