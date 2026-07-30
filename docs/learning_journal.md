@@ -4,26 +4,40 @@ This document serves as a development and learning journal to record key concept
 
 ---
 
-## 📅 2026-07-30 - Identity Linking Architecture (Google OAuth & Telegram Token Pairing)
+## 📅 2026-07-30 - Identity Linking Architecture, JPA `@Column` Deep-Dive & Conventional Commits
 
-### 💡 Key Concepts Learned
+### 💡 Key Concepts Learned & Architectural Discussions
 
-1. **Identity Linking Architecture:**
-   - A single `User` entity in PostgreSQL serves as the core authority for the user's data (meals, goals, macros).
-   - Authentication Providers (Google OAuth, Passwords) and Communication Channels (Telegram Bot) are access layers linked to the same primary `user_id`.
+1. **Identity Linking Architecture (Google OAuth & Telegram Token Pairing):**
+   - A single `User` entity in PostgreSQL serves as the core authority for user data (meals, goals, macros).
+   - Switched from traditional Email/Password to Google OAuth: eliminates password hashing (BCrypt), password reset flows, and email confirmation steps, improving UX with one-click login.
+   - Confirmed Telegram token pairing (`/start <token>`) remains 100% compatible for Sprint 2 identity linking.
 
-2. **Google OAuth vs Traditional Password Auth:**
-   - Eliminates password hashing overhead (BCrypt), password reset flows, and email confirmation steps.
-   - Drastically improves User Experience (UX) via standard OAuth2 one-click login.
+2. **JPA `@Column` Annotation vs. Database Constraints (`schema.sql`):**
+   - **Why use `@Column` in Java if SQL already has constraints?**
+     - *In-Memory Validation:* Hibernate checks `@Column(nullable = false)` in Java RAM before attempting network I/O or sending SQL queries to PostgreSQL.
+     - *DDL Generation:* Tools and test environments (`ddl-auto`) read Java annotations to build tables automatically.
+     - *Code Self-Documentation:* Explicitly documents column constraints directly inside `User.java`.
+   - **Naming Rules:**
+     - For single-word matching fields (e.g., `email`), `name` can be omitted: `@Column(nullable = false, unique = true)`.
+     - For multi-word fields converting Java `camelCase` to SQL `snake_case` (e.g., `googleId` $\rightarrow$ `google_id`), specifying `name = "google_id"` guarantees explicit mapping.
 
-3. **Telegram Token Pairing Pattern (Sprint 2 Roadmap):**
-   - Web clients generate a temporary secret token linked to the authenticated session (`https://t.me/BotName?start=<token>`).
-   - Opening Telegram via this link sends the token to the bot, allowing the backend to map `telegram_chat_id` to the existing `User` without requiring credentials inside Telegram.
-   - Confirmed 100% compatible with Google OAuth or any future identity provider.
+3. **Nullable vs. Unique Constraints on Linked Account Identifiers (`telegram_chat_id`):**
+   - `telegram_chat_id` must be **`NULLABLE`** (default) because users register via Google on the Web before linking Telegram. Enforcing `NOT NULL` would block new web signups.
+   - `telegram_chat_id` must be **`UNIQUE`** (`unique = true`) because no two users can share the same Telegram account.
+   - *SQL Insight:* PostgreSQL allows multiple `NULL` values in a `UNIQUE` column because SQL standards treat `NULL` values as non-equal.
 
-### 📝 Notes & AI Discussions
-- Discussed architectural trade-offs of Email/Password vs Google OAuth.
-- Recorded Architectural Decision (ADR-01) in `README.md` and added Jira tasks `BE-28` through `BE-32` to track the Sprint 1 Google Auth scope extension.
+4. **Conventional Commits Standard & Workflow Efficiency:**
+   - Standard format: `<type>(<scope>): <short description>`.
+   - **The Golden Rule (`feat` vs `refactor`):**
+     - `feat:` Used when adding a **new capability, field, or endpoint** to the system (e.g., adding `google_id` to `schema.sql` & `User.java`).
+     - `refactor:` Used when **reorganizing existing code** without changing external system behavior or API capabilities.
+     - `fix:`, `docs:`, `chore:`, `test:` for bug fixes, documentation, build config, and testing respectively.
+   - **Workflow Shortcuts:** Combined staging & committing via `git commit -am "msg"` (for tracked files) and `git add . && git commit -m "msg"` or custom Git aliases (`git config --global alias.ac '!git add -A && git commit -m'`).
+
+### 📝 Notes & AI Mentor Discussions
+- Evaluated domain lifecycle of `User` fields: verified that `email` must be retained alongside `google_id` (Google provides email for user display, notifications, and identity checks).
+- Recorded Architectural Decision Record (ADR-01) in `README.md` and created Jira tasks `BE-28` through `BE-32` directly via Jira Cloud REST API.
 
 ---
 
