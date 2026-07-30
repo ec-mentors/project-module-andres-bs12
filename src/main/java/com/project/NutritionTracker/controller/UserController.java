@@ -24,7 +24,8 @@ public class UserController {
         this.service = service;
     }
 
-
+    // Controller not conected to google verification yet for testable reasons.
+    // To make it work with Google, the method 'processGoogleAuth' should be called instead of 'processGoogleAuth'
     @PostMapping("/auth/google")
     public ResponseEntity<UserResponseDTO> authWithGoogle(@RequestBody UserRequestDTO dto) {
         UserResponseDTO response = service.processGoogleAuth(dto);

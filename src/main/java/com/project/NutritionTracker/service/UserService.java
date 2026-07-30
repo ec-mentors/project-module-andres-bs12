@@ -107,6 +107,9 @@ public class UserService {
         return mapper.toResponseDTO(repository.save(newuser));
     }
 
+
+
+    // This method is not working yet since it will verify with google, for testable reason, it will not verify tokens yet
     public UserResponseDTO verifyAndProcessGoogleToken(String googleIdToken) {
         // 1. Check that is not empty
         if (googleIdToken == null || googleIdToken.isEmpty()) {
