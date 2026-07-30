@@ -47,7 +47,7 @@ public class GoalController {
         return ResponseEntity.ok(service.getGoalByUserAndDate(userId, date));
     }
 
-    @GetMapping("/{userId}/all")
+    @GetMapping("/user/{userId}/all")
     public ResponseEntity<List<GoalResponseDTO>> getAllGoalsByUser (
            @PathVariable UUID userId) {
         return ResponseEntity.ok(service.findAllGoalsByUser(userId));

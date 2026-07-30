@@ -15,4 +15,5 @@ public class UserResponseDTO {
    private String lastName;
    private String email;
    private LocalDateTime createdAt;
+   private String googleId;
 }

@@ -40,12 +40,12 @@ NutritionTracker is a Spring Boot application designed to help users log their d
 | ↳ `BE-28` | *Create User Controller* | REST (`UserController.java`) | ✅ `Done` | Jul 29, 2026 |
 | ↳ `BE-29` | *Create Goal Controller* | REST (`GoalController.java`) | ✅ `Done` | Jul 29, 2026 |
 | ↳ `BE-30` | *Create Entry Controller* | REST (`EntryController.java`) | ✅ `Done` | Jul 29, 2026 |
-| **`BE-20`** | Get presentation ready | Project Delivery | 🎯 `In Progress` | Jul 31, 2026 |
-| **`BE-28`** | Update `User` Entity & Schema for Google OAuth | Model & DB (`User.java`, `schema.sql`) | 🎯 `In Progress` | Jul 31, 2026 |
-| **`BE-29`** | Refactor User DTOs & Mapper | DTO & Mapper Layer | ⏳ `To Do` | Jul 31, 2026 |
-| **`BE-30`** | Add Google OAuth2 Client Dependencies | Build Config (`pom.xml`) | ⏳ `To Do` | Aug 01, 2026 |
-| **`BE-31`** | Implement Google Auth Controller & Service | Logic (`UserService.java`, `UserController.java`) | ⏳ `To Do` | Aug 01, 2026 |
-| **`BE-32`** | Postman Verification for Google Auth Flow | QA & Testing | ⏳ `To Do` | Aug 02, 2026 |
+| **`BE-20`** | Get presentation ready | Project Delivery | ✅ `Done` | Jul 31, 2026 |
+| **`BE-28`** | Update `User` Entity & Schema for Google OAuth | Model & DB (`User.java`, `schema.sql`) | ✅ `Done` | Jul 31, 2026 |
+| **`BE-29`** | Refactor User DTOs & Mapper | DTO & Mapper Layer | ✅ `Done` | Jul 31, 2026 |
+| **`BE-30`** | Add Google OAuth2 Client Dependencies | Build Config (`pom.xml`) | ✅ `Done` | Aug 01, 2026 |
+| **`BE-31`** | Implement Google Auth Controller & Service | Logic (`UserService.java`, `UserController.java`) | ✅ `Done` | Aug 01, 2026 |
+| **`BE-32`** | Postman Verification for Google Auth Flow | QA & Testing | ✅ `Done` | Aug 02, 2026 |
 
 ---
 
@@ -93,10 +93,11 @@ classDiagram
 
     class users {
         +UUID id PK
+        +String google_id UK
+        +String email UK
         +String first_name
         +String last_name
-        +String email UK
-        +String password_hash
+        +Long telegram_chat_id
         +Timestamp created_at
     }
 
@@ -137,10 +138,11 @@ erDiagram
 
     users {
         UUID id PK
+        VARCHAR google_id UK "NOT NULL"
+        VARCHAR email UK "NOT NULL"
         VARCHAR first_name
         VARCHAR last_name
-        VARCHAR email UK
-        VARCHAR password_hash
+        BIGINT telegram_chat_id "NULLABLE (Sprint 2)"
         TIMESTAMP created_at
     }
 
@@ -172,9 +174,11 @@ erDiagram
 
 ## 🗄️ Database Tables & Constraints
 
-- **`users`**: Stores user profiles.
+- **`users`**: Stores user profiles (Google OAuth identity).
   - `id`: `UUID PRIMARY KEY DEFAULT gen_random_uuid()` (Globally unique identifier).
-  - `email`: `UNIQUE` constraint for web login.
+  - `google_id`: `VARCHAR UNIQUE NOT NULL` (Google's unique `sub` identifier).
+  - `email`: `VARCHAR UNIQUE NOT NULL` (User's email provided by Google).
+  - `telegram_chat_id`: `BIGINT` (Nullable, linked in Sprint 2).
 - **`goal`**: Stores daily nutritional goals.
   - `id`: `UUID PRIMARY KEY DEFAULT gen_random_uuid()`.
   - `user_id`: `UUID REFERENCES users(id) ON DELETE CASCADE`.
