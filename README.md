@@ -93,10 +93,11 @@ classDiagram
 
     class users {
         +UUID id PK
+        +String google_id UK
+        +String email UK
         +String first_name
         +String last_name
-        +String email UK
-        +String password_hash
+        +Long telegram_chat_id
         +Timestamp created_at
     }
 
@@ -137,10 +138,11 @@ erDiagram
 
     users {
         UUID id PK
+        VARCHAR google_id UK "NOT NULL"
+        VARCHAR email UK "NOT NULL"
         VARCHAR first_name
         VARCHAR last_name
-        VARCHAR email UK
-        VARCHAR password_hash
+        BIGINT telegram_chat_id "NULLABLE (Sprint 2)"
         TIMESTAMP created_at
     }
 
@@ -172,9 +174,11 @@ erDiagram
 
 ## 🗄️ Database Tables & Constraints
 
-- **`users`**: Stores user profiles.
+- **`users`**: Stores user profiles (Google OAuth identity).
   - `id`: `UUID PRIMARY KEY DEFAULT gen_random_uuid()` (Globally unique identifier).
-  - `email`: `UNIQUE` constraint for web login.
+  - `google_id`: `VARCHAR UNIQUE NOT NULL` (Google's unique `sub` identifier).
+  - `email`: `VARCHAR UNIQUE NOT NULL` (User's email provided by Google).
+  - `telegram_chat_id`: `BIGINT` (Nullable, linked in Sprint 2).
 - **`goal`**: Stores daily nutritional goals.
   - `id`: `UUID PRIMARY KEY DEFAULT gen_random_uuid()`.
   - `user_id`: `UUID REFERENCES users(id) ON DELETE CASCADE`.
