@@ -40,12 +40,12 @@ NutritionTracker is a Spring Boot application designed to help users log their d
 | ↳ `BE-28` | *Create User Controller* | REST (`UserController.java`) | ✅ `Done` | Jul 29, 2026 |
 | ↳ `BE-29` | *Create Goal Controller* | REST (`GoalController.java`) | ✅ `Done` | Jul 29, 2026 |
 | ↳ `BE-30` | *Create Entry Controller* | REST (`EntryController.java`) | ✅ `Done` | Jul 29, 2026 |
-| **`BE-20`** | Get presentation ready | Project Delivery | 🎯 `In Progress` | Jul 31, 2026 |
-| **`BE-28`** | Update `User` Entity & Schema for Google OAuth | Model & DB (`User.java`, `schema.sql`) | 🎯 `In Progress` | Jul 31, 2026 |
-| **`BE-29`** | Refactor User DTOs & Mapper | DTO & Mapper Layer | ⏳ `To Do` | Jul 31, 2026 |
-| **`BE-30`** | Add Google OAuth2 Client Dependencies | Build Config (`pom.xml`) | ⏳ `To Do` | Aug 01, 2026 |
-| **`BE-31`** | Implement Google Auth Controller & Service | Logic (`UserService.java`, `UserController.java`) | ⏳ `To Do` | Aug 01, 2026 |
-| **`BE-32`** | Postman Verification for Google Auth Flow | QA & Testing | ⏳ `To Do` | Aug 02, 2026 |
+| **`BE-20`** | Get presentation ready | Project Delivery | ✅ `Done` | Jul 31, 2026 |
+| **`BE-28`** | Update `User` Entity & Schema for Google OAuth | Model & DB (`User.java`, `schema.sql`) | ✅ `Done` | Jul 31, 2026 |
+| **`BE-29`** | Refactor User DTOs & Mapper | DTO & Mapper Layer | ✅ `Done` | Jul 31, 2026 |
+| **`BE-30`** | Add Google OAuth2 Client Dependencies | Build Config (`pom.xml`) | ✅ `Done` | Aug 01, 2026 |
+| **`BE-31`** | Implement Google Auth Controller & Service | Logic (`UserService.java`, `UserController.java`) | ✅ `Done` | Aug 01, 2026 |
+| **`BE-32`** | Postman Verification for Google Auth Flow | QA & Testing | ✅ `Done` | Aug 02, 2026 |
 
 ---
 

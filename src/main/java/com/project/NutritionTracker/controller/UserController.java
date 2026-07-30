@@ -2,12 +2,16 @@ package com.project.NutritionTracker.controller;
 
 import com.project.NutritionTracker.dto.UserRequestDTO;
 import com.project.NutritionTracker.dto.UserResponseDTO;
+import com.project.NutritionTracker.exception.NotFoundException;
+import com.project.NutritionTracker.model.User;
+import com.project.NutritionTracker.repository.UserRepository;
 import com.project.NutritionTracker.service.UserService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @RestController
@@ -20,15 +24,15 @@ public class UserController {
         this.service = service;
     }
 
-    // To create a new user
-    // no Url it is unique, the others will contain /...
 
-    // @Requestbody Takes a json and turns it into an object DTO
-    @PostMapping()
-    public ResponseEntity<UserResponseDTO> createUser(@RequestBody UserRequestDTO dto) {
-        UserResponseDTO created = service.createUser(dto);
-        return ResponseEntity.created(URI.create("/api/user/" + created.getId())).body(created);
+    @PostMapping("/auth/google")
+    public ResponseEntity<UserResponseDTO> authWithGoogle(@RequestBody UserRequestDTO dto) {
+        UserResponseDTO response = service.processGoogleAuth(dto);
+
+        return ResponseEntity.ok(response);
     }
+
+
 
     // @RequesTParam is needed because we need to receive an email. it comes from the URL after the ?
     // http://localhost:8080/api/user/search?email=andres.postman@example.com
