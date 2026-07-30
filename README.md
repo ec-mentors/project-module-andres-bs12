@@ -41,8 +41,31 @@ NutritionTracker is a Spring Boot application designed to help users log their d
 | ↳ `BE-29` | *Create Goal Controller* | REST (`GoalController.java`) | ✅ `Done` | Jul 29, 2026 |
 | ↳ `BE-30` | *Create Entry Controller* | REST (`EntryController.java`) | ✅ `Done` | Jul 29, 2026 |
 | **`BE-20`** | Get presentation ready | Project Delivery | 🎯 `In Progress` | Jul 31, 2026 |
+| **`BE-28`** | Update `User` Entity & Schema for Google OAuth | Model & DB (`User.java`, `schema.sql`) | 🎯 `In Progress` | Jul 31, 2026 |
+| **`BE-29`** | Refactor User DTOs & Mapper | DTO & Mapper Layer | ⏳ `To Do` | Jul 31, 2026 |
+| **`BE-30`** | Add Google OAuth2 Client Dependencies | Build Config (`pom.xml`) | ⏳ `To Do` | Aug 01, 2026 |
+| **`BE-31`** | Implement Google Auth Controller & Service | Logic (`UserService.java`, `UserController.java`) | ⏳ `To Do` | Aug 01, 2026 |
+| **`BE-32`** | Postman Verification for Google Auth Flow | QA & Testing | ⏳ `To Do` | Aug 02, 2026 |
 
 ---
+
+### 🧠 Architectural Decision Record (ADR-01): Pivot to Google OAuth & Future Telegram Linkage
+
+**Date:** July 30, 2026  
+**Status:** Approved  
+
+#### ❓ Context & Questions Raised:
+During Sprint 1, two architectural questions were evaluated:
+1. Is traditional Email/Password authentication optimal, or is Google OAuth ("Log in with Google") significantly better for UX?
+2. If we pivot to Google OAuth now, will it remain compatible with the planned Telegram Bot integration in Sprint 2?
+
+#### 💡 Decision & Rationale:
+- **Pivot to Google OAuth:** Replacing manual email/password auth with Google OAuth eliminates password hashing, reset flows, and email verification overhead while providing a superior one-click user login experience.
+- **Identity Linking & Telegram Compatibility:** In our domain model, the `User` record in PostgreSQL is the core authority. Google OAuth serves as the Web Authentication Provider, whereas Telegram will serve as a Communication Channel.
+- **Sprint 2 Telegram Scope:** Telegram integration will be implemented in Sprint 2 using a temporary token pairing mechanism (`/start <token>`). This ADR ensures the database schema (`google_id`, `telegram_chat_id`) is pre-configured in Sprint 1 without implementing Telegram logic yet.
+
+---
+
 
 ## 🔮 Sprint 2 Preview & Future Considerations
 

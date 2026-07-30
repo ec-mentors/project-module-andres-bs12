@@ -4,6 +4,29 @@ This document serves as a development and learning journal to record key concept
 
 ---
 
+## 📅 2026-07-30 - Identity Linking Architecture (Google OAuth & Telegram Token Pairing)
+
+### 💡 Key Concepts Learned
+
+1. **Identity Linking Architecture:**
+   - A single `User` entity in PostgreSQL serves as the core authority for the user's data (meals, goals, macros).
+   - Authentication Providers (Google OAuth, Passwords) and Communication Channels (Telegram Bot) are access layers linked to the same primary `user_id`.
+
+2. **Google OAuth vs Traditional Password Auth:**
+   - Eliminates password hashing overhead (BCrypt), password reset flows, and email confirmation steps.
+   - Drastically improves User Experience (UX) via standard OAuth2 one-click login.
+
+3. **Telegram Token Pairing Pattern (Sprint 2 Roadmap):**
+   - Web clients generate a temporary secret token linked to the authenticated session (`https://t.me/BotName?start=<token>`).
+   - Opening Telegram via this link sends the token to the bot, allowing the backend to map `telegram_chat_id` to the existing `User` without requiring credentials inside Telegram.
+   - Confirmed 100% compatible with Google OAuth or any future identity provider.
+
+### 📝 Notes & AI Discussions
+- Discussed architectural trade-offs of Email/Password vs Google OAuth.
+- Recorded Architectural Decision (ADR-01) in `README.md` and added Jira tasks `BE-28` through `BE-32` to track the Sprint 1 Google Auth scope extension.
+
+---
+
 ## 📅 2026-07-29 - REST Controllers, HTTP Status Codes & Postman Testing
 
 ### 💡 Key Concepts Learned
@@ -88,13 +111,3 @@ This document serves as a development and learning journal to record key concept
    - **Step 1:** Save/commit pending work on feature branch (`git add . && git commit -m "wip"` or `git stash`).
    - **Step 2:** Update local `main` branch from GitHub (`git checkout main && git pull origin main`).
    - **Step 3:** Switch back to feature branch and merge `main` (`git checkout <feature-branch> && git merge main --no-edit`).
-
----
-
-## 📅 YYYY-MM-DD - [Day Title]
-
-### 💡 Key Concepts Learned
-- [Write what you learned today...]
-
-### 📝 Notes & AI Discussions
-- [Write notes from your discussions...]
