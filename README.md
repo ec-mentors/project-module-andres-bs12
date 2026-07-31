@@ -4,7 +4,7 @@ NutritionTracker is a Spring Boot application designed to help users log their d
 
 ---
 
-## 🎯 Sprint 1: Back-End Roadmap (Jira Board: BE | Parent: `BE S1` - `BE-55`)
+## 🎯 Sprint 1: Back-End Roadmap (Jira Board: `BE` | Parent Epic: `BE S1` - `BE-55`)
 
 **Sprint Duration:** July 27, 2026 – August 10, 2026  
 **Goal:** Implement core Spring Boot architecture (Entities, DTOs, Mappers, Repositories, Services, Controllers, and Database Schema).
@@ -61,40 +61,40 @@ During Sprint 1, two architectural questions were evaluated:
 
 ---
 
-## 🎨 Sprint 2: Front-End & Multi-Page Roadmap (Jira Board: `BE` | Parent: `FE S2` - `BE-54`)
+## 🎨 Sprint 2: Front-End & Multi-Page Roadmap (Jira Board: `BE` | Parent Epic: `FE S2` - `BE-54`)
 
 **Sprint Duration:** August 03, 2026 – August 17, 2026  
 **Goal:** Implement the Multi-Page Web Application matching the exact Figma design system ("CaloriesTrack Atomic Design v3") followed by Telegram Bot and OpenAI add-on integrations.
 
-> 💡 **Single Project Workspace:** All Sprint 1 and Sprint 2 tasks live within Jira Project **`BE`** (`NutritionTracker`), organized cleanly under Parent Epics:
-> - **Sprint 1 Parent:** `BE S1` (`BE-55`)
-> - **Sprint 2 Parent:** `FE S2` (`BE-54`)
+> 💡 **Unified Backlog & Tagging System:**
+> - **Parent Epic:** `FE S2` (`BE-54`)
+> - **Jira Tags / Labels:** Order & execution sequence codes (`FE-1`, `FE-2`, etc.) and phases (`Phase-1`, `Phase-2`, etc.) are attached as native Jira Labels to keep titles clean and readable.
 
-### 📋 Sprint 2 Backlog & Live Jira Issues (Jira Project: `BE` | Parent Epic: `FE S2` - `BE-54`)
+### 📋 Sprint 2 Backlog & Clean Jira Issues (Jira Cloud Project: `BE`)
 
-| Jira Key | Parent Epic | Summary | Component | Status | Target Date |
+| Jira Key | Parent Epic | Clean Summary / Title | Jira Labels / Tags | Status | Target Date |
 | :--- | :---: | :--- | :--- | :---: | :---: |
-| **`BE-33`** | `FE S2` | **FE-1: Design System & Global Layout Setup** | Frontend / Assets | ⏳ `In Progress` | Aug 03, 2026 |
-| ↳ `BE-34` | `FE S2` | *FE-2: Setup Figma Design Tokens CSS (`styles.css`)* | Styles (`css/styles.css`) | ⏳ `In Progress` | Aug 03, 2026 |
-| ↳ `BE-35` | `FE S2` | *FE-3: Build Shared Navigation Header Component* | HTML Component | ⏳ `In Progress` | Aug 04, 2026 |
-| **`BE-36`** | `FE S2` | **FE-4: Page 1 - Home / Daily Dashboard (`index.html`)** | Frontend / Page 1 | 📅 `To Do` | Aug 06, 2026 |
-| ↳ `BE-37` | `FE S2` | *FE-5: Build Kcal Remaining Hero & 4 Macro KPI Cards* | UI Component | 📅 `To Do` | Aug 05, 2026 |
-| ↳ `BE-38` | `FE S2` | *FE-6: Build Goal vs Actual Comparison Table* | UI Component | 📅 `To Do` | Aug 05, 2026 |
-| ↳ `BE-39` | `FE S2` | *FE-7: Build Latest Entries Side Panel* | UI Component | 📅 `To Do` | Aug 06, 2026 |
-| ↳ `BE-40` | `FE S2` | *FE-8: Connect Home page JS to REST API* | JavaScript (`app.js`) | 📅 `To Do` | Aug 06, 2026 |
-| **`BE-41`** | `FE S2` | **FE-9: Page 2 - Overview / Analytics Dashboard (`overview.html`)** | Frontend / Page 2 | 📅 `To Do` | Aug 09, 2026 |
-| ↳ `BE-42` | `FE S2` | *FE-10: Build Monthly Balance KPI Row Cards* | UI Component | 📅 `To Do` | Aug 08, 2026 |
-| ↳ `BE-43` | `FE S2` | *FE-11: Build Charts Container (Macro Distribution & Trend)* | Charts Component | 📅 `To Do` | Aug 08, 2026 |
-| ↳ `BE-44` | `FE S2` | *FE-12: Connect Overview JS to Analytics REST Data* | JavaScript (`overview.js`) | 📅 `To Do` | Aug 09, 2026 |
-| **`BE-45`** | `FE S2` | **FE-13: Page 3 - Set Goal Management (`goal.html`)** | Frontend / Page 3 | 📅 `To Do` | Aug 11, 2026 |
-| ↳ `BE-46` | `FE S2` | *FE-14: Build Goal Settings Panel Form* | UI Component | 📅 `To Do` | Aug 10, 2026 |
-| ↳ `BE-47` | `FE S2` | *FE-15: Connect Goal Form to REST API* | JavaScript (`goal.js`) | 📅 `To Do` | Aug 11, 2026 |
-| **`BE-48`** | `FE S2` | **EXT-1: Add-on 1 - Telegram Bot Integration** | Integration / Bot | 📅 `To Do` | Aug 14, 2026 |
-| ↳ `BE-49` | `FE S2` | *EXT-2: Register Telegram Bot & Handle `/start` Command* | Spring Boot Service | 📅 `To Do` | Aug 13, 2026 |
-| ↳ `BE-50` | `FE S2` | *EXT-3: Link Telegram Chat ID to User Account* | Service & DB | 📅 `To Do` | Aug 14, 2026 |
-| **`BE-51`** | `FE S2` | **EXT-4: Add-on 2 - OpenAI Natural Language Parser** | Integration / AI | 📅 `To Do` | Aug 17, 2026 |
-| ↳ `BE-52` | `FE S2` | *EXT-5: Integrate OpenAI API for Voice/Text Meal Logging* | Service (`AIService.java`) | 📅 `To Do` | Aug 16, 2026 |
-| ↳ `BE-53` | `FE S2` | *EXT-6: Parse AI Response into Structured `EntryRequestDTO`* | AI Mapper | 📅 `To Do` | Aug 17, 2026 |
+| **`BE-33`** | `FE S2` | **Design System & Global Layout Setup** | `FE-1`, `Phase-1`, `DesignSystem` | ⏳ `In Progress` | Aug 03, 2026 |
+| ↳ `BE-34` | `FE S2` | *Setup Figma Design Tokens CSS (`styles.css`)* | `FE-2`, `Phase-1`, `CSS` | ⏳ `In Progress` | Aug 03, 2026 |
+| ↳ `BE-35` | `FE S2` | *Build Shared Navigation Header Component* | `FE-3`, `Phase-1`, `Navigation` | ⏳ `In Progress` | Aug 04, 2026 |
+| **`BE-36`** | `FE S2` | **Page 1: Home / Daily Dashboard (`index.html`)** | `FE-4`, `Phase-2`, `Page-Home` | 📅 `To Do` | Aug 06, 2026 |
+| ↳ `BE-37` | `FE S2` | *Build Kcal Remaining Hero & 4 Macro KPI Cards* | `FE-5`, `Phase-2`, `Hero-KPI` | 📅 `To Do` | Aug 05, 2026 |
+| ↳ `BE-38` | `FE S2` | *Build Goal vs Actual Comparison Table* | `FE-6`, `Phase-2`, `ComparisonTable` | 📅 `To Do` | Aug 05, 2026 |
+| ↳ `BE-39` | `FE S2` | *Build Latest Entries Side Panel* | `FE-7`, `Phase-2`, `EntriesPanel` | 📅 `To Do` | Aug 06, 2026 |
+| ↳ `BE-40` | `FE S2` | *Connect Home page JS to REST API* | `FE-8`, `Phase-2`, `REST-Integration` | 📅 `To Do` | Aug 06, 2026 |
+| **`BE-41`** | `FE S2` | **Page 2: Overview / Analytics Dashboard (`overview.html`)** | `FE-9`, `Phase-3`, `Page-Overview` | 📅 `To Do` | Aug 09, 2026 |
+| ↳ `BE-42` | `FE S2` | *Build Monthly Balance KPI Row Cards* | `FE-10`, `Phase-3`, `KPI-Cards` | 📅 `To Do` | Aug 08, 2026 |
+| ↳ `BE-43` | `FE S2` | *Build Charts Container (Macro Distribution & Trend)* | `FE-11`, `Phase-3`, `Charts` | 📅 `To Do` | Aug 08, 2026 |
+| ↳ `BE-44` | `FE S2` | *Connect Overview JS to Analytics REST Data* | `FE-12`, `Phase-3`, `REST-Integration` | 📅 `To Do` | Aug 09, 2026 |
+| **`BE-45`** | `FE S2` | **Page 3: Set Goal Management (`goal.html`)** | `FE-13`, `Phase-3`, `Page-Goal` | 📅 `To Do` | Aug 11, 2026 |
+| ↳ `BE-46` | `FE S2` | *Build Goal Settings Panel Form* | `FE-14`, `Phase-3`, `GoalForm` | 📅 `To Do` | Aug 10, 2026 |
+| ↳ `BE-47` | `FE S2` | *Connect Goal Form to REST API* | `FE-15`, `Phase-3`, `REST-Integration` | 📅 `To Do` | Aug 11, 2026 |
+| **`BE-48`** | `FE S2` | **Add-on 1: Telegram Bot Integration** | `EXT-1`, `Phase-4`, `Telegram` | 📅 `To Do` | Aug 14, 2026 |
+| ↳ `BE-49` | `FE S2` | *Register Telegram Bot & Handle `/start` Command* | `EXT-2`, `Phase-4`, `Telegram` | 📅 `To Do` | Aug 13, 2026 |
+| ↳ `BE-50` | `FE S2` | *Link Telegram Chat ID to User Account* | `EXT-3`, `Phase-4`, `Telegram` | 📅 `To Do` | Aug 14, 2026 |
+| **`BE-51`** | `FE S2` | **Add-on 2: OpenAI Natural Language Parser** | `EXT-4`, `Phase-4`, `OpenAI` | 📅 `To Do` | Aug 17, 2026 |
+| ↳ `BE-52` | `FE S2` | *Integrate OpenAI API for Voice/Text Meal Logging* | `EXT-5`, `Phase-4`, `OpenAI` | 📅 `To Do` | Aug 16, 2026 |
+| ↳ `BE-53` | `FE S2` | *Parse AI Response into Structured `EntryRequestDTO`* | `EXT-6`, `Phase-4`, `OpenAI` | 📅 `To Do` | Aug 17, 2026 |
 
 ---
 
