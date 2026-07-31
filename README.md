@@ -66,29 +66,29 @@ During Sprint 1, two architectural questions were evaluated:
 **Sprint Duration:** August 03, 2026 – August 17, 2026  
 **Goal:** Implement the Multi-Page Web Application matching the exact Figma design system ("CaloriesTrack Atomic Design v3").
 
-> 💡 **Pure Front-End Scope:**
+> 💡 **Clean Tagging System:**
 > - **Parent Epic:** `FE S2` (`BE-54`)
-> - **Jira Tags / Labels:** Every issue starts strictly with its execution tag (`FE-1`, `FE-2`, ... `FE-15`) followed by `Phase-1`, `Phase-2`, `Phase-3`.
+> - **Single Jira Tag:** Each task contains strictly a single unique tag (`FE-1`, `FE-2`, ... `FE-15`) specifying its execution sequence.
 
 ### 📋 Sprint 2 Front-End Backlog & Clean Jira Issues (Jira Cloud Project: `BE`)
 
-| Jira Key | Parent Epic | Clean Summary / Title | Jira Labels / Tags (Strict Order) | Status | Target Date |
-| :--- | :---: | :--- | :--- | :---: | :---: |
-| **`BE-33`** | `FE S2` | **Design System & Global Layout Setup** | `FE-1`, `Phase-1`, `DesignSystem` | ⏳ `In Progress` | Aug 03, 2026 |
-| ↳ `BE-34` | `FE S2` | *Setup Figma Design Tokens CSS (`styles.css`)* | `FE-2`, `Phase-1`, `CSS` | ⏳ `In Progress` | Aug 03, 2026 |
-| ↳ `BE-35` | `FE S2` | *Build Shared Navigation Header Component* | `FE-3`, `Phase-1`, `Navigation` | ⏳ `In Progress` | Aug 04, 2026 |
-| **`BE-36`** | `FE S2` | **Page 1: Home / Daily Dashboard (`index.html`)** | `FE-4`, `Phase-2`, `Page-Home` | 📅 `To Do` | Aug 06, 2026 |
-| ↳ `BE-37` | `FE S2` | *Build Kcal Remaining Hero & 4 Macro KPI Cards* | `FE-5`, `Phase-2`, `Hero-KPI` | 📅 `To Do` | Aug 05, 2026 |
-| ↳ `BE-38` | `FE S2` | *Build Goal vs Actual Comparison Table* | `FE-6`, `Phase-2`, `ComparisonTable` | 📅 `To Do` | Aug 05, 2026 |
-| ↳ `BE-39` | `FE S2` | *Build Latest Entries Side Panel* | `FE-7`, `Phase-2`, `EntriesPanel` | 📅 `To Do` | Aug 06, 2026 |
-| ↳ `BE-40` | `FE S2` | *Connect Home page JS to REST API* | `FE-8`, `Phase-2`, `REST-Integration` | 📅 `To Do` | Aug 06, 2026 |
-| **`BE-41`** | `FE S2` | **Page 2: Overview / Analytics Dashboard (`overview.html`)** | `FE-9`, `Phase-3`, `Page-Overview` | 📅 `To Do` | Aug 09, 2026 |
-| ↳ `BE-42` | `FE S2` | *Build Monthly Balance KPI Row Cards* | `FE-10`, `Phase-3`, `KPI-Cards` | 📅 `To Do` | Aug 08, 2026 |
-| ↳ `BE-43` | `FE S2` | *Build Charts Container (Macro Distribution & Trend)* | `FE-11`, `Phase-3`, `Charts` | 📅 `To Do` | Aug 08, 2026 |
-| ↳ `BE-44` | `FE S2` | *Connect Overview JS to Analytics REST Data* | `FE-12`, `Phase-3`, `REST-Integration` | 📅 `To Do` | Aug 09, 2026 |
-| **`BE-45`** | `FE S2` | **Page 3: Set Goal Management (`goal.html`)** | `FE-13`, `Phase-3`, `Page-Goal` | 📅 `To Do` | Aug 11, 2026 |
-| ↳ `BE-46` | `FE S2` | *Build Goal Settings Panel Form* | `FE-14`, `Phase-3`, `GoalForm` | 📅 `To Do` | Aug 10, 2026 |
-| ↳ `BE-47` | `FE S2` | *Connect Goal Form to REST API* | `FE-15`, `Phase-3`, `REST-Integration` | 📅 `To Do` | Aug 11, 2026 |
+| Jira Key | Parent Epic | Clean Summary / Title | Jira Tag | Status | Target Date |
+| :--- | :---: | :--- | :---: | :---: | :---: |
+| **`BE-33`** | `FE S2` | **Design System & Global Layout Setup** | `FE-1` | ⏳ `In Progress` | Aug 03, 2026 |
+| ↳ `BE-34` | `FE S2` | *Setup Figma Design Tokens CSS (`styles.css`)* | `FE-2` | ⏳ `In Progress` | Aug 03, 2026 |
+| ↳ `BE-35` | `FE S2` | *Build Shared Navigation Header Component* | `FE-3` | ⏳ `In Progress` | Aug 04, 2026 |
+| **`BE-36`** | `FE S2` | **Page 1: Home / Daily Dashboard (`index.html`)** | `FE-4` | 📅 `To Do` | Aug 06, 2026 |
+| ↳ `BE-37` | `FE S2` | *Build Kcal Remaining Hero & 4 Macro KPI Cards* | `FE-5` | 📅 `To Do` | Aug 05, 2026 |
+| ↳ `BE-38` | `FE S2` | *Build Goal vs Actual Comparison Table* | `FE-6` | 📅 `To Do` | Aug 05, 2026 |
+| ↳ `BE-39` | `FE S2` | *Build Latest Entries Side Panel* | `FE-7` | 📅 `To Do` | Aug 06, 2026 |
+| ↳ `BE-40` | `FE S2` | *Connect Home page JS to REST API* | `FE-8` | 📅 `To Do` | Aug 06, 2026 |
+| **`BE-41`** | `FE S2` | **Page 2: Overview / Analytics Dashboard (`overview.html`)** | `FE-9` | 📅 `To Do` | Aug 09, 2026 |
+| ↳ `BE-42` | `FE S2` | *Build Monthly Balance KPI Row Cards* | `FE-10` | 📅 `To Do` | Aug 08, 2026 |
+| ↳ `BE-43` | `FE S2` | *Build Charts Container (Macro Distribution & Trend)* | `FE-11` | 📅 `To Do` | Aug 08, 2026 |
+| ↳ `BE-44` | `FE S2` | *Connect Overview JS to Analytics REST Data* | `FE-12` | 📅 `To Do` | Aug 09, 2026 |
+| **`BE-45`** | `FE S2` | **Page 3: Set Goal Management (`goal.html`)** | `FE-13` | 📅 `To Do` | Aug 11, 2026 |
+| ↳ `BE-46` | `FE S2` | *Build Goal Settings Panel Form* | `FE-14` | 📅 `To Do` | Aug 10, 2026 |
+| ↳ `BE-47` | `FE S2` | *Connect Goal Form to REST API* | `FE-15` | 📅 `To Do` | Aug 11, 2026 |
 
 ---
 
