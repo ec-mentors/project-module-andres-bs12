@@ -61,32 +61,32 @@ During Sprint 1, two architectural questions were evaluated:
 
 ---
 
-## 🎨 Sprint 2: Front-End Roadmap (Jira Board: BE)
+## 🎨 Sprint 2: Front-End Roadmap (Jira Board: FE)
 
 **Sprint Duration:** August 03, 2026 – August 17, 2026  
 **Goal:** Implement the Multi-Page Web Application matching the exact Figma design system ("CaloriesTrack Atomic Design v3").
 
-> 💡 **Sequential Dependencies:** Every task in Jira Cloud is linked with native blocker dependencies (`is blocked by` / `blocks`). Tasks must be executed in order from `BE-33` down to `BE-47`.
+> 💡 **Sequential Dependencies:** Every task in Jira Cloud is linked with native blocker dependencies (`is blocked by` / `blocks`). Tasks must be executed in order from `FE-1` down to `FE-15`.
 
-### 📋 Sprint 2 Backlog & Tasks (Jira Project: BE)
+### 📋 Sprint 2 Backlog & Tasks (Jira Project: FE)
 
 | Issue Key | Summary | Component | Status | Due Date |
 | :--- | :--- | :--- | :---: | :---: |
-| **`BE-33`** | Design System & Global Layout Setup | Frontend / Assets | ⏳ `In Progress` | Aug 03, 2026 |
-| ↳ `BE-34` | *Setup Figma Design Tokens CSS (`styles.css`)* | Styles (`css/styles.css`) | ⏳ `In Progress` | Aug 03, 2026 |
-| ↳ `BE-35` | *Build Shared Navigation Header Component* | HTML Component | ⏳ `In Progress` | Aug 04, 2026 |
-| **`BE-36`** | Page 1: Home / Daily Dashboard (`index.html`) | Frontend / Page 1 | 📅 `To Do` | Aug 06, 2026 |
-| ↳ `BE-37` | *Build Kcal Remaining Hero & 4 Macro KPI Cards* | UI Component | 📅 `To Do` | Aug 05, 2026 |
-| ↳ `BE-38` | *Build Goal vs Actual Comparison Table* | UI Component | 📅 `To Do` | Aug 05, 2026 |
-| ↳ `BE-39` | *Build Latest Entries Side Panel* | UI Component | 📅 `To Do` | Aug 06, 2026 |
-| ↳ `BE-40` | *Connect Home page JS to REST API* | JavaScript (`app.js`) | 📅 `To Do` | Aug 06, 2026 |
-| **`BE-41`** | Page 2: Overview / Analytics Dashboard (`overview.html`) | Frontend / Page 2 | 📅 `To Do` | Aug 09, 2026 |
-| ↳ `BE-42` | *Build Monthly Balance KPI Row Cards* | UI Component | 📅 `To Do` | Aug 08, 2026 |
-| ↳ `BE-43` | *Build Charts Container (Macro Distribution & Trend)* | Charts Component | 📅 `To Do` | Aug 08, 2026 |
-| ↳ `BE-44` | *Connect Overview JS to Analytics REST Data* | JavaScript (`overview.js`) | 📅 `To Do` | Aug 09, 2026 |
-| **`BE-45`** | Page 3: Set Goal Management (`goal.html`) | Frontend / Page 3 | 📅 `To Do` | Aug 11, 2026 |
-| ↳ `BE-46` | *Build Goal Settings Panel Form* | UI Component | 📅 `To Do` | Aug 10, 2026 |
-| ↳ `BE-47` | *Connect Goal Form to REST API* | JavaScript (`goal.js`) | 📅 `To Do` | Aug 11, 2026 |
+| **`FE-1`** | Design System & Global Layout Setup | Frontend / Assets | ⏳ `In Progress` | Aug 03, 2026 |
+| ↳ `FE-2` | *Setup Figma Design Tokens CSS (`styles.css`)* | Styles (`css/styles.css`) | ⏳ `In Progress` | Aug 03, 2026 |
+| ↳ `FE-3` | *Build Shared Navigation Header Component* | HTML Component | ⏳ `In Progress` | Aug 04, 2026 |
+| **`FE-4`** | Page 1: Home / Daily Dashboard (`index.html`) | Frontend / Page 1 | 📅 `To Do` | Aug 06, 2026 |
+| ↳ `FE-5` | *Build Kcal Remaining Hero & 4 Macro KPI Cards* | UI Component | 📅 `To Do` | Aug 05, 2026 |
+| ↳ `FE-6` | *Build Goal vs Actual Comparison Table* | UI Component | 📅 `To Do` | Aug 05, 2026 |
+| ↳ `FE-7` | *Build Latest Entries Side Panel* | UI Component | 📅 `To Do` | Aug 06, 2026 |
+| ↳ `FE-8` | *Connect Home page JS to REST API* | JavaScript (`app.js`) | 📅 `To Do` | Aug 06, 2026 |
+| **`FE-9`** | Page 2: Overview / Analytics Dashboard (`overview.html`) | Frontend / Page 2 | 📅 `To Do` | Aug 09, 2026 |
+| ↳ `FE-10` | *Build Monthly Balance KPI Row Cards* | UI Component | 📅 `To Do` | Aug 08, 2026 |
+| ↳ `FE-11` | *Build Charts Container (Macro Distribution & Trend)* | Charts Component | 📅 `To Do` | Aug 08, 2026 |
+| ↳ `FE-12` | *Connect Overview JS to Analytics REST Data* | JavaScript (`overview.js`) | 📅 `To Do` | Aug 09, 2026 |
+| **`FE-13`** | Page 3: Set Goal Management (`goal.html`) | Frontend / Page 3 | 📅 `To Do` | Aug 11, 2026 |
+| ↳ `FE-14` | *Build Goal Settings Panel Form* | UI Component | 📅 `To Do` | Aug 10, 2026 |
+| ↳ `FE-15` | *Connect Goal Form to REST API* | JavaScript (`goal.js`) | 📅 `To Do` | Aug 11, 2026 |
 
 ---
 
@@ -94,8 +94,8 @@ During Sprint 1, two architectural questions were evaluated:
 
 To build this yourself step-by-step, follow this recommended sequence:
 
-1. **Step 1 (Design System - `BE-34`):** Open `src/main/resources/static/css/styles.css` and define the Figma variables (`:root`) for colors (`#05030d`, `#6417ff`), fonts (`Inter`), glassmorphism cards, and buttons.
-2. **Step 2 (Page 1 - Home - `BE-36`):** Create `src/main/resources/static/index.html` with the Header, Kcal remaining hero, 4 KPI cards, Comparison Table, and Latest Entries panel.
-3. **Step 3 (Page 2 - Overview - `BE-41`):** Create `src/main/resources/static/overview.html` with the Monthly KPI cards and Charts container.
-4. **Step 4 (Page 3 - Goal - `BE-45`):** Create `src/main/resources/static/goal.html` with the `Goal Settings Panel` form.
-5. **Step 5 (REST Integration - `BE-40`, `BE-44`, `BE-47`):** Create `src/main/resources/static/js/app.js` to fetch data from `/api/entry` and `/api/goal`, handle form submissions, and update progress bars dynamically.
+1. **Step 1 (Design System - `FE-2`):** Open `src/main/resources/static/css/styles.css` and define the Figma variables (`:root`) for colors (`#05030d`, `#6417ff`), fonts (`Inter`), glassmorphism cards, and buttons.
+2. **Step 2 (Page 1 - Home - `FE-4`):** Create `src/main/resources/static/index.html` with the Header, Kcal remaining hero, 4 KPI cards, Comparison Table, and Latest Entries panel.
+3. **Step 3 (Page 2 - Overview - `FE-9`):** Create `src/main/resources/static/overview.html` with the Monthly KPI cards and Charts container.
+4. **Step 4 (Page 3 - Goal - `FE-13`):** Create `src/main/resources/static/goal.html` with the `Goal Settings Panel` form.
+5. **Step 5 (REST Integration - `FE-8`, `FE-12`, `FE-15`):** Create `src/main/resources/static/js/app.js` to fetch data from `/api/entry` and `/api/goal`, handle form submissions, and update progress bars dynamically.
