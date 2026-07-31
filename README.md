@@ -41,11 +41,6 @@ NutritionTracker is a Spring Boot application designed to help users log their d
 | ↳ `BE-29` | *Create Goal Controller* | REST (`GoalController.java`) | ✅ `Done` | Jul 29, 2026 |
 | ↳ `BE-30` | *Create Entry Controller* | REST (`EntryController.java`) | ✅ `Done` | Jul 29, 2026 |
 | **`BE-20`** | Get presentation ready | Project Delivery | ✅ `Done` | Jul 31, 2026 |
-| **`BE-28`** | Update `User` Entity & Schema for Google OAuth | Model & DB (`User.java`, `schema.sql`) | ✅ `Done` | Jul 31, 2026 |
-| **`BE-29`** | Refactor User DTOs & Mapper | DTO & Mapper Layer | ✅ `Done` | Jul 31, 2026 |
-| **`BE-30`** | Add Google OAuth2 Client Dependencies | Build Config (`pom.xml`) | ✅ `Done` | Aug 01, 2026 |
-| **`BE-31`** | Implement Google Auth Controller & Service | Logic (`UserService.java`, `UserController.java`) | ✅ `Done` | Aug 01, 2026 |
-| **`BE-32`** | Postman Verification for Google Auth Flow | QA & Testing | ✅ `Done` | Aug 02, 2026 |
 
 ---
 
@@ -66,24 +61,61 @@ During Sprint 1, two architectural questions were evaluated:
 
 ---
 
+## 🎨 Sprint 2: Front-End & Multi-Page Roadmap (Jira Board: Sprint2)
 
-## 🔮 Sprint 2 Preview & Future Considerations
+**Sprint Duration:** August 03, 2026 – August 17, 2026  
+**Goal:** Implement the Multi-Page Web Application matching the exact Figma design system ("CaloriesTrack Atomic Design v3") followed by Telegram Bot and OpenAI add-on integrations.
 
-**Planned Additions:** Week of August 3, 2026
+> 💡 **Design System Tokens (Figma Connected):**
+> - **Background:** `#05030d` (`--color-bg-dark`)
+> - **Brand Primary:** `#6417ff` (`--ct-color-brand-default`, hover: `#7c3aff`, soft: `#eee6ff`)
+> - **Glassmorphism:** `#15111ccc` (`backdrop-filter: blur(22px)`, shadow `#6417FF3D`)
+> - **Typography:** Google Font `Inter` (Display 56px, Headings 32px/30px/24px)
 
-### 🚀 Key Features & Ideas for Sprint 2:
-- **Telegram Bot Integration:**
-  - Setup and configure Telegram Bot Token.
-  - Establish seamless communication between Telegram Bot, Spring Boot API, and Web UI.
-- **OpenAI API Integration:**
-  - Enable natural language processing to log meals and track nutrition automatically via OpenAI text/voice parsing.
-  - Parse user messages into structured `Entry` and `Goal` records.
+### 📋 Sprint 2 Backlog & Tasks (Jira Parent / Epic: `Sprint2`)
+
+| Issue Key | Summary | Component | Status | Target Date |
+| :--- | :--- | :--- | :---: | :---: |
+| **`FE-1`** | **Design System & Global Layout Setup** | Frontend / Assets | ⏳ `In Progress` | Aug 03, 2026 |
+| ↳ `FE-2` | *Setup Figma Design Tokens CSS (`styles.css`)* | Styles (`css/styles.css`) | ⏳ `In Progress` | Aug 03, 2026 |
+| ↳ `FE-3` | *Build Shared Navigation Header (Logo, Links, User Selector)* | HTML Component | ⏳ `In Progress` | Aug 04, 2026 |
+| **`FE-4`** | **Page 1: Home / Daily Dashboard (`index.html`)** | Frontend / Page 1 | 📅 `To Do` | Aug 06, 2026 |
+| ↳ `FE-5` | *Build Kcal Remaining Hero & 4 Macro KPI Cards (`OverviewHPSmall`)* | UI Component | 📅 `To Do` | Aug 05, 2026 |
+| ↳ `FE-6` | *Build Goal vs Actual Comparison Table (`Comparison Table`)* | UI Component | 📅 `To Do` | Aug 05, 2026 |
+| ↳ `FE-7` | *Build Latest Entries Side Panel (`Latest Entries Panel`)* | UI Component | 📅 `To Do` | Aug 06, 2026 |
+| ↳ `FE-8` | *Connect Home page JS to REST API (`/api/entry`, `/api/goal`)* | JavaScript (`app.js`) | 📅 `To Do` | Aug 06, 2026 |
+| **`FE-9`** | **Page 2: Overview / Analytics Dashboard (`overview.html`)** | Frontend / Page 2 | 📅 `To Do` | Aug 09, 2026 |
+| ↳ `FE-10` | *Build Monthly Balance KPI Row Cards (`Overview KPI Card`)* | UI Component | 📅 `To Do` | Aug 08, 2026 |
+| ↳ `FE-11` | *Build Charts Container (Macro Distribution & Trend Line Charts)* | Charts Component | 📅 `To Do` | Aug 08, 2026 |
+| ↳ `FE-12` | *Connect Overview JS to Analytics REST Data* | JavaScript (`overview.js`) | 📅 `To Do` | Aug 09, 2026 |
+| **`FE-13`** | **Page 3: Set Goal Management (`goal.html`)** | Frontend / Page 3 | 📅 `To Do` | Aug 11, 2026 |
+| ↳ `FE-14` | *Build Goal Settings Panel Form (Calorie & Macro Inputs)* | UI Component | 📅 `To Do` | Aug 10, 2026 |
+| ↳ `FE-15` | *Connect Goal Form to `POST/PUT /api/goal` REST API* | JavaScript (`goal.js`) | 📅 `To Do` | Aug 11, 2026 |
+| **`EXT-1`** | **Add-on 1: Telegram Bot Integration** | Integration / Bot | 📅 `To Do` | Aug 14, 2026 |
+| ↳ `EXT-2` | *Register Telegram Bot & Handle `/start` Command* | Spring Boot Service | 📅 `To Do` | Aug 13, 2026 |
+| ↳ `EXT-3` | *Link Telegram Chat ID to User Account* | Service & DB | 📅 `To Do` | Aug 14, 2026 |
+| **`EXT-4`** | **Add-on 2: OpenAI Natural Language Parser** | Integration / AI | 📅 `To Do` | Aug 17, 2026 |
+| ↳ `EXT-5` | *Integrate OpenAI API for Voice/Text Meal Logging* | Service (`AIService.java`) | 📅 `To Do` | Aug 16, 2026 |
+| ↳ `EXT-6` | *Parse AI Response into Structured `EntryRequestDTO`* | AI Mapper | 📅 `To Do` | Aug 17, 2026 |
+
+---
+
+### 🗺️ Step-by-Step Execution Guide for Sprint 2
+
+To build this yourself step-by-step, follow this recommended sequence:
+
+1. **Step 1 (Design System):** Open `src/main/resources/static/css/styles.css` and define the Figma variables (`:root`) for colors (`#05030d`, `#6417ff`), fonts (`Inter`), glassmorphism cards, and buttons.
+2. **Step 2 (Page 1 - Home):** Create `src/main/resources/static/index.html` with the Header, Kcal remaining hero, 4 KPI cards, Comparison Table, and Latest Entries panel.
+3. **Step 3 (Page 2 - Overview):** Create `src/main/resources/static/overview.html` with the Monthly KPI cards and Charts container.
+4. **Step 4 (Page 3 - Goal):** Create `src/main/resources/static/goal.html` with the `Goal Settings Panel` form.
+5. **Step 5 (REST Integration):** Create `src/main/resources/static/js/app.js` to fetch data from `/api/entry` and `/api/goal`, handle form submissions, and update progress bars dynamically.
+6. **Step 6 (Add-ons):** Implement the Telegram Bot controller and OpenAI API integration services in Spring Boot.
 
 ---
 
 ## 📊 Database Architecture
 
-The database is built on PostgreSQL using **UUID** as Primary & Foreign Keys for enhanced security and unguessable URLs. Below is the domain & database model for **Sprint 1**.
+The database is built on PostgreSQL using **UUID** as Primary & Foreign Keys for enhanced security and unguessable URLs. Below is the domain & database model for **Sprint 1 & Sprint 2**.
 
 ### 1. Class Diagram (Java / JPA Domain Model)
 
@@ -187,6 +219,6 @@ erDiagram
   - `id`: `UUID PRIMARY KEY DEFAULT gen_random_uuid()`.
   - `user_id`: `UUID REFERENCES users(id) ON DELETE CASCADE`.
   - `meal_type`: Categorizes meals (`Breakfast`, `Lunch`, `Dinner`, `Snack`).
-  - `source`: Tracks entry origin (`Manual` web UI vs future integrations).
+  - `source`: Tracks entry origin (`Manual` web UI vs Telegram/OpenAI).
 
 The DDL SQL script is located at [`src/main/resources/schema.sql`](src/main/resources/schema.sql).
