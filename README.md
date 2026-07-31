@@ -4,14 +4,14 @@ NutritionTracker is a Spring Boot application designed to help users log their d
 
 ---
 
-## 🎯 Sprint 1: Back-End Roadmap (Jira Board: BE)
+## 🎯 Sprint 1: Back-End Roadmap (Jira Board: BE | Parent: `BE S1` - `BE-55`)
 
 **Sprint Duration:** July 27, 2026 – August 10, 2026  
 **Goal:** Implement core Spring Boot architecture (Entities, DTOs, Mappers, Repositories, Services, Controllers, and Database Schema).
 
 > 💡 **Architectural Decision:** Using DTOs (`RequestDTO` and `ResponseDTO`) along with dedicated `@Component` Mappers (`UserMapper`, `GoalMapper`, `EntryMapper`) to decouple the public API payload layer from JPA database entities.
 
-### 📋 Sprint 1 Backlog & Tasks (Jira Project: BE)
+### 📋 Sprint 1 Backlog & Tasks (Jira Project: `BE` | Parent Epic: `BE S1`)
 
 | Issue Key | Summary | Component | Status | Due Date |
 | :--- | :--- | :--- | :---: | :---: |
@@ -61,42 +61,40 @@ During Sprint 1, two architectural questions were evaluated:
 
 ---
 
-## 🎨 Sprint 2: Front-End & Multi-Page Roadmap (Jira Board: FE)
+## 🎨 Sprint 2: Front-End & Multi-Page Roadmap (Jira Board: `BE` | Parent: `FE S2` - `BE-54`)
 
 **Sprint Duration:** August 03, 2026 – August 17, 2026  
 **Goal:** Implement the Multi-Page Web Application matching the exact Figma design system ("CaloriesTrack Atomic Design v3") followed by Telegram Bot and OpenAI add-on integrations.
 
-> 💡 **Design System Tokens (Figma Connected):**
-> - **Background:** `#05030d` (`--color-bg-dark`)
-> - **Brand Primary:** `#6417ff` (`--ct-color-brand-default`, hover: `#7c3aff`, soft: `#eee6ff`)
-> - **Glassmorphism:** `#15111ccc` (`backdrop-filter: blur(22px)`, shadow `#6417FF3D`)
-> - **Typography:** Google Font `Inter` (Display 56px, Headings 32px/30px/24px)
+> 💡 **Single Project Workspace:** All Sprint 1 and Sprint 2 tasks live within Jira Project **`BE`** (`NutritionTracker`), organized cleanly under Parent Epics:
+> - **Sprint 1 Parent:** `BE S1` (`BE-55`)
+> - **Sprint 2 Parent:** `FE S2` (`BE-54`)
 
-### 📋 Sprint 2 Backlog & Live Jira Issues (Jira Cloud Project: `FE`)
+### 📋 Sprint 2 Backlog & Live Jira Issues (Jira Project: `BE` | Parent Epic: `FE S2` - `BE-54`)
 
-| Jira Key | Summary | Component | Status | Target Date |
-| :--- | :--- | :--- | :---: | :---: |
-| **`FE-1`** | **Design System & Global Layout Setup** | Frontend / Assets | ⏳ `In Progress` | Aug 03, 2026 |
-| ↳ `FE-2` | *Setup Figma Design Tokens CSS (`styles.css`)* | Styles (`css/styles.css`) | ⏳ `In Progress` | Aug 03, 2026 |
-| ↳ `FE-3` | *Build Shared Navigation Header Component* | HTML Component | ⏳ `In Progress` | Aug 04, 2026 |
-| **`FE-4`** | **Page 1: Home / Daily Dashboard (`index.html`)** | Frontend / Page 1 | 📅 `To Do` | Aug 06, 2026 |
-| ↳ `FE-5` | *Build Kcal Remaining Hero & 4 Macro KPI Cards* | UI Component | 📅 `To Do` | Aug 05, 2026 |
-| ↳ `FE-6` | *Build Goal vs Actual Comparison Table* | UI Component | 📅 `To Do` | Aug 05, 2026 |
-| ↳ `FE-7` | *Build Latest Entries Side Panel* | UI Component | 📅 `To Do` | Aug 06, 2026 |
-| ↳ `FE-8` | *Connect Home page JS to REST API* | JavaScript (`app.js`) | 📅 `To Do` | Aug 06, 2026 |
-| **`FE-9`** | **Page 2: Overview / Analytics Dashboard (`overview.html`)** | Frontend / Page 2 | 📅 `To Do` | Aug 09, 2026 |
-| ↳ `FE-10` | *Build Monthly Balance KPI Row Cards* | UI Component | 📅 `To Do` | Aug 08, 2026 |
-| ↳ `FE-11` | *Build Charts Container (Macro Distribution & Trend Charts)* | Charts Component | 📅 `To Do` | Aug 08, 2026 |
-| ↳ `FE-12` | *Connect Overview JS to Analytics REST Data* | JavaScript (`overview.js`) | 📅 `To Do` | Aug 09, 2026 |
-| **`FE-13`** | **Page 3: Set Goal Management (`goal.html`)** | Frontend / Page 3 | 📅 `To Do` | Aug 11, 2026 |
-| ↳ `FE-14` | *Build Goal Settings Panel Form* | UI Component | 📅 `To Do` | Aug 10, 2026 |
-| ↳ `FE-15` | *Connect Goal Form to REST API* | JavaScript (`goal.js`) | 📅 `To Do` | Aug 11, 2026 |
-| **`FE-16`** | **Add-on 1: Telegram Bot Integration** | Integration / Bot | 📅 `To Do` | Aug 14, 2026 |
-| ↳ `FE-17` | *Register Telegram Bot & Handle `/start` Command* | Spring Boot Service | 📅 `To Do` | Aug 13, 2026 |
-| ↳ `FE-18` | *Link Telegram Chat ID to User Account* | Service & DB | 📅 `To Do` | Aug 14, 2026 |
-| **`FE-19`** | **Add-on 2: OpenAI Natural Language Parser** | Integration / AI | 📅 `To Do` | Aug 17, 2026 |
-| ↳ `FE-20` | *Integrate OpenAI API for Voice/Text Meal Logging* | Service (`AIService.java`) | 📅 `To Do` | Aug 16, 2026 |
-| ↳ `FE-21` | *Parse AI Response into Structured `EntryRequestDTO`* | AI Mapper | 📅 `To Do` | Aug 17, 2026 |
+| Jira Key | Parent Epic | Summary | Component | Status | Target Date |
+| :--- | :---: | :--- | :--- | :---: | :---: |
+| **`BE-33`** | `FE S2` | **FE-1: Design System & Global Layout Setup** | Frontend / Assets | ⏳ `In Progress` | Aug 03, 2026 |
+| ↳ `BE-34` | `FE S2` | *FE-2: Setup Figma Design Tokens CSS (`styles.css`)* | Styles (`css/styles.css`) | ⏳ `In Progress` | Aug 03, 2026 |
+| ↳ `BE-35` | `FE S2` | *FE-3: Build Shared Navigation Header Component* | HTML Component | ⏳ `In Progress` | Aug 04, 2026 |
+| **`BE-36`** | `FE S2` | **FE-4: Page 1 - Home / Daily Dashboard (`index.html`)** | Frontend / Page 1 | 📅 `To Do` | Aug 06, 2026 |
+| ↳ `BE-37` | `FE S2` | *FE-5: Build Kcal Remaining Hero & 4 Macro KPI Cards* | UI Component | 📅 `To Do` | Aug 05, 2026 |
+| ↳ `BE-38` | `FE S2` | *FE-6: Build Goal vs Actual Comparison Table* | UI Component | 📅 `To Do` | Aug 05, 2026 |
+| ↳ `BE-39` | `FE S2` | *FE-7: Build Latest Entries Side Panel* | UI Component | 📅 `To Do` | Aug 06, 2026 |
+| ↳ `BE-40` | `FE S2` | *FE-8: Connect Home page JS to REST API* | JavaScript (`app.js`) | 📅 `To Do` | Aug 06, 2026 |
+| **`BE-41`** | `FE S2` | **FE-9: Page 2 - Overview / Analytics Dashboard (`overview.html`)** | Frontend / Page 2 | 📅 `To Do` | Aug 09, 2026 |
+| ↳ `BE-42` | `FE S2` | *FE-10: Build Monthly Balance KPI Row Cards* | UI Component | 📅 `To Do` | Aug 08, 2026 |
+| ↳ `BE-43` | `FE S2` | *FE-11: Build Charts Container (Macro Distribution & Trend)* | Charts Component | 📅 `To Do` | Aug 08, 2026 |
+| ↳ `BE-44` | `FE S2` | *FE-12: Connect Overview JS to Analytics REST Data* | JavaScript (`overview.js`) | 📅 `To Do` | Aug 09, 2026 |
+| **`BE-45`** | `FE S2` | **FE-13: Page 3 - Set Goal Management (`goal.html`)** | Frontend / Page 3 | 📅 `To Do` | Aug 11, 2026 |
+| ↳ `BE-46` | `FE S2` | *FE-14: Build Goal Settings Panel Form* | UI Component | 📅 `To Do` | Aug 10, 2026 |
+| ↳ `BE-47` | `FE S2` | *FE-15: Connect Goal Form to REST API* | JavaScript (`goal.js`) | 📅 `To Do` | Aug 11, 2026 |
+| **`BE-48`** | `FE S2` | **EXT-1: Add-on 1 - Telegram Bot Integration** | Integration / Bot | 📅 `To Do` | Aug 14, 2026 |
+| ↳ `BE-49` | `FE S2` | *EXT-2: Register Telegram Bot & Handle `/start` Command* | Spring Boot Service | 📅 `To Do` | Aug 13, 2026 |
+| ↳ `BE-50` | `FE S2` | *EXT-3: Link Telegram Chat ID to User Account* | Service & DB | 📅 `To Do` | Aug 14, 2026 |
+| **`BE-51`** | `FE S2` | **EXT-4: Add-on 2 - OpenAI Natural Language Parser** | Integration / AI | 📅 `To Do` | Aug 17, 2026 |
+| ↳ `BE-52` | `FE S2` | *EXT-5: Integrate OpenAI API for Voice/Text Meal Logging* | Service (`AIService.java`) | 📅 `To Do` | Aug 16, 2026 |
+| ↳ `BE-53` | `FE S2` | *EXT-6: Parse AI Response into Structured `EntryRequestDTO`* | AI Mapper | 📅 `To Do` | Aug 17, 2026 |
 
 ---
 
@@ -104,12 +102,12 @@ During Sprint 1, two architectural questions were evaluated:
 
 To build this yourself step-by-step, follow this recommended sequence:
 
-1. **Step 1 (Design System - `FE-2`):** Open `src/main/resources/static/css/styles.css` and define the Figma variables (`:root`) for colors (`#05030d`, `#6417ff`), fonts (`Inter`), glassmorphism cards, and buttons.
-2. **Step 2 (Page 1 - Home - `FE-4`):** Create `src/main/resources/static/index.html` with the Header, Kcal remaining hero, 4 KPI cards, Comparison Table, and Latest Entries panel.
-3. **Step 3 (Page 2 - Overview - `FE-9`):** Create `src/main/resources/static/overview.html` with the Monthly KPI cards and Charts container.
-4. **Step 4 (Page 3 - Goal - `FE-13`):** Create `src/main/resources/static/goal.html` with the `Goal Settings Panel` form.
-5. **Step 5 (REST Integration - `FE-8`, `FE-12`, `FE-15`):** Create `src/main/resources/static/js/app.js` to fetch data from `/api/entry` and `/api/goal`, handle form submissions, and update progress bars dynamically.
-6. **Step 6 (Add-ons - `FE-16` & `FE-19`):** Implement the Telegram Bot controller and OpenAI API integration services in Spring Boot.
+1. **Step 1 (Design System - `BE-34`):** Open `src/main/resources/static/css/styles.css` and define the Figma variables (`:root`) for colors (`#05030d`, `#6417ff`), fonts (`Inter`), glassmorphism cards, and buttons.
+2. **Step 2 (Page 1 - Home - `BE-36`):** Create `src/main/resources/static/index.html` with the Header, Kcal remaining hero, 4 KPI cards, Comparison Table, and Latest Entries panel.
+3. **Step 3 (Page 2 - Overview - `BE-41`):** Create `src/main/resources/static/overview.html` with the Monthly KPI cards and Charts container.
+4. **Step 4 (Page 3 - Goal - `BE-45`):** Create `src/main/resources/static/goal.html` with the `Goal Settings Panel` form.
+5. **Step 5 (REST Integration - `BE-40`, `BE-44`, `BE-47`):** Create `src/main/resources/static/js/app.js` to fetch data from `/api/entry` and `/api/goal`, handle form submissions, and update progress bars dynamically.
+6. **Step 6 (Add-ons - `BE-48` & `BE-51`):** Implement the Telegram Bot controller and OpenAI API integration services in Spring Boot.
 
 ---
 
