@@ -9,7 +9,7 @@ import java.util.UUID;
 public interface UserRepository extends JpaRepository <User, UUID> {
 
     // To find a user by email when log in
-    Optional<User> findByEmail(String email);
+    Optional<User> findByEmail(String email); // to make request with a legible identifier, if I want to show the email instead of Google id
 
     Optional<User> findByGoogleId(String googleId);
 

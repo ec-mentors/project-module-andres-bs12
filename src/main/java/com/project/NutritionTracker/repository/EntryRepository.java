@@ -12,5 +12,10 @@ public interface EntryRepository extends JpaRepository<Entry, UUID> {
 
     List<Entry> findByUser(User user);
 
+
+    // This method is a sql request
+    // SELECT * FROM entry
+    // WHERE user_id = 'n'
+    //  AND created_on BETWEEN 'date' AND 'date';
     List<Entry> findByUserAndCreatedOnBetween(User user, LocalDateTime start, LocalDateTime end);
 }

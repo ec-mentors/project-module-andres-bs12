@@ -15,5 +15,5 @@ public interface GoalRepository extends JpaRepository<Goal, UUID> {
     // To find a goal by user and date
     public Optional<Goal> findByUserAndStartDate(User user, LocalDate startDare);
 
-    List<Goal> findAllByUser(User user);
+    List<Goal> findAllByUser(User user); // for now just to check if the goals are being saved
 }

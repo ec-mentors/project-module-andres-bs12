@@ -27,22 +27,23 @@ public class UserService {
         this.mapper = mapper;
     }
 
-    public UserResponseDTO createUser(UserRequestDTO dto) {
-
-        if (dto == null) {
-            return null;
-        }
-
-        if (repository.findByEmail(dto.getEmail()).isPresent()) {
-            throw new RuntimeException("Email already register, Log in");
-        }
-
-        // Here ios possible to do it directly because User is a main entity, do not depend on anything else I have to assign,for example
-        // the other entities needed and assigned user "manually". User has already all the data needed, and the date is created on the mapper
-        User user = mapper.toEntity(dto);
-
-        return mapper.toResponseDTO(repository.save(user));
-    }
+    // Old version
+//    public UserResponseDTO createUser(UserRequestDTO dto) {
+//
+//        if (dto == null) {
+//            return null;
+//        }
+//
+//        if (repository.findByEmail(dto.getEmail()).isPresent()) {
+//            throw new RuntimeException("Email already register, Log in");
+//        }
+//
+//        // Here ios possible to do it directly because User is a main entity, do not depend on anything else I have to assign,for example
+//        // the other entities needed and assigned user "manually". User has already all the data needed, and the date is created on the mapper
+//        User user = mapper.toEntity(dto);
+//
+//        return mapper.toResponseDTO(repository.save(user));
+//    }
 
 
     public UserResponseDTO findByEmail(String email) {
@@ -91,6 +92,8 @@ public class UserService {
                 .toList();
     }
 
+    // This is like my login process, user exist then log in, doesn't exist then create it
+    // This will get the data verified from the method "verifyAndProcessGoogleToken"
     public UserResponseDTO processGoogleAuth(UserRequestDTO dto) {
 
         if (dto == null || dto.getGoogleId() == null) {
@@ -136,7 +139,7 @@ public class UserService {
             // get the payload object with the auth data from google
             GoogleIdToken.Payload payload = idToken.getPayload();
 
-
+            // This is a request since will be sent to another method not to the user yet.
             UserRequestDTO dto = new UserRequestDTO();
 
             // Subject in JWT contains the identifier. (googleId)

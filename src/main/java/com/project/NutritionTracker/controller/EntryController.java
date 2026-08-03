@@ -57,6 +57,4 @@ public class EntryController {
         return ResponseEntity.ok(service.updateEntry(entryId, dto));
     }
 
-
-
 }

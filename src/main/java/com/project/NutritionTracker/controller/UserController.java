@@ -24,13 +24,17 @@ public class UserController {
         this.service = service;
     }
 
-    // Controller not conected to google verification yet for testable reasons.
+    // Response entity represents the complete HTTP response sent back to the client
+
+    // Controller not connected to google verification yet for testable reasons.
     // To make it work with Google, the method 'processGoogleAuth' should be called instead of 'processGoogleAuth'
+
+    // Request body, it's expecting a json object to be sent as key value
     @PostMapping("/auth/google")
     public ResponseEntity<UserResponseDTO> authWithGoogle(@RequestBody UserRequestDTO dto) {
-        UserResponseDTO response = service.processGoogleAuth(dto);
+        UserResponseDTO response = service.processGoogleAuth(dto); // not auth yet
 
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(response); // code 200, converts java object to json
     }
 
 
@@ -40,10 +44,11 @@ public class UserController {
     @GetMapping("/search")
     public ResponseEntity<UserResponseDTO> findByEmail(@RequestParam String email) {
         UserResponseDTO user = service.findByEmail(email);
-        return ResponseEntity.ok(user); // Code 200. Automatically generated with .ok
+        return ResponseEntity.ok(user); // Code 200. Automatically generated with .ok java object converted to json
     }
 
     // Path variable to use the variable inside mapping
+    // PathVariable -> to identify unique resources,
     @GetMapping("/{id}")
     public ResponseEntity<UserResponseDTO> findById(@PathVariable UUID id) {
         UserResponseDTO user = service.findById(id);
@@ -56,7 +61,7 @@ public class UserController {
             @RequestBody UserRequestDTO dto) { // Since this one is a json object
         UserResponseDTO user = service.updateUser(id, dto);
 
-        return ResponseEntity.ok(user);
+        return ResponseEntity.ok(user); // code 200 // object to json
     }
 
     @GetMapping()

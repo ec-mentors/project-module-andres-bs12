@@ -51,7 +51,7 @@ public class GoalService {
 
     public GoalResponseDTO updateGoal(UUID id, GoalRequestDTO dto) {
         Goal goal = repository.findById(id).orElseThrow(() -> new NotFoundException("Goal not found"));
-
+        // Doesn't update the user
         goal.setCarbs(dto.getCarbs());
         goal.setFat(dto.getFat());
         goal.setKcal(dto.getKcal());
