@@ -41,6 +41,12 @@ NutritionTracker is a Spring Boot application designed to help users log their d
 | ↳ `NT-29` | *Create Goal Controller* | REST (`GoalController.java`) | ✅ `Done` | Jul 29, 2026 |
 | ↳ `NT-30` | *Create Entry Controller* | REST (`EntryController.java`) | ✅ `Done` | Jul 29, 2026 |
 | **`NT-20`** | Get presentation ready | Project Delivery | ✅ `Done` | Jul 31, 2026 |
+| **`NT-65`** | BE Testing Setup & Verification | Back-End Testing | 📅 `To Do` | Aug 05, 2026 |
+| ↳ `NT-66` | *Setup H2 Test DB Config* | Test Config (`pom.xml`) | 📅 `To Do` | Aug 03, 2026 |
+| ↳ `NT-67` | *Create UserRepositoryTest* | Repository Test (`@DataJpaTest`) | 📅 `To Do` | Aug 04, 2026 |
+| ↳ `NT-68` | *Create GoalRepositoryTest* | Repository Test (`@DataJpaTest`) | 📅 `To Do` | Aug 04, 2026 |
+| ↳ `NT-69` | *Create EntryRepositoryTest* | Repository Test (`@DataJpaTest`) | 📅 `To Do` | Aug 04, 2026 |
+| ↳ `NT-70` | *Create Service Layer Unit Tests* | Service Test (`Mockito`) | 📅 `To Do` | Aug 05, 2026 |
 
 ---
 
@@ -61,7 +67,7 @@ During Sprint 1, two architectural questions were evaluated:
 
 ---
 
-## 🎨 Sprint 2: Front-End Roadmap (Jira Project: NT | Parent Epic: `FE S2` - `NT-54`)
+## 🎨 Sprint 2: Front-End Roadmap (Jira Project: NT | Parent Epic: `FE S2` - `NT-71`)
 
 **Sprint Duration:** August 03, 2026 – August 17, 2026  
 **Goal:** Implement the Multi-Page Web Application matching the exact Figma design system ("CaloriesTrack Atomic Design v3").
