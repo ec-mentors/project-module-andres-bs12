@@ -18,12 +18,19 @@ Task tracking and sprint planning are managed natively via **GitHub Issues & Git
 
 ## 🎯 Sprint Overview
 
-### 🎨 **Sprint 2: Front-End & Security (Aug 03 – Aug 17, 2026)**
-- **Goal:** Build the Multi-Page Web Interface matching the Figma design system ("CaloriesTrack Atomic Design v3") and implement Spring Security user data ownership validation.
-- **Key Modules:**
-  - `NT-74`: Refactor Boilerplate DTOs with Java Records & MapStruct (✅ `Done`)
-  - `NT-73`: User Data Ownership Security & IDOR Protection (📅 `To Do`)
-  - `NT-33` to `NT-47`: Front-End Layout, Dashboards, Goal Management & REST Client (`app.js`).
+### 🔒 **Sprint 2: DTO Refactoring & Security Ownership (Aug 03 – Aug 10, 2026)**
+- **Goal:** Modernize DTO layer and implement Spring Security user data ownership validation.
+- **Tasks & Milestone:** `Milestone: Sprint2`
+  - Refactor Boilerplate DTOs with Java Records & MapStruct (✅ `Done` - Issue #12)
+  - Investigate and Implement User Data Ownership Security / IDOR Protection (📅 `To Do` - Issue #11)
+
+### 🎨 **Sprint 3: Front-End Architecture & REST Client (Aug 10 – Aug 24, 2026)**
+- **Goal:** Build the Multi-Page Web Interface matching the Figma design system ("CaloriesTrack Atomic Design v3") and connect UI components to REST API endpoints.
+- **Tasks & Milestone:** `Milestone: Sprint3`
+  - Design System, Figma Design Tokens (`styles.css`), Header & Layout Components (Issues #14 - #16)
+  - Page 1: Home / Daily Dashboard & Kcal Hero, Macro Cards, Comparison Table, Side Panel (Issues #17 - #21)
+  - Page 2: Overview / Analytics Dashboard, Monthly Balance KPI, Charts Container (Issues #22 - #25)
+  - Page 3: Goal Settings Panel Form & REST API Client Integration (Issues #26 - #28)
 
 ### ⚙️ **Sprint 1: Back-End Core (Jul 27 – Aug 10, 2026)**
 - **Goal:** Core Spring Boot architecture (Entities, DTOs, Mappers, Repositories, Services, Controllers, and PostgreSQL Schema).
