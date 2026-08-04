@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: GitHub Project Board & Roadmap
+    url: https://github.com/orgs/ec-mentors/projects
+    about: Track active sprints, task statuses, and project milestones interactively.

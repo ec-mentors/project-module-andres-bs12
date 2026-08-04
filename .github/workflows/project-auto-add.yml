@@ -1,0 +1,19 @@
+name: 📌 Auto Add Issues to GitHub Project & Labeling
+
+on:
+  issues:
+    types: [opened, labeled]
+  pull_request:
+    types: [opened]
+
+jobs:
+  track_issue:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      pull-requests: write
+    steps:
+      - name: Log Task Creation
+        run: |
+          echo "New issue or PR detected: ${{ github.event.issue.title || github.event.pull_request.title }}"
+          echo "Task URL: ${{ github.event.issue.html_url || github.event.pull_request.html_url }}"

@@ -1,0 +1,46 @@
+name: 🚀 Feature Task / User Story
+description: Propose a new feature, backend capability, or frontend task.
+title: "[TASK]: "
+labels: ["enhancement", "sprint-task"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to fill out this task template!
+  - type: input
+    id: component
+    attributes:
+      label: Component / Layer
+      description: e.g., Backend, Frontend, Security, DTO, Database, REST API
+      placeholder: e.g., Backend / Security
+    validations:
+      required: true
+  - type: dropdown
+    id: sprint
+    attributes:
+      label: Target Sprint
+      options:
+        - Sprint 2 (Front-End & Security)
+        - Sprint 1 (Back-End Core)
+        - Backlog / Future
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: Task Description
+      description: Provide a clear and detailed description of the work to be performed.
+      placeholder: Describe what needs to be built or refactored...
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance_criteria
+    attributes:
+      label: Acceptance Criteria
+      description: List the criteria that must be satisfied for this task to be considered DONE.
+      placeholder: |
+        - [ ] Criterion 1
+        - [ ] Criterion 2
+        - [ ] Unit/Integration tests pass
+    validations:
+      required: false
