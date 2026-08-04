@@ -1,10 +1,8 @@
 name: 🔄 Jira <-> GitHub Bidirectional Sync
 
 on:
-  issues:
-    types: [opened, edited, closed, reopened, labeled, unlabeled]
   schedule:
-    - cron: '*/15 * * * *'
+    - cron: '*/30 * * * *'
   workflow_dispatch:
 
 jobs:
