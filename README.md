@@ -78,6 +78,8 @@ During Sprint 1, two architectural questions were evaluated:
 
 | Issue Key | Summary | Component | Status | Due Date |
 | :--- | :--- | :--- | :---: | :---: |
+| **`NT-74`** | Refactor Boilerplate DTOs with Java Records & MapStruct | Back-End / DTOs | ✅ `Done` | Aug 04, 2026 |
+| **`NT-73`** | Investigate & Implement User Data Ownership Security (IDOR Protection) | Back-End / Security | 📅 `To Do` | Aug 07, 2026 |
 | **`NT-33`** | Design System & Global Layout Setup | Frontend / Assets | ⏳ `In Progress` | Aug 03, 2026 |
 | ↳ `NT-34` | *Setup Figma Design Tokens CSS (`styles.css`)* | Styles (`css/styles.css`) | ⏳ `In Progress` | Aug 03, 2026 |
 | ↳ `NT-35` | *Build Shared Navigation Header Component* | HTML Component | ⏳ `In Progress` | Aug 04, 2026 |
