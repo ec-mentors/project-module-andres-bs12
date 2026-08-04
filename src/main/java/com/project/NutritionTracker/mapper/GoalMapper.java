@@ -14,5 +14,5 @@ public interface GoalMapper {
     @Mapping(target = "user", ignore = true)
     Goal toEntity(GoalRequestDTO dto);
 
-    public GoalResponseDTO toResponseDTO(Goal goal);
+    GoalResponseDTO toResponseDTO(Goal goal);
 }
