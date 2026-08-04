@@ -9,7 +9,7 @@ NutritionTracker is a modern Spring Boot & Web application designed to help user
 Task tracking and sprint planning are managed natively via **GitHub Issues & GitHub Projects** (v2) and synchronized with **Jira Cloud**.
 
 * 🚀 **[View Live GitHub Issues & Backlog](https://github.com/ec-mentors/project-module-andres-bs12/issues)**
-* 📊 **[View Interactive GitHub Project Board](https://github.com/orgs/ec-mentors/projects)**
+* 📊 **[View Interactive GitHub Project Board (NutritionTracker Board)](https://github.com/users/andres-bs12/projects/3)**
 * 🎯 **Jira Cloud Integration:** Project Key `NT`
 
 > 💡 **Task Tracking Workflow:** New features, refactoring, and bug reports are created directly via GitHub Issue Templates (`.github/ISSUE_TEMPLATE`) or GitHub CLI (`gh issue create`). Status changes, pull request merges, and iteration movements update automatically.
