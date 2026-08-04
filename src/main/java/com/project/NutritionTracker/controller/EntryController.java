@@ -34,7 +34,7 @@ public class EntryController {
             @RequestBody EntryRequestDTO dto) {
 
         EntryResponseDTO created = service.createEntry(dto, userId);
-        return ResponseEntity.created(URI.create("/api/entry/" + created.getId())).body(created);
+        return ResponseEntity.created(URI.create("/api/entry/" + created.id())).body(created);
     }
 
     @DeleteMapping("/{userId}")

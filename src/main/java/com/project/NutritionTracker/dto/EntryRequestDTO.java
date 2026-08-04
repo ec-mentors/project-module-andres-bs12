@@ -4,13 +4,13 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
-public class EntryRequestDTO {
-    private String mealName;
-    private Integer kcal;
-    private Double carbs;
-    private Double fat;
-    private Double protein;
-}
+
+public record EntryRequestDTO (
+     String mealName,
+     Integer kcal,
+     Double carbs,
+     Double fat,
+     Double protein
+)
+{}
+

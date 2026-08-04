@@ -10,6 +10,7 @@ import com.project.NutritionTracker.repository.EntryRepository;
 import com.project.NutritionTracker.repository.UserRepository;
 import org.springframework.stereotype.Service;
 
+import java.security.Timestamp;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -44,6 +45,7 @@ public class EntryService {
         Entry entry = mapper.toEntity(dto);
 
         entry.setUser(user);
+        entry.setCreatedOn(LocalDateTime.now());
         Entry savedEntry = repository.save(entry);
         return mapper.toResponseDTO(savedEntry);
     }
@@ -79,11 +81,11 @@ public class EntryService {
 
         Entry entry = repository.findById(id).orElseThrow(() -> new NotFoundException("Entry not found"));
 
-        entry.setCarbs(dto.getCarbs());
-        entry.setFat(dto.getFat());
-        entry.setMealName(dto.getMealName());
-        entry.setProtein(dto.getProtein());
-        entry.setKcal(dto.getKcal());
+        entry.setCarbs(dto.carbs());
+        entry.setFat(dto.fat());
+        entry.setMealName(dto.mealName());
+        entry.setProtein(dto.protein());
+        entry.setKcal(dto.kcal());
 
         repository.save(entry);
 
