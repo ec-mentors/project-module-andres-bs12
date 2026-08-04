@@ -3,41 +3,16 @@ package com.project.NutritionTracker.mapper;
 import com.project.NutritionTracker.dto.GoalRequestDTO;
 import com.project.NutritionTracker.dto.GoalResponseDTO;
 import com.project.NutritionTracker.model.Goal;
-import org.springframework.stereotype.Component;
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
 
-import java.time.LocalDate;
+@Mapper(componentModel = "spring")
+public interface GoalMapper {
 
-@Component
-public class GoalMapper {
+    @Mapping(target = "startDate", ignore = true)
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "user", ignore = true)
+    Goal toEntity(GoalRequestDTO dto);
 
-    public Goal toEntity(GoalRequestDTO dto) {
-        if (dto == null) {
-            return null;
-        }
-
-        Goal goal = new Goal();
-
-        goal.setCarbs(dto.getCarbs());
-        goal.setFat(dto.getFat());
-        goal.setKcal(dto.getKcal());
-        goal.setProtein(dto.getProtein());
-        goal.setStartDate(LocalDate.now());
-        return goal;
-    }
-
-    public GoalResponseDTO toResponseDTO(Goal goal) {
-        if (goal == null) {
-            return null;
-        }
-
-        GoalResponseDTO dto = new GoalResponseDTO();
-
-        dto.setId(goal.getId());
-        dto.setCarbs(goal.getCarbs());
-        dto.setFat(goal.getFat());
-        dto.setKcal(goal.getKcal());
-        dto.setProtein(goal.getProtein());
-        dto.setStartDate(goal.getStartDate());
-        return dto;
-    }
+    GoalResponseDTO toResponseDTO(Goal goal);
 }

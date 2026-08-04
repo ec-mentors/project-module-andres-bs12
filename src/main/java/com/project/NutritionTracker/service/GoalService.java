@@ -36,14 +36,10 @@ public class GoalService {
         }
 
         User user = uRepository.findById(userId).orElseThrow(() -> new NotFoundException("User not found with id: " + userId));
-        Goal goal = new Goal();
+        Goal goal = mapper.toEntity(dto);
 
-        goal.setCarbs(dto.getCarbs());
-        goal.setProtein(dto.getProtein());
-        goal.setStartDate(LocalDate.now());
-        goal.setKcal(dto.getKcal());
-        goal.setFat(dto.getFat());
         goal.setUser(user);
+        goal.setStartDate(LocalDate.now());
 
         return mapper.toResponseDTO(repository.save(goal));
     }
@@ -52,11 +48,11 @@ public class GoalService {
     public GoalResponseDTO updateGoal(UUID id, GoalRequestDTO dto) {
         Goal goal = repository.findById(id).orElseThrow(() -> new NotFoundException("Goal not found"));
         // Doesn't update the user
-        goal.setCarbs(dto.getCarbs());
-        goal.setFat(dto.getFat());
-        goal.setKcal(dto.getKcal());
+        goal.setCarbs(dto.carbs());
+        goal.setFat(dto.fat());
+        goal.setKcal(dto.kcal());
         goal.setStartDate(LocalDate.now());
-        goal.setProtein(dto.getProtein());
+        goal.setProtein(dto.protein());
 
         return mapper.toResponseDTO(repository.save(goal));
     }

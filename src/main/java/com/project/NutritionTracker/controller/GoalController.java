@@ -30,7 +30,7 @@ public class GoalController {
             @PathVariable UUID userId) {
         GoalResponseDTO created = service.createGoal(dto, userId);
 
-        return ResponseEntity.created(URI.create("/api/goal/" + created.getId())).body(created); // code 201, converted to json
+        return ResponseEntity.created(URI.create("/api/goal/" + created.id())).body(created); // code 201, converted to json
     }
 
     @PutMapping("/{goalId}")

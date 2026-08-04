@@ -12,6 +12,7 @@ import com.project.NutritionTracker.model.User;
 import com.project.NutritionTracker.repository.UserRepository;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -26,25 +27,6 @@ public class UserService {
         this.repository = repository;
         this.mapper = mapper;
     }
-
-    // Old version
-//    public UserResponseDTO createUser(UserRequestDTO dto) {
-//
-//        if (dto == null) {
-//            return null;
-//        }
-//
-//        if (repository.findByEmail(dto.getEmail()).isPresent()) {
-//            throw new RuntimeException("Email already register, Log in");
-//        }
-//
-//        // Here ios possible to do it directly because User is a main entity, do not depend on anything else I have to assign,for example
-//        // the other entities needed and assigned user "manually". User has already all the data needed, and the date is created on the mapper
-//        User user = mapper.toEntity(dto);
-//
-//        return mapper.toResponseDTO(repository.save(user));
-//    }
-
 
     public UserResponseDTO findByEmail(String email) {
         if (email == null) {
@@ -79,8 +61,8 @@ public class UserService {
 
     public UserResponseDTO updateUser(UUID id, UserRequestDTO dto) {
         User user = repository.findById(id).orElseThrow(() -> new NotFoundException("User not found"));
-        user.setFirstName(dto.getFirstName());
-        user.setLastName(dto.getLastName());
+        user.setFirstName(dto.firstName());
+        user.setLastName(dto.lastName());
         return mapper.toResponseDTO(repository.save(user));
     }
 
@@ -96,17 +78,20 @@ public class UserService {
     // This will get the data verified from the method "verifyAndProcessGoogleToken"
     public UserResponseDTO processGoogleAuth(UserRequestDTO dto) {
 
-        if (dto == null || dto.getGoogleId() == null) {
+        if (dto == null || dto.googleId() == null) {
             throw new IllegalArgumentException("Invalid Google authentication payload");
         }
 
-        Optional<User> existingUser = repository.findByGoogleId(dto.getGoogleId());
+        Optional<User> existingUser = repository.findByGoogleId(dto.googleId());
 
         if (existingUser.isPresent()) {
             return mapper.toResponseDTO(existingUser.get());
         }
 
         User newuser = mapper.toEntity(dto);
+
+        // set the time
+        newuser.setCreatedAt(LocalDateTime.now());
         return mapper.toResponseDTO(repository.save(newuser));
     }
 
@@ -139,14 +124,12 @@ public class UserService {
             // get the payload object with the auth data from google
             GoogleIdToken.Payload payload = idToken.getPayload();
 
-            // This is a request since will be sent to another method not to the user yet.
-            UserRequestDTO dto = new UserRequestDTO();
-
-            // Subject in JWT contains the identifier. (googleId)
-            dto.setGoogleId(payload.getSubject());
-            dto.setEmail(payload.getEmail());
-            dto.setFirstName((String) payload.get("given_name"));
-            dto.setLastName((String) payload.get("family_name"));
+            UserRequestDTO dto = new UserRequestDTO(
+                (String) payload.get("given_name"),
+                (String) payload.get("family_name"),
+                payload.getEmail(),
+                payload.getSubject()
+            );
 
             // Now if the token works, will be sent to this method.
             return processGoogleAuth(dto);

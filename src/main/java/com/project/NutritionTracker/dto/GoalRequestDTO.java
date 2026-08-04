@@ -4,12 +4,10 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
-public class GoalRequestDTO {
-    private Integer kcal;
-    private Double carbs;
-    private Double fat;
-    private Double protein;
-}
+
+public record GoalRequestDTO (
+        Integer kcal,
+    Double carbs,
+    Double fat,
+    Double protein
+) {}
