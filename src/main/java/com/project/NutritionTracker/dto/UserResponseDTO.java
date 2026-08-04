@@ -1,10 +1,12 @@
 package com.project.NutritionTracker.dto;
 
-import lombok.*;
-
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+// Record is a container of immutable data
+// create constructor with all parameters
+// create getters .kcal...
+// generate methods
 public record UserResponseDTO (
     String firstName,
     UUID id,

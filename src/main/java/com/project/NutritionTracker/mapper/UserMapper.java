@@ -6,6 +6,7 @@ import com.project.NutritionTracker.model.User;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
+
 @Mapper(componentModel = "spring")
 public interface UserMapper {
 
