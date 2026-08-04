@@ -1,0 +1,31 @@
+name: 🔄 Jira <-> GitHub Bidirectional Sync
+
+on:
+  issues:
+    types: [opened, edited, closed, reopened, labeled, unlabeled]
+  schedule:
+    - cron: '*/15 * * * *'
+  workflow_dispatch:
+
+jobs:
+  sync:
+    name: Sync Jira and GitHub Tasks
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Execute Bidirectional Sync Script
+        env:
+          JIRA_URL: ${{ secrets.JIRA_URL || 'https://abspersonal12.atlassian.net' }}
+          JIRA_EMAIL: ${{ secrets.JIRA_EMAIL || 'abs.personal12@gmail.com' }}
+          JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
+          JIRA_PROJECT_KEY: ${{ secrets.JIRA_PROJECT_KEY || 'NT' }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          python3 scripts/sync_jira_github.py
