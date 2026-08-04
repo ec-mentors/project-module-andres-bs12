@@ -1,19 +1,18 @@
-name: 📌 Auto Add Issues to GitHub Project & Labeling
+name: 📌 Auto Add Issues to GitHub Project
 
 on:
   issues:
-    types: [opened, labeled]
+    types: [opened]
   pull_request:
     types: [opened]
 
 jobs:
-  track_issue:
+  add-to-project:
+    name: Add issue to project board
     runs-on: ubuntu-latest
-    permissions:
-      issues: write
-      pull-requests: write
     steps:
-      - name: Log Task Creation
-        run: |
-          echo "New issue or PR detected: ${{ github.event.issue.title || github.event.pull_request.title }}"
-          echo "Task URL: ${{ github.event.issue.html_url || github.event.pull_request.html_url }}"
+      - name: Add to Project
+        uses: actions/add-to-project@v1
+        with:
+          project-url: https://github.com/users/andres-bs12/projects/3
+          github-token: ${{ secrets.GITHUB_TOKEN }}
