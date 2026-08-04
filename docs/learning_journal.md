@@ -4,6 +4,34 @@ This document serves as a development and learning journal to record key concept
 
 ---
 
+## 📅 2026-08-04 - Refactoring DTO Boilerplate: Java Records, MapStruct Automation & Spring Security Ownership
+
+### 💡 Key Concepts Learned & Architectural Discussions
+
+1. **Java Records (Java 14+) for In-Memory DTOs:**
+   - Migrated all Request and Response DTOs (`UserRequestDTO`, `UserResponseDTO`, `GoalRequestDTO`, `GoalResponseDTO`, `EntryRequestDTO`, `EntryResponseDTO`) from Lombok POJOs (`@Data`) to native **Java Records**.
+   - Records are immutable, transparent data carriers declared in a single line (e.g. `public record UserRequestDTO(String firstName, String lastName, String email, String googleId) {}`).
+   - Replaced getter naming conventions from JavaBeans style (`dto.getFirstName()`) to record accessor syntax (`dto.firstName()`).
+
+2. **Automated Compile-Time Mapping with MapStruct:**
+   - Replaced manual setter/getter translation classes with MapStruct declarative interfaces (`@Mapper(componentModel = "spring")`).
+   - MapStruct generates high-performance Java implementation code (`GoalMapperImpl.java`) at compile-time without reflection overhead.
+   - Configured `pom.xml` using `mapstruct`, `mapstruct-processor`, and `lombok-mapstruct-binding` for seamless compatibility between Lombok `@Entity` classes and MapStruct DTO interfaces.
+   - Used `@Mapping(target = "...", ignore = true)` to explicitly declare fields generated server-side (`id`, `createdAt`, `startDate`, `user`) versus client-supplied fields.
+
+3. **Layered Architecture & Responsibilities (DTO vs. Entity vs. Service):**
+   - **`RequestDTO` (Input Shield):** Accepts strictly client-permitted parameters, preventing clients from forging primary keys (`id`) or dates (`createdAt`).
+   - **`ResponseDTO` (Output Security Filter):** Guarantees that internal database state or sensitive fields are never exposed to external HTTP clients.
+   - **`@Entity` (Persistence Layer):** Maps PostgreSQL tables, primary keys (`UUID`), unique constraints, and foreign key relationships (`@ManyToOne`).
+   - **`@Service` (Business Brain):** Orchestrates database lookups, applies server-side timestamps (`LocalDateTime.now()`), and delegates pure data conversion to MapStruct (`mapper.toEntity(dto)`).
+
+4. **Spring Security Ownership Validation & IDOR Prevention:**
+   - Evaluated **IDOR** (*Insecure Direct Object References*) risks where users could attempt to modify resources belonging to others by manipulating URL path variables (`PUT /api/goal/{id}`).
+   - Explored Spring Security `@PreAuthorize` method security with custom evaluation beans (`@goalSecurity.isOwner(#id, authentication)`).
+   - Demonstrated how pre-authorization interceptors reject unauthorized access with HTTP `403 Forbidden` prior to executing service layer business logic.
+
+---
+
 ## 📅 2026-07-30 - Identity Linking Architecture, JPA `@Column` Deep-Dive & Conventional Commits
 
 ### 💡 Key Concepts Learned & Architectural Discussions
