@@ -44,8 +44,6 @@ def jira_request(endpoint, method='GET', payload=None):
             return json.loads(content) if content else {}
     except Exception as e:
         print(f"Jira API error ({method} {endpoint}): {e}")
-        if hasattr(e, 'read'):
-            print(e.read().decode())
         return None
 
 def fetch_all_jira_issues():
@@ -59,8 +57,8 @@ def fetch_all_jira_issues():
         return []
     return res['issues']
 
-def fetch_active_github_issues():
-    cmd = ['gh', 'issue', 'list', '--repo', GH_REPO, '--state', 'open', '--limit', '50', '--json', 'number,title,state,body,labels,milestone']
+def fetch_all_github_issues():
+    cmd = ['gh', 'issue', 'list', '--repo', GH_REPO, '--state', 'all', '--limit', '200', '--json', 'number,title,state,body,labels,milestone']
     res = subprocess.run(cmd, capture_output=True, text=True)
     if res.returncode != 0:
         print("Error fetching GitHub issues:", res.stderr)
@@ -82,7 +80,7 @@ def transition_jira_issue(jira_key, target_status_name):
     
     if target_id:
         res = jira_request(f'/rest/api/3/issue/{jira_key}/transitions', method='POST', payload={'transition': {'id': target_id}})
-        print(f"Transitioned Jira {jira_key} -> {target_status_name}")
+        print(f"✓ Transitioned Jira {jira_key} -> {target_status_name}")
         return True
     else:
         print(f"Could not find transition ID for Jira {jira_key} to {target_status_name}")
@@ -91,11 +89,11 @@ def transition_jira_issue(jira_key, target_status_name):
 def sync_jira_and_github():
     print("=== Starting Precise Jira <-> GitHub Sync ===")
     jira_issues = fetch_all_jira_issues()
-    gh_issues = fetch_active_github_issues()
+    gh_issues = fetch_all_github_issues()
     
     jira_by_key = {issue['key']: issue for issue in jira_issues}
 
-    print(f"Loaded {len(jira_issues)} Jira issues and {len(gh_issues)} open GitHub issues.")
+    print(f"Loaded {len(jira_issues)} Jira issues and {len(gh_issues)} GitHub issues.")
 
     for gh_issue in gh_issues:
         gh_num = gh_issue['number']
@@ -103,51 +101,50 @@ def sync_jira_and_github():
         gh_state = gh_issue['state']
         gh_labels = [l['name'] for l in gh_issue.get('labels', [])]
         
-        matched_jira = None
-        # Match strictly by [NT-xx] key in title or body
-        for key, issue in jira_by_key.items():
-            if f"[{key}]" in gh_title or (gh_issue.get('body') and f"[{key}]" in gh_issue['body']):
-                matched_jira = issue
+        # Match strictly by [NT-xx] key in title
+        jira_key = None
+        for key in jira_by_key:
+            if f"[{key}]" in gh_title:
+                jira_key = key
                 break
                 
-        if matched_jira:
-            jira_key = matched_jira['key']
-            jira_status = matched_jira['fields']['status']['name']
+        if jira_key:
+            jira_status = jira_by_key[jira_key]['fields']['status']['name']
             
-            # Sync Jira -> GitHub status
+            # 1. If GitHub issue is CLOSED, move Jira task to Done
+            if gh_state == 'CLOSED':
+                if jira_status.lower() not in ['done', 'completado', 'cerrado']:
+                    transition_jira_issue(jira_key, 'Done')
+                continue
+
+            # 2. If GitHub issue is OPEN, sync state & labels
             new_gh_labels = list(gh_labels)
             label_changed = False
             
             if jira_status.lower() == 'done':
-                if gh_state == 'OPEN':
-                    subprocess.run(['gh', 'issue', 'close', str(gh_num), '--repo', GH_REPO, '--comment', f'Closed via Jira sync ({jira_key} is Done)'])
-                    print(f"Closed GitHub #{gh_num} ({gh_title}) -> Jira {jira_key} is Done.")
+                subprocess.run(['gh', 'issue', 'close', str(gh_num), '--repo', GH_REPO, '--comment', f'Closed via Jira sync ({jira_key} is Done)'])
+                print(f"Closed GitHub #{gh_num} ({gh_title}) -> Jira {jira_key} is Done.")
                 if 'status: done' not in new_gh_labels:
                     new_gh_labels = [l for l in new_gh_labels if not l.startswith('status:')] + ['status: done']
                     label_changed = True
 
             elif jira_status.lower() == 'in progress':
-                if gh_state == 'CLOSED':
-                    subprocess.run(['gh', 'issue', 'reopen', str(gh_num), '--repo', GH_REPO])
-                    print(f"Reopened GitHub #{gh_num} ({gh_title}) -> Jira {jira_key} is In Progress.")
                 if 'status: in-progress' not in new_gh_labels:
                     new_gh_labels = [l for l in new_gh_labels if not l.startswith('status:')] + ['status: in-progress']
                     label_changed = True
 
             elif jira_status.lower() in ['to do', 'backlog']:
-                if gh_state == 'OPEN' and 'status: todo' not in new_gh_labels:
+                if 'status: todo' not in new_gh_labels:
                     new_gh_labels = [l for l in new_gh_labels if not l.startswith('status:')] + ['status: todo']
                     label_changed = True
 
             if label_changed:
                 subprocess.run(['gh', 'issue', 'edit', str(gh_num), '--repo', GH_REPO, '--add-label', ','.join(new_gh_labels)])
 
-            # Sync GitHub -> Jira status
-            if gh_state == 'CLOSED' and jira_status.lower() != 'done':
-                transition_jira_issue(jira_key, 'Done')
-            elif gh_state == 'OPEN' and 'status: in-progress' in gh_labels and jira_status.lower() != 'in progress':
+            # Sync GitHub labels -> Jira status if Jira is not synced
+            if 'status: in-progress' in gh_labels and jira_status.lower() != 'in progress':
                 transition_jira_issue(jira_key, 'In Progress')
-            elif gh_state == 'OPEN' and 'status: todo' in gh_labels and jira_status.lower() not in ['to do', 'backlog']:
+            elif 'status: todo' in gh_labels and jira_status.lower() not in ['to do', 'backlog']:
                 transition_jira_issue(jira_key, 'To Do')
 
     print("=== Sync Complete! ===")
