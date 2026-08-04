@@ -59,8 +59,8 @@ def fetch_all_jira_issues():
         return []
     return res['issues']
 
-def fetch_all_github_issues():
-    cmd = ['gh', 'issue', 'list', '--repo', GH_REPO, '--state', 'all', '--limit', '200', '--json', 'number,title,state,body,labels,milestone']
+def fetch_active_github_issues():
+    cmd = ['gh', 'issue', 'list', '--repo', GH_REPO, '--state', 'open', '--limit', '50', '--json', 'number,title,state,body,labels,milestone']
     res = subprocess.run(cmd, capture_output=True, text=True)
     if res.returncode != 0:
         print("Error fetching GitHub issues:", res.stderr)
@@ -89,41 +89,27 @@ def transition_jira_issue(jira_key, target_status_name):
         return False
 
 def sync_jira_and_github():
-    print("=== Starting Pure Status Sync (No Auto Creation) ===")
+    print("=== Starting Precise Jira <-> GitHub Sync ===")
     jira_issues = fetch_all_jira_issues()
-    gh_issues = fetch_all_github_issues()
+    gh_issues = fetch_active_github_issues()
     
     jira_by_key = {issue['key']: issue for issue in jira_issues}
-    jira_by_summary_clean = {issue['fields']['summary'].lower().strip(): issue for issue in jira_issues}
 
-    print(f"Loaded {len(jira_issues)} Jira issues and {len(gh_issues)} GitHub issues.")
+    print(f"Loaded {len(jira_issues)} Jira issues and {len(gh_issues)} open GitHub issues.")
 
-    # ONLY sync explicit Sprint 2 and Sprint 3 issues: #11, #12, and "Definir Sprint 3"
-    allowed_issues = {11, 12}
-    
     for gh_issue in gh_issues:
         gh_num = gh_issue['number']
         gh_title = gh_issue['title'].strip()
         gh_state = gh_issue['state']
         gh_labels = [l['name'] for l in gh_issue.get('labels', [])]
         
-        # Skip bulk closed issues
-        if 'Definir Sprint 3' in gh_title:
-            allowed_issues.add(gh_num)
-
-        if gh_num not in allowed_issues:
-            continue
-
         matched_jira = None
+        # Match strictly by [NT-xx] key in title or body
         for key, issue in jira_by_key.items():
-            if key in gh_title or (gh_issue.get('body') and key in gh_issue['body']):
+            if f"[{key}]" in gh_title or (gh_issue.get('body') and f"[{key}]" in gh_issue['body']):
                 matched_jira = issue
                 break
                 
-        if not matched_jira:
-            clean_title = gh_title.lower().strip()
-            matched_jira = jira_by_summary_clean.get(clean_title)
-            
         if matched_jira:
             jira_key = matched_jira['key']
             jira_status = matched_jira['fields']['status']['name']
