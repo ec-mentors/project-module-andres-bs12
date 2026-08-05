@@ -1,6 +1,48 @@
 # 🥗 NutritionTracker
 
-NutritionTracker is a modern Spring Boot & Web application designed to help users log daily nutrition entries (meals, calories, macros) and track them against personalized nutritional goals.
+NutritionTracker is a modern, high-performance Spring Boot & Web application designed to help users log daily nutrition entries (meals, calories, macros) and track them against personalized nutritional goals securely.
+
+---
+
+## 🏗️ System Security & Request Lifecycle Architecture
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Client as HTTP Client (Postman / Web UI)
+    participant Filter as GoogleAuthFilter
+    participant Context as SecurityContextHolder
+    participant Controller as REST Controllers
+    participant PreAuth as Spring Security (@PreAuthorize)
+    participant Evaluator as Domain Evaluator (EntrySecurity / GoalSecurity)
+    participant Service as Service Layer
+    participant DB as PostgreSQL Database
+
+    Client->>Filter: HTTP Request + Header (Authorization: Bearer <token>)
+    Filter->>Filter: Verify Google ID Token (GoogleIdTokenVerifier)
+    Filter->>DB: Fetch/Create User by google_id
+    DB-->>Filter: Return User Entity (id, email, role)
+    Filter->>Context: Store UserPrincipal(User) in SecurityContext
+    Filter->>Controller: Forward Request to Endpoint
+    Controller->>PreAuth: Intercept Method Execution
+    alt Record Ownership Evaluation
+        PreAuth->>Evaluator: isOwner(recordId, UserPrincipal)
+        Evaluator->>DB: Query Record Owner
+        DB-->>Evaluator: Return Record User ID
+        Evaluator-->>PreAuth: True / False (UUID match)
+    else Role Evaluation
+        PreAuth->>PreAuth: Check hasRole('ADMIN') vs GrantedAuthorities
+    end
+    alt Authorized (200 OK / 201 Created)
+        PreAuth->>Service: Execute Service Business Logic
+        Service->>DB: Save / Query Database
+        DB-->>Service: Return Entities
+        Service-->>Controller: Map to ResponseDTO
+        Controller-->>Client: HTTP Response (JSON Payload)
+    else Unauthorized (403 Forbidden)
+        PreAuth-->>Client: HTTP 403 Forbidden Error
+    end
+```
 
 ---
 
@@ -12,17 +54,21 @@ Task tracking and sprint planning are managed natively via **GitHub Issues & Git
 * 📊 **[View Interactive GitHub Project Board (NutritionTracker Board)](https://github.com/users/andres-bs12/projects/3)**
 * 🎯 **Jira Cloud Integration:** Project Key `NT`
 
-> 💡 **Task Tracking Workflow:** New features, refactoring, and bug reports are created directly via GitHub Issue Templates (`.github/ISSUE_TEMPLATE`) or GitHub CLI (`gh issue create`). Status changes, pull request merges, and iteration movements update automatically.
-
 ---
 
 ## 🎯 Sprint Overview
 
-### 🔒 **Sprint 2: DTO Refactoring & Security Ownership (Aug 03 – Aug 10, 2026)**
-- **Goal:** Modernize DTO layer and implement Spring Security user data ownership validation.
+### ⚙️ **Sprint 1: Back-End Core (Jul 27 – Aug 10, 2026)**
+- **Goal:** Build foundational Spring Boot architecture (Entities, DTOs, Mappers, Repositories, Services, Controllers, and PostgreSQL Schema).
+- **Architecture:** Decoupled DTO payload layer (`RequestDTO` / `ResponseDTO`) with `@Component` Mappers and Google OAuth identity linking (`google_id`).
+- **Status:** ✅ `Completed`
+
+### 🔒 **Sprint 2: DTO Refactoring, Security Ownership & Testing (Aug 03 – Aug 10, 2026)**
+- **Goal:** Modernize DTO layer with Java Records & MapStruct, enforce Spring Security IDOR protection & RBAC, and build automated unit/integration tests.
 - **Tasks & Milestone:** `Milestone: Sprint2`
   - Refactor Boilerplate DTOs with Java Records & MapStruct (✅ `Done` - Issue #12)
   - Investigate and Implement User Data Ownership Security / IDOR Protection (✅ `Done` - Issue #11)
+  - Create Automated Unit & Integration Tests for Controllers, Services & Security Evaluators (📅 `In Progress` - Issue #13)
 
 ### 🎨 **Sprint 3: Front-End Architecture & REST Client (Aug 10 – Aug 24, 2026)**
 - **Goal:** Build the Multi-Page Web Interface matching the Figma design system ("CaloriesTrack Atomic Design v3") and connect UI components to REST API endpoints.
@@ -31,10 +77,6 @@ Task tracking and sprint planning are managed natively via **GitHub Issues & Git
   - Page 1: Home / Daily Dashboard & Kcal Hero, Macro Cards, Comparison Table, Side Panel (Issues #17 - #21)
   - Page 2: Overview / Analytics Dashboard, Monthly Balance KPI, Charts Container (Issues #22 - #25)
   - Page 3: Goal Settings Panel Form & REST API Client Integration (Issues #26 - #28)
-
-### ⚙️ **Sprint 1: Back-End Core (Jul 27 – Aug 10, 2026)**
-- **Goal:** Core Spring Boot architecture (Entities, DTOs, Mappers, Repositories, Services, Controllers, and PostgreSQL Schema).
-- **Architecture:** Decoupled DTO payload layer (`RequestDTO` / `ResponseDTO`) with `@Component` Mappers and Google OAuth identity linking (`google_id`).
 
 ---
 
@@ -50,12 +92,17 @@ Task tracking and sprint planning are managed natively via **GitHub Issues & Git
 - **Context & Critical Realization:** Initially attempted passing `requestingUserId` as an HTTP URL parameter (`@RequestParam`). However, critical analysis revealed a severe **IDOR (Insecure Direct Object Reference)** vulnerability: any malicious user could spoof the `userId` in the URL parameter to access or alter private records belonging to another user.
 - **Key Learning & Solution:** Realized that user identity must never be trusted from unverified request parameters. Implemented a domain-specific `UserPrincipal` wrapper implementing `UserDetails`. Delegated record-level authorization to Spring Security (`@EnableMethodSecurity` + `@PreAuthorize("@entrySecurity.isOwner(#entryId, principal)")`), performing a 100% type-safe `UUID` to `UUID` comparison against the cryptographically verified security context in memory.
 
+### 💡 ADR-03: Role-Based Access Control (RBAC) vs. Hardcoded Credentials Antipattern
+- **Date:** August 5, 2026 | **Status:** Approved
+- **Context & Security Analysis:** Evaluated hardcoding specific admin email strings in `@PreAuthorize("principal.username == 'admin@example.com'")`. Discovered that hardcoding specific emails directly in Java annotations is a security antipattern (*Hardcoded Credentials* / *Security Through Obscurity*), leaking admin identities in repositories and forcing recompilation if emails change.
+- **Solution:** Implemented standard Spring Security Roles (`hasRole('ADMIN')`) backed by `GrantedAuthority` (`SimpleGrantedAuthority("ROLE_ADMIN")`). Roles decouple security rules from individual user identities, enabling dynamic, environment-based administration in PostgreSQL.
+
 ---
 
-## 🗺️ Step-by-Step Execution Guide for Sprint 2
+## 🗺️ Step-by-Step Execution Guide for Sprint 2 & Sprint 3
 
-1. **Step 1 (Design System - `NT-34`):** Open `src/main/resources/static/css/styles.css` and define Figma tokens (`:root`) for colors (`#05030d`, `#6417ff`), fonts (`Inter`), glassmorphism, and buttons.
-2. **Step 2 (Page 1 - Home - `NT-36`):** Create `src/main/resources/static/index.html` with Header, Kcal remaining hero, 4 KPI cards, Comparison Table, and Latest Entries panel.
-3. **Step 3 (Page 2 - Overview - `NT-41`):** Create `src/main/resources/static/overview.html` with Monthly KPI cards and Charts container.
-4. **Step 4 (Page 3 - Goal - `NT-45`):** Create `src/main/resources/static/goal.html` with `Goal Settings Panel` form.
-5. **Step 5 (REST Integration - `NT-40`, `NT-44`, `NT-47`):** Create `src/main/resources/static/js/app.js` to fetch data from `/api/entry` and `/api/goal`, handle form submissions, and update progress bars dynamically.
+1. **Step 1 (Security & Data Ownership - Completed):** Protect `EntryService`, `GoalService`, and `UserService` using `@PreAuthorize`, `UserPrincipal`, `EntrySecurity`, and `GoalSecurity`.
+2. **Step 2 (Automated Unit & Integration Testing - Next Step):** Implement `@WebMvcTest` and `@SpringBootTest` test suites for `EntryController`, `GoalController`, `UserController`, and domain security evaluators.
+3. **Step 3 (Design System & CSS Tokens):** Define Figma tokens (`:root`) in `src/main/resources/static/css/styles.css` for colors (`#05030d`, `#6417ff`), fonts (`Inter`), glassmorphism, and buttons.
+4. **Step 5 (Frontend Views):** Create `index.html` (Dashboard), `overview.html` (Analytics), and `goal.html` (Goal Settings).
+5. **Step 6 (REST Client Integration):** Implement `app.js` to fetch REST data from `/api/entry` and `/api/goal`, handle form submissions, and render real-time UI updates.
