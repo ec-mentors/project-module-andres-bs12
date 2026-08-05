@@ -68,7 +68,7 @@ Task tracking and sprint planning are managed natively via **GitHub Issues & Git
 - **Tasks & Milestone:** `Milestone: Sprint2`
   - Refactor Boilerplate DTOs with Java Records & MapStruct (✅ `Done` - Issue #12)
   - Investigate and Implement User Data Ownership Security / IDOR Protection (✅ `Done` - Issue #11)
-  - Create Automated Unit & Integration Tests for Controllers, Services & Security Evaluators (📅 `In Progress` - Issue #13)
+  - Create Automated Unit & Integration Tests for User, Goal, and Entry Modules (📅 `In Progress` - Issue #520)
 
 ### 🎨 **Sprint 3: Front-End Architecture & REST Client (Aug 10 – Aug 24, 2026)**
 - **Goal:** Build the Multi-Page Web Interface matching the Figma design system ("CaloriesTrack Atomic Design v3") and connect UI components to REST API endpoints.
