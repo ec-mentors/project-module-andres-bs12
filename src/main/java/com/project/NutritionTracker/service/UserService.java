@@ -29,6 +29,7 @@ public class UserService {
         this.mapper = mapper;
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     public UserResponseDTO findByEmail(String email) {
         if (email == null) {
             return null;
@@ -39,7 +40,7 @@ public class UserService {
         return mapper.toResponseDTO(user);
     }
 
-
+    @PreAuthorize("hasRole('ADMIN')")
     public UserResponseDTO findById(UUID id) {
         if (id == null) {
             return null;
@@ -50,6 +51,7 @@ public class UserService {
         return mapper.toResponseDTO(user);
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     public UserResponseDTO findByGoogleId(String googleId) {
         if (googleId == null) {
             return null;
@@ -68,6 +70,7 @@ public class UserService {
         return mapper.toResponseDTO(repository.save(user));
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     public List<UserResponseDTO> getAllUsers() {
         var enttitiesList = repository.findAll();
 

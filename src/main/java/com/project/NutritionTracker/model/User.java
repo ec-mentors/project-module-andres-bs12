@@ -39,5 +39,8 @@ public class User {
 
     @Column(name = "created_at")  // Item is created here, don't need the other attributes
     private LocalDateTime createdAt;
+
+    @Column(nullable = false)
+    private String role = "USER";
 }
 

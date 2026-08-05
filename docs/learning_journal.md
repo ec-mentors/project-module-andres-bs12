@@ -4,6 +4,41 @@ This document serves as a development and learning journal to record key concept
 
 ---
 
+## 📅 2026-08-05 - User Data Ownership Security (IDOR Protection), Google OAuth2 Filter & Role-Based Access Control (RBAC)
+
+### 💡 Key Concepts Learned & Architectural Decisions
+
+1. **IDOR (Insecure Direct Object Reference) Vulnerability & Parameter Spoofing:**
+   - *Critical Realization:* Passing `requestingUserId` as an unverified URL parameter (`@RequestParam`) or request body field is a severe security flaw. Any malicious user could change `?userId=uuid_of_victim` to modify or access private records belonging to someone else.
+   - *Solution:* User identity must **never** be trusted from client-controlled URL parameters. Identity must be extracted cryptographically from the server-validated security context (`SecurityContextHolder`).
+
+2. **Custom Domain Principal (`UserPrincipal` implementing `UserDetails`):**
+   - Created a domain-specific wrapper class `UserPrincipal` that wraps the JPA `User` entity.
+   - Added a direct `getId()` getter returning the PostgreSQL `UUID`, enabling **100% type-safe `UUID` to `UUID` comparisons** (`principal.getId().equals(entry.getUser().getId())`) without reflection or string conversion overhead.
+
+3. **Method-Level Authorization with Spring Security `@PreAuthorize` & SpEL:**
+   - Enabled `@EnableMethodSecurity` in `SecurityConfig.java`.
+   - Built dedicated domain evaluator beans (`EntrySecurity`, `GoalSecurity`) registered with `@Component("entrySecurity")`.
+   - Used SpEL expressions to intercept method execution prior to service business logic:
+     - Record ownership checks: `@PreAuthorize("isAuthenticated() && @entrySecurity.isOwner(#id, principal)")`.
+     - Self-identity checks: `@PreAuthorize("isAuthenticated() && #userId == principal.id")`.
+
+4. **Real Google OAuth2 Filter (`GoogleAuthFilter`):**
+   - Created `GoogleAuthFilter` extending `OncePerRequestFilter` to intercept incoming `Authorization: Bearer <GOOGLE_ID_TOKEN>` headers.
+   - Decoded and verified Google JWT signatures using `userService.verifyAndProcessGoogleToken(googleIdToken)`.
+   - Loaded/created the user in PostgreSQL, wrapped it in `UserPrincipal`, and stored it in `SecurityContextHolder.getContext().setAuthentication(auth)` for the duration of the HTTP request.
+
+5. **Role-Based Access Control (RBAC) vs. Hardcoded Credentials Antipattern:**
+   - *Discussion:* Evaluated hardcoding specific admin email strings in `@PreAuthorize("principal.username == 'admin@example.com'")`.
+   - *Security Analysis:* Hardcoding specific emails or credentials directly in Java annotations is a security antipattern (*Hardcoded Credentials* / *Security Through Obscurity*). It leaks admin identities in open-source repositories and requires recompiling the app if an email changes.
+   - *Enterprise Solution:* Use standard Spring Security Roles (`hasRole('ADMIN')`) backed by `GrantedAuthority` (`SimpleGrantedAuthority("ROLE_ADMIN")`). Roles decouple security logic from specific identity strings, enabling dynamic, environment-based administration in PostgreSQL.
+
+6. **Origin & Extraction of User Emails (`email` field):**
+   - *Where does the email come from?* User email addresses originate directly from Google's cryptographically signed ID Token (`id_token`).
+   - *Extraction Flow:* When authenticating via Google OAuth2, `GoogleIdTokenVerifier` validates the token signature, and `idToken.getPayload().getEmail()` extracts the verified email. This email is stored in PostgreSQL (`users.email`) and accessed via `user.getEmail()` / `UserPrincipal.getUsername()`.
+
+---
+
 ## 📅 2026-08-04 - Refactoring DTO Boilerplate: Java Records, MapStruct Automation & Spring Security Ownership
 
 ### 💡 Key Concepts Learned & Architectural Discussions
