@@ -1,47 +1,47 @@
 # 🥗 NutritionTracker
 
-NutritionTracker is a modern, high-performance Spring Boot & Web application designed to help users log daily nutrition entries (meals, calories, macros) and track them against personalized nutritional goals securely.
+NutritionTracker is a modern, high-performance Spring Boot application designed to help users log daily nutrition entries (meals, calories, macros) and track them against personalized nutritional goals.
 
 ---
 
-## 🏗️ System Security & Request Lifecycle Architecture
+## 🗄️ Database Schema & Data Model
 
 ```mermaid
-sequenceDiagram
-    autonumber
-    actor Client as HTTP Client (Postman / Web UI)
-    participant Filter as GoogleAuthFilter
-    participant Context as SecurityContextHolder
-    participant Controller as REST Controllers
-    participant PreAuth as Spring Security (@PreAuthorize)
-    participant Evaluator as Domain Evaluator (EntrySecurity / GoalSecurity)
-    participant Service as Service Layer
-    participant DB as PostgreSQL Database
+erDiagram
+    USER ||--o{ GOAL : "defines (1:N)"
+    USER ||--o{ ENTRY : "logs (1:N)"
 
-    Client->>Filter: HTTP Request + Header (Authorization: Bearer <token>)
-    Filter->>Filter: Verify Google ID Token (GoogleIdTokenVerifier)
-    Filter->>DB: Fetch/Create User by google_id
-    DB-->>Filter: Return User Entity (id, email, role)
-    Filter->>Context: Store UserPrincipal(User) in SecurityContext
-    Filter->>Controller: Forward Request to Endpoint
-    Controller->>PreAuth: Intercept Method Execution
-    alt Record Ownership Evaluation
-        PreAuth->>Evaluator: isOwner(recordId, UserPrincipal)
-        Evaluator->>DB: Query Record Owner
-        DB-->>Evaluator: Return Record User ID
-        Evaluator-->>PreAuth: True / False (UUID match)
-    else Role Evaluation
-        PreAuth->>PreAuth: Check hasRole('ADMIN') vs GrantedAuthorities
-    end
-    alt Authorized (200 OK / 201 Created)
-        PreAuth->>Service: Execute Service Business Logic
-        Service->>DB: Save / Query Database
-        DB-->>Service: Return Entities
-        Service-->>Controller: Map to ResponseDTO
-        Controller-->>Client: HTTP Response (JSON Payload)
-    else Unauthorized (403 Forbidden)
-        PreAuth-->>Client: HTTP 403 Forbidden Error
-    end
+    USER {
+        uuid id PK
+        string google_id UK
+        string email UK
+        string first_name
+        string last_name
+        string role
+        bigint telegram_chat_id
+        timestamp created_at
+    }
+
+    GOAL {
+        uuid id PK
+        uuid user_id FK
+        date start_date
+        int kcal
+        int protein
+        int carbs
+        int fat
+    }
+
+    ENTRY {
+        uuid id PK
+        uuid user_id FK
+        string meal_name
+        timestamp logged_at
+        int kcal
+        int protein
+        int carbs
+        int fat
+    }
 ```
 
 ---
@@ -96,13 +96,3 @@ Task tracking and sprint planning are managed natively via **GitHub Issues & Git
 - **Date:** August 5, 2026 | **Status:** Approved
 - **Context & Security Analysis:** Evaluated hardcoding specific admin email strings in `@PreAuthorize("principal.username == 'admin@example.com'")`. Discovered that hardcoding specific emails directly in Java annotations is a security antipattern (*Hardcoded Credentials* / *Security Through Obscurity*), leaking admin identities in repositories and forcing recompilation if emails change.
 - **Solution:** Implemented standard Spring Security Roles (`hasRole('ADMIN')`) backed by `GrantedAuthority` (`SimpleGrantedAuthority("ROLE_ADMIN")`). Roles decouple security rules from individual user identities, enabling dynamic, environment-based administration in PostgreSQL.
-
----
-
-## 🗺️ Step-by-Step Execution Guide for Sprint 2 & Sprint 3
-
-1. **Step 1 (Security & Data Ownership - Completed):** Protect `EntryService`, `GoalService`, and `UserService` using `@PreAuthorize`, `UserPrincipal`, `EntrySecurity`, and `GoalSecurity`.
-2. **Step 2 (Automated Unit & Integration Testing - Next Step):** Implement `@WebMvcTest` and `@SpringBootTest` test suites for `EntryController`, `GoalController`, `UserController`, and domain security evaluators.
-3. **Step 3 (Design System & CSS Tokens):** Define Figma tokens (`:root`) in `src/main/resources/static/css/styles.css` for colors (`#05030d`, `#6417ff`), fonts (`Inter`), glassmorphism, and buttons.
-4. **Step 5 (Frontend Views):** Create `index.html` (Dashboard), `overview.html` (Analytics), and `goal.html` (Goal Settings).
-5. **Step 6 (REST Client Integration):** Implement `app.js` to fetch REST data from `/api/entry` and `/api/goal`, handle form submissions, and render real-time UI updates.
