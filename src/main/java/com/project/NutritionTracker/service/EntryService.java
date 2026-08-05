@@ -8,6 +8,7 @@ import com.project.NutritionTracker.model.Entry;
 import com.project.NutritionTracker.model.User;
 import com.project.NutritionTracker.repository.EntryRepository;
 import com.project.NutritionTracker.repository.UserRepository;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 
 import java.security.Timestamp;
@@ -77,7 +78,8 @@ public class EntryService {
                 .toList();
     }
 
-    public EntryResponseDTO updateEntry(UUID id, EntryRequestDTO dto) {
+    @PreAuthorize("@entrySecurity.isOwner(#id, requestingUserId)")
+    public EntryResponseDTO updateEntry(UUID id, UUID requestingUserId, EntryRequestDTO dto) {
 
         Entry entry = repository.findById(id).orElseThrow(() -> new NotFoundException("Entry not found"));
 
