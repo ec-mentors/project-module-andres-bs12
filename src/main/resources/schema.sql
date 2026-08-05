@@ -8,6 +8,7 @@ CREATE TABLE users (
     email VARCHAR(100) UNIQUE NOT NULL,
     first_name VARCHAR(50) NOT NULL,
     last_name VARCHAR(50) NOT NULL,
+    role VARCHAR(50) DEFAULT 'USER' NOT NULL,
     telegram_chat_id BIGINT UNIQUE,
     created_at TIMESTAMP DEFAULT NOW()
 );
@@ -35,17 +36,14 @@ CREATE TABLE entry (
     protein DECIMAL(5,2) NOT NULL
 );
 
--- TEST DATA --
+-- SEED DATA FOR LOCAL DEVELOPMENT --
 
--- USER
-INSERT INTO users (id, google_id, first_name, last_name, email) VALUES
-('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11','google-uid-123456', 'Andrés', 'Bejarano', 'andres@example.com');
+INSERT INTO users (id, google_id, first_name, last_name, email, role) VALUES
+('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 'google-uid-123456', 'Andrés', 'Bejarano', 'andres@example.com', 'ADMIN');
 
--- GOAL (One per user per date)
 INSERT INTO goal (user_id, start_date, kcal, carbs, fat, protein) VALUES 
-('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', '2026-07-01', 2000, 200.00, 70.00, 140.00);
+('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', CURRENT_DATE, 2000, 200.00, 70.00, 140.00);
 
--- ENTRY
 INSERT INTO entry (user_id, meal_name, source, kcal, carbs, fat, protein) VALUES 
 ('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 'Eggs and coffee', 'Manual', 350, 60.00, 5.00, 12.00),
 ('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 'Rice and chicken', 'Manual', 650, 75.00, 12.00, 55.00),
