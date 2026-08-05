@@ -8,6 +8,8 @@ import com.project.NutritionTracker.model.Entry;
 import com.project.NutritionTracker.model.User;
 import com.project.NutritionTracker.repository.EntryRepository;
 import com.project.NutritionTracker.repository.UserRepository;
+import org.apache.tomcat.util.net.openssl.ciphers.Authentication;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 
 import java.security.Timestamp;
@@ -30,6 +32,7 @@ public class EntryService {
         this.uRepository = uRepository;
     }
 
+    @PreAuthorize("isAuthenticated() && #userId == principal.id")
     public List<EntryResponseDTO> findByUser(UUID userId) {
         if (userId == null) {
             return List.of();
@@ -40,6 +43,7 @@ public class EntryService {
         return repository.findByUser(user).stream().map(mapper::toResponseDTO).toList();
     }
 
+    @PreAuthorize("isAuthenticated() && #userId == principal.id")
     public EntryResponseDTO createEntry(EntryRequestDTO dto, UUID userId) {
         User user = uRepository.findById(userId).orElseThrow(() -> new NotFoundException("User not found with id: " + userId));
         Entry entry = mapper.toEntity(dto);
@@ -50,6 +54,7 @@ public class EntryService {
         return mapper.toResponseDTO(savedEntry);
     }
 
+    @PreAuthorize("@entrySecurity.isOwner(#id, principal)")
     public void removeEntry(UUID id) {
         if (repository.existsById(id)) {
             repository.deleteById(id);
@@ -58,6 +63,7 @@ public class EntryService {
         }
     }
 
+    @PreAuthorize("#userId == principal.id")
     public List<EntryResponseDTO> findTodayEntriesByUser(UUID userId) {
 
         if (userId == null) {
@@ -68,15 +74,13 @@ public class EntryService {
         LocalDateTime startOfDay = LocalDate.now().atStartOfDay();
         LocalDateTime endOfDay = LocalDate.now().atTime(LocalTime.MAX);
 
-        // This method is a sql request
-        // SELECT * FROM entry
-        // WHERE user_id = 'n'
-        //  AND created_on BETWEEN 'date' AND 'date';
+
         return repository.findByUserAndCreatedOnBetween(user, startOfDay, endOfDay).stream()
                 .map(mapper::toResponseDTO)
                 .toList();
     }
 
+    @PreAuthorize("isAuthenticated() && @entrySecurity.isOwner(#id, principal)")
     public EntryResponseDTO updateEntry(UUID id, EntryRequestDTO dto) {
 
         Entry entry = repository.findById(id).orElseThrow(() -> new NotFoundException("Entry not found"));

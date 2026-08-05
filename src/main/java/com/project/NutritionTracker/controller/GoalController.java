@@ -24,6 +24,7 @@ public class GoalController {
         this.service = service;
     }
 
+
     @PostMapping("/{userId}")
     public ResponseEntity<GoalResponseDTO> createGoal(
             @RequestBody GoalRequestDTO dto,

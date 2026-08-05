@@ -10,6 +10,7 @@ import com.project.NutritionTracker.exception.NotFoundException;
 import com.project.NutritionTracker.mapper.UserMapper;
 import com.project.NutritionTracker.model.User;
 import com.project.NutritionTracker.repository.UserRepository;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -28,6 +29,7 @@ public class UserService {
         this.mapper = mapper;
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     public UserResponseDTO findByEmail(String email) {
         if (email == null) {
             return null;
@@ -38,7 +40,7 @@ public class UserService {
         return mapper.toResponseDTO(user);
     }
 
-
+    @PreAuthorize("hasRole('ADMIN')")
     public UserResponseDTO findById(UUID id) {
         if (id == null) {
             return null;
@@ -49,6 +51,7 @@ public class UserService {
         return mapper.toResponseDTO(user);
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     public UserResponseDTO findByGoogleId(String googleId) {
         if (googleId == null) {
             return null;
@@ -59,6 +62,7 @@ public class UserService {
         return mapper.toResponseDTO(user);
     }
 
+    @PreAuthorize("isAuthenticated() && #id == principal.id")
     public UserResponseDTO updateUser(UUID id, UserRequestDTO dto) {
         User user = repository.findById(id).orElseThrow(() -> new NotFoundException("User not found"));
         user.setFirstName(dto.firstName());
@@ -66,6 +70,7 @@ public class UserService {
         return mapper.toResponseDTO(repository.save(user));
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     public List<UserResponseDTO> getAllUsers() {
         var enttitiesList = repository.findAll();
 
@@ -128,7 +133,7 @@ public class UserService {
                 (String) payload.get("given_name"),
                 (String) payload.get("family_name"),
                 payload.getEmail(),
-                payload.getSubject()
+                payload.getSubject() // googleId
             );
 
             // Now if the token works, will be sent to this method.

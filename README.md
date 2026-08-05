@@ -45,6 +45,11 @@ Task tracking and sprint planning are managed natively via **GitHub Issues & Git
 - **Decision:** Replacing manual email/password auth with Google OAuth eliminates password hashing, reset flows, and email verification overhead while providing a superior one-click user login experience.
 - **Identity Linking:** The `User` record in PostgreSQL serves as the core authority. Google OAuth handles Web Auth; Telegram serves as a secondary channel via token pairing (`/start <token>`).
 
+### 💡 ADR-02: User Data Ownership & IDOR Protection via Spring Security `@PreAuthorize` & `UserPrincipal`
+- **Date:** August 5, 2026 | **Status:** Approved
+- **Context & Critical Realization:** Initially attempted passing `requestingUserId` as an HTTP URL parameter (`@RequestParam`). However, critical analysis revealed a severe **IDOR (Insecure Direct Object Reference)** vulnerability: any malicious user could spoof the `userId` in the URL parameter to access or alter private records belonging to another user.
+- **Key Learning & Solution:** Realized that user identity must never be trusted from unverified request parameters. Implemented a domain-specific `UserPrincipal` wrapper implementing `UserDetails`. Delegated record-level authorization to Spring Security (`@EnableMethodSecurity` + `@PreAuthorize("@entrySecurity.isOwner(#entryId, principal)")`), performing a 100% type-safe `UUID` to `UUID` comparison against the cryptographically verified security context in memory.
+
 ---
 
 ## 🗺️ Step-by-Step Execution Guide for Sprint 2

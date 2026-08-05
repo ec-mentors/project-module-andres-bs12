@@ -3,6 +3,7 @@ package com.project.NutritionTracker.controller;
 import com.project.NutritionTracker.dto.EntryRequestDTO;
 import com.project.NutritionTracker.dto.EntryResponseDTO;
 import com.project.NutritionTracker.service.EntryService;
+import org.apache.tomcat.util.net.openssl.ciphers.Authentication;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -37,7 +38,7 @@ public class EntryController {
         return ResponseEntity.created(URI.create("/api/entry/" + created.id())).body(created);
     }
 
-    @DeleteMapping("/{userId}")
+    @DeleteMapping("/{entryId}")
     public ResponseEntity<Void> removeEntry(@PathVariable UUID entryId) {
         service.removeEntry(entryId);
 
@@ -48,6 +49,7 @@ public class EntryController {
     public ResponseEntity<List<EntryResponseDTO>> findTodayEntriesByUser(@PathVariable UUID userId) {
         return ResponseEntity.ok(service.findTodayEntriesByUser(userId));
     }
+
 
     @PutMapping("/{entryId}/update")
     public ResponseEntity<EntryResponseDTO> updateEntry(
