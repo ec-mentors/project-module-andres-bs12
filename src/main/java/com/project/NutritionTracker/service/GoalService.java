@@ -8,6 +8,7 @@ import com.project.NutritionTracker.model.Goal;
 import com.project.NutritionTracker.model.User;
 import com.project.NutritionTracker.repository.GoalRepository;
 import com.project.NutritionTracker.repository.UserRepository;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -30,6 +31,7 @@ public class GoalService {
     }
 
 
+    @PreAuthorize("isAuthenticated() && #userId == principal.id")
     public GoalResponseDTO createGoal(GoalRequestDTO dto, UUID userId) {
         if (dto == null) {
             return null;
@@ -44,7 +46,7 @@ public class GoalService {
         return mapper.toResponseDTO(repository.save(goal));
     }
 
-
+    @PreAuthorize("isAuthenticated() && @goalSecurity.isOwner(#id, principal)")
     public GoalResponseDTO updateGoal(UUID id, GoalRequestDTO dto) {
         Goal goal = repository.findById(id).orElseThrow(() -> new NotFoundException("Goal not found"));
         // Doesn't update the user
@@ -57,10 +59,12 @@ public class GoalService {
         return mapper.toResponseDTO(repository.save(goal));
     }
 
+    @PreAuthorize("#userId == principal.id")
     public GoalResponseDTO getGoalByUserAndDate(UUID userId, LocalDate date) {
         if (userId == null) {
             return null;
         }
+
 
         User user = uRepository.findById(userId).orElseThrow(() -> new NotFoundException("User not found with id: " + userId));
 
@@ -69,6 +73,7 @@ public class GoalService {
         return mapper.toResponseDTO(goal);
     }
 
+    @PreAuthorize("#userId == principal.id")
     public List<GoalResponseDTO> findAllGoalsByUser(UUID userId) {
 
         if (userId == null) {

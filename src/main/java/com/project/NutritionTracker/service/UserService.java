@@ -60,6 +60,7 @@ public class UserService {
         return mapper.toResponseDTO(user);
     }
 
+    @PreAuthorize("isAuthenticated() && #id == principal.id")
     public UserResponseDTO updateUser(UUID id, UserRequestDTO dto) {
         User user = repository.findById(id).orElseThrow(() -> new NotFoundException("User not found"));
         user.setFirstName(dto.firstName());
