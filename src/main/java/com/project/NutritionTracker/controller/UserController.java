@@ -31,8 +31,8 @@ public class UserController {
 
     // Request body, it's expecting a json object to be sent as key value
     @PostMapping("/auth/google")
-    public ResponseEntity<UserResponseDTO> authWithGoogle(@RequestBody UserRequestDTO dto) {
-        UserResponseDTO response = service.processGoogleAuth(dto); // not auth yet
+    public ResponseEntity<UserResponseDTO> authWithGoogle(@RequestBody String googleId) {
+        UserResponseDTO response = service.verifyAndProcessGoogleToken(googleId); // not auth yet
 
         return ResponseEntity.ok(response); // code 200, converts java object to json
     }

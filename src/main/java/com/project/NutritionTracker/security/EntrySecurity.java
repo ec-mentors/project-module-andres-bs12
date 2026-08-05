@@ -1,11 +1,10 @@
 package com.project.NutritionTracker.security;
 
-import com.project.NutritionTracker.model.Entry;
 import com.project.NutritionTracker.repository.EntryRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
 
-import java.util.Optional;
 import java.util.UUID;
 
 @Component("entrySecurity")
@@ -15,13 +14,13 @@ public class EntrySecurity {
     private final EntryRepository entryRepository;
 
     // verifies if the user that makes the request is the owner of the  specific `entry`
-    public boolean isOwner(UUID entryId, UUID requestingUserId) {
+    public boolean isOwner(UUID entryId, UserPrincipal principal) {
 
-        if (entryId == null || requestingUserId == null) return false;
+        if (entryId == null || principal == null || principal.getId() == null) return false;
 
         return entryRepository.findById(entryId)
                 .map(entry -> entry.getUser() != null &&
-                        requestingUserId.equals(entry.getUser().getId()))
+                        entry.getUser().getId().equals(principal.getId()))
                 .orElse(false);
     }
 }

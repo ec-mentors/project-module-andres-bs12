@@ -10,6 +10,7 @@ import com.project.NutritionTracker.exception.NotFoundException;
 import com.project.NutritionTracker.mapper.UserMapper;
 import com.project.NutritionTracker.model.User;
 import com.project.NutritionTracker.repository.UserRepository;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -128,7 +129,7 @@ public class UserService {
                 (String) payload.get("given_name"),
                 (String) payload.get("family_name"),
                 payload.getEmail(),
-                payload.getSubject()
+                payload.getSubject() // googleId
             );
 
             // Now if the token works, will be sent to this method.
