@@ -4,6 +4,34 @@ This document serves as a development and learning journal to record key concept
 
 ---
 
+## 📅 2026-08-07 - Service Layer Unit Testing with Mockito & JUnit 5 (Sprint 2)
+
+### 💡 Key Concepts Learned & Architectural Decisions
+
+1. **Unit Testing vs. Integration Testing in Spring Boot:**
+   - **Unit Tests (Mockito):** Test a single class (`UserService`, `GoalService`, `EntryService`) in complete isolation without launching the Spring Boot application context (`@SpringBootTest`). Uses `@ExtendWith(MockitoExtension.class)` and `@Mock` dependencies. Runs in milliseconds.
+   - **Integration Tests (`@SpringBootTest` / `@WebMvcTest`):** Test the interaction between multiple layers (Controller + Service + Repository + Database / HTTP Request-Response pipeline).
+
+2. **The "Why Mock?" Realization & Given-When-Then Pattern:**
+   - *Core Concept:* Mocking dependencies (`repository`, `mapper`) does not "hardcode" the test away. Instead, mocks isolate the external world so the test evaluates the **exact Java business logic, edge-case validation, exception throwing, and call orchestration inside the Service class**.
+   - *AAA Pattern:*
+     - **Given (`when(...).thenReturn(...)`):** Sets up controlled responses for mock dependencies.
+     - **When (`service.method(...)`):** Executes the actual real Java code inside the service.
+     - **Then (`assertEquals`, `assertThrows`, `verify`):** Asserts return values, verifies exception throwing, and ensures mock methods were invoked the expected number of times (`times(1)`, `never()`).
+
+3. **`ArgumentCaptor` for Dynamic State & Date Verification:**
+   - When services mutate entity state before saving (e.g. `goal.setStartDate(LocalDate.now())` or `entry.setCreatedOn(LocalDateTime.now())`), `ArgumentCaptor<T>` captures the exact object passed to `repository.save(captor.capture())` for detailed attribute assertions.
+
+4. **Testing `void` Methods (`removeEntry`):**
+   - For `void` return methods, unit tests verify call interactions on `@Mock` objects using `verify(repository, times(1)).deleteById(id)` for success paths and `verify(repository, never()).deleteById(any())` when exceptions are thrown.
+
+5. **Comprehensive Service Test Coverage (45 Unit Tests):**
+   - **`UserServiceTest` (17 tests):** Tests `findByEmail`, `findById`, `findByGoogleId`, `updateUser`, `getAllUsers`, `processGoogleAuth`.
+   - **`GoalServiceTest` (12 tests):** Tests `createGoal`, `getGoalByUserAndDate`, `findAllGoalsByUser`, `updateGoal`.
+   - **`EntryServiceTest` (16 tests):** Tests `findByUser`, `createEntry`, `removeEntry`, `findTodayEntriesByUser`, `updateEntry`.
+
+---
+
 ## 📅 2026-08-05 - User Data Ownership Security (IDOR Protection), Google OAuth2 Filter & Role-Based Access Control (RBAC)
 
 ### 💡 Key Concepts Learned & Architectural Decisions
