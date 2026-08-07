@@ -49,6 +49,9 @@ public class GoalService {
     @PreAuthorize("isAuthenticated() && @goalSecurity.isOwner(#id, principal)")
     public GoalResponseDTO updateGoal(UUID id, GoalRequestDTO dto) {
         Goal goal = repository.findById(id).orElseThrow(() -> new NotFoundException("Goal not found"));
+        if (dto == null) {
+            throw  new IllegalArgumentException("New Goal can't be null");
+        }
         // Doesn't update the user
         goal.setCarbs(dto.carbs());
         goal.setFat(dto.fat());
@@ -62,7 +65,7 @@ public class GoalService {
     @PreAuthorize("#userId == principal.id")
     public GoalResponseDTO getGoalByUserAndDate(UUID userId, LocalDate date) {
         if (userId == null) {
-            return null;
+            throw  new IllegalArgumentException("new user can't be null");
         }
 
 
@@ -77,7 +80,7 @@ public class GoalService {
     public List<GoalResponseDTO> findAllGoalsByUser(UUID userId) {
 
         if (userId == null) {
-            return null;
+            throw  new IllegalArgumentException("User can't be null");
         }
 
         User user = uRepository.findById(userId).orElseThrow(() -> new NotFoundException("User not found with id: " + userId));

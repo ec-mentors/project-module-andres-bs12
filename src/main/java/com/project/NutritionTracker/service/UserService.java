@@ -64,6 +64,9 @@ public class UserService {
 
     @PreAuthorize("isAuthenticated() && #id == principal.id")
     public UserResponseDTO updateUser(UUID id, UserRequestDTO dto) {
+        if (dto == null || id == null) {
+            throw  new IllegalArgumentException("new user can't be null");
+        }
         User user = repository.findById(id).orElseThrow(() -> new NotFoundException("User not found"));
         user.setFirstName(dto.firstName());
         user.setLastName(dto.lastName());
