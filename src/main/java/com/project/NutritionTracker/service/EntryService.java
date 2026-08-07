@@ -35,7 +35,7 @@ public class EntryService {
     @PreAuthorize("isAuthenticated() && #userId == principal.id")
     public List<EntryResponseDTO> findByUser(UUID userId) {
         if (userId == null) {
-            return List.of();
+            throw  new IllegalArgumentException("User can't be null");
         }
 
         User user = uRepository.findById(userId).orElseThrow(() -> new NotFoundException("User not found with id: " + userId));
@@ -45,6 +45,9 @@ public class EntryService {
 
     @PreAuthorize("isAuthenticated() && #userId == principal.id")
     public EntryResponseDTO createEntry(EntryRequestDTO dto, UUID userId) {
+        if (dto == null || userId == null) {
+            throw new IllegalArgumentException("dto and user must not be null");
+        }
         User user = uRepository.findById(userId).orElseThrow(() -> new NotFoundException("User not found with id: " + userId));
         Entry entry = mapper.toEntity(dto);
 
@@ -65,15 +68,14 @@ public class EntryService {
 
     @PreAuthorize("#userId == principal.id")
     public List<EntryResponseDTO> findTodayEntriesByUser(UUID userId) {
-
         if (userId == null) {
-            return List.of();
+            throw new IllegalArgumentException("UserId can't be null");
         }
+
         User user = uRepository.findById(userId).orElseThrow(() -> new NotFoundException("User not found with id: " + userId));
 
         LocalDateTime startOfDay = LocalDate.now().atStartOfDay();
         LocalDateTime endOfDay = LocalDate.now().atTime(LocalTime.MAX);
-
 
         return repository.findByUserAndCreatedOnBetween(user, startOfDay, endOfDay).stream()
                 .map(mapper::toResponseDTO)
@@ -82,6 +84,10 @@ public class EntryService {
 
     @PreAuthorize("isAuthenticated() && @entrySecurity.isOwner(#id, principal)")
     public EntryResponseDTO updateEntry(UUID id, EntryRequestDTO dto) {
+
+        if (dto == null) {
+            throw new IllegalArgumentException("DTO can't be null");
+        }
 
         Entry entry = repository.findById(id).orElseThrow(() -> new NotFoundException("Entry not found"));
 

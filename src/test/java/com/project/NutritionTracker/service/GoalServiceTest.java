@@ -43,26 +43,21 @@ public class GoalServiceTest {
 
     private UUID sampleId;
     private User sampleUser;
-    private LocalDate sampleStartdate;
-    private Long telegramId;
+    private LocalDate sampleStartDate;
+//    private Long telegramId;
 
     @BeforeEach
     void setSUp() {
+        sampleId = UUID.randomUUID();
+        sampleStartDate = LocalDate.of(2026, 8, 6);
+
         // User
-        sampleUser = new User();
-        sampleUser.setId(sampleId);
-        sampleUser.setGoogleId("googleid123");
-        sampleUser.setCreatedAt(LocalDateTime.now());
-        sampleUser.setEmail("sampleemail@sample.com");
-        sampleUser.setFirstName("Ben");
-        sampleUser.setLastName("Marx");
+        sampleUser = new User(sampleId, "googleid123", "Ben", "Marx", "sampleemail@sample.com", null, LocalDateTime.now(), "USER");
 
         // Goal
-        sampleId = UUID.randomUUID();
-        sampleStartdate = LocalDate.of(2026, 8, 6);
-        sampleGoal = new Goal(sampleId, sampleUser, sampleStartdate, 1000, 100.0, 10.0, 1.0);
+        sampleGoal = new Goal(sampleId, sampleUser, sampleStartDate, 1000, 100.0, 10.0, 1.0);
         sampleGoalRequestDTO = new GoalRequestDTO(1000, 100.0, 10.0, 1.0);
-        sampleGoalResponseDTO = new GoalResponseDTO(sampleId, sampleStartdate, 1000, 100.0, 10.0, 1.0);
+        sampleGoalResponseDTO = new GoalResponseDTO(sampleId, sampleStartDate, 1000, 100.0, 10.0, 1.0);
     }
 
 
@@ -79,7 +74,7 @@ public class GoalServiceTest {
 
         assertNotNull(responseDTO);
         assertEquals(sampleGoalResponseDTO, responseDTO);
-        assertEquals(sampleStartdate, responseDTO.startDate());
+        assertEquals(sampleStartDate, responseDTO.startDate());
         assertEquals(sampleId, responseDTO.id());
 
         verify(uRepository, times(1)).findById(sampleId);
@@ -130,27 +125,27 @@ public class GoalServiceTest {
     @Test
     void getGoalByUserAndDate() {
         when(uRepository.findById(sampleId)).thenReturn(Optional.of(sampleUser));
-        when(repository.findByUserAndStartDate(sampleUser, sampleStartdate)).thenReturn(Optional.of(sampleGoal));
+        when(repository.findByUserAndStartDate(sampleUser, sampleStartDate)).thenReturn(Optional.of(sampleGoal));
         when(mapper.toResponseDTO(sampleGoal)).thenReturn(sampleGoalResponseDTO);
 
-        GoalResponseDTO responseDTO = service.getGoalByUserAndDate(sampleId, sampleStartdate);
+        GoalResponseDTO responseDTO = service.getGoalByUserAndDate(sampleId, sampleStartDate);
 
         assertNotNull(responseDTO);
         assertEquals(sampleGoalResponseDTO, responseDTO);
-        assertEquals(sampleStartdate, responseDTO.startDate());
+        assertEquals(sampleStartDate, responseDTO.startDate());
         assertEquals(sampleId, responseDTO.id());
 
         verify(uRepository, times(1)).findById(sampleId);
-        verify(repository, times(1)).findByUserAndStartDate(sampleUser, sampleStartdate);
+        verify(repository, times(1)).findByUserAndStartDate(sampleUser, sampleStartDate);
         verify(mapper, times(1)).toResponseDTO(sampleGoal);
     }
 
     @Test
     void getGoalByUserAndDate_throwIAE_WhenUserIdIsNull() {
-        assertThrows(IllegalArgumentException.class, () -> service.getGoalByUserAndDate(null, sampleStartdate));
+        assertThrows(IllegalArgumentException.class, () -> service.getGoalByUserAndDate(null, sampleStartDate));
 
         verify(uRepository, never()).findById(sampleId);
-        verify(repository, never()).findByUserAndStartDate(sampleUser, sampleStartdate);
+        verify(repository, never()).findByUserAndStartDate(sampleUser, sampleStartDate);
         verify(mapper, never()).toResponseDTO(sampleGoal);
     }
 
@@ -159,7 +154,7 @@ public class GoalServiceTest {
         UUID fakeid = UUID.randomUUID();
         when(uRepository.findById(fakeid)).thenReturn(Optional.empty());
 
-        assertThrows(NotFoundException.class, () -> service.getGoalByUserAndDate(fakeid, sampleStartdate));
+        assertThrows(NotFoundException.class, () -> service.getGoalByUserAndDate(fakeid, sampleStartDate));
 
         verify(uRepository, times(1)).findById(fakeid);
         verify(repository, never()).findByUserAndStartDate(any(), any());
@@ -184,8 +179,8 @@ public class GoalServiceTest {
 
     @Test
     void findAllGoalsByUser() {
-        Goal sampleGoal2 = new Goal(sampleId, sampleUser, sampleStartdate, 2000, 200.0, 20.0, 2.0);
-        GoalResponseDTO sampleGoalResponseDTO2 = new GoalResponseDTO(sampleId, sampleStartdate, 2000, 200.0, 20.0, 2.0);
+        Goal sampleGoal2 = new Goal(sampleId, sampleUser, sampleStartDate, 2000, 200.0, 20.0, 2.0);
+        GoalResponseDTO sampleGoalResponseDTO2 = new GoalResponseDTO(sampleId, sampleStartDate, 2000, 200.0, 20.0, 2.0);
 
         when(uRepository.findById(sampleId)).thenReturn(Optional.of(sampleUser));
         when(repository.findAllByUser(sampleUser)).thenReturn(List.of(sampleGoal, sampleGoal2));
@@ -238,17 +233,7 @@ public class GoalServiceTest {
 
     }
 
-    @Test
-    void updateGoal_ThrowsNFE_WhenGoalNotFound() {
-        UUID fakeGoalId = UUID.randomUUID();
-        when(repository.findById(fakeGoalId)).thenReturn(Optional.empty());
 
-        assertThrows(NotFoundException.class, () -> service.updateGoal(fakeGoalId, sampleGoalRequestDTO));
-
-        verify(repository, times(1)).findById(fakeGoalId);
-        verify(repository, never()).findAllByUser(any());
-        verify(mapper, never()).toResponseDTO(any());
-    }
 
 
     // ----------   updateGoal ---------
@@ -274,6 +259,18 @@ public class GoalServiceTest {
         verify(repository, times(1)).findById(sampleId);
         verify(repository, times(1)).save(sampleGoal);
         verify(mapper, times(1)).toResponseDTO(sampleGoal);
+    }
+
+    @Test
+    void updateGoal_ThrowsNFE_WhenGoalNotFound() {
+        UUID fakeGoalId = UUID.randomUUID();
+        when(repository.findById(fakeGoalId)).thenReturn(Optional.empty());
+
+        assertThrows(NotFoundException.class, () -> service.updateGoal(fakeGoalId, sampleGoalRequestDTO));
+
+        verify(repository, times(1)).findById(fakeGoalId);
+        verify(repository, never()).findAllByUser(any());
+        verify(mapper, never()).toResponseDTO(any());
     }
 
     @Test

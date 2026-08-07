@@ -46,13 +46,7 @@ public class UserServiceTest {
         sampleEmail = "test@example.com";
         sampleGoogleId = "google-123";
 
-        sampleUser = new User();
-        sampleUser.setId(sampleId);
-        sampleUser.setEmail(sampleEmail);
-        sampleUser.setFirstName("John");
-        sampleUser.setLastName("Doe");
-        sampleUser.setCreatedAt(LocalDateTime.of(2026, 8, 1, 10, 1));
-        sampleUser.setGoogleId("google-123");
+        sampleUser = new User(sampleId, sampleGoogleId, "John", "Doe", sampleEmail, null, LocalDateTime.of(2026, 8, 1, 10, 1), "USER");
         sampleResponseDTO = new UserResponseDTO("John", sampleId, "Doe", sampleEmail, LocalDateTime.of(2026, 8, 1, 10, 1), "google-123");
         sampleRequestDTO = new UserRequestDTO("John", "Doe", sampleEmail, "google-123");
 
