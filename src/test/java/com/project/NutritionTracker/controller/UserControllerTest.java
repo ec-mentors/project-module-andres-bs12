@@ -3,7 +3,6 @@ package com.project.NutritionTracker.controller;
 import com.project.NutritionTracker.dto.UserRequestDTO;
 import com.project.NutritionTracker.dto.UserResponseDTO;
 import com.project.NutritionTracker.exception.NotFoundException;
-import com.project.NutritionTracker.model.User;
 import com.project.NutritionTracker.service.UserService;
 import com.project.NutritionTracker.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -27,7 +26,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import java.io.NotActiveException;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
