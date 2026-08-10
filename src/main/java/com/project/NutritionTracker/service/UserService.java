@@ -35,7 +35,7 @@ public class UserService {
             return null;
         }
 
-        User user = repository.findByEmail(email).orElseThrow(() -> new NotFoundException("Email not found, Sign up"));
+        User user = repository.findByEmail(email).orElseThrow(() -> new NotFoundException("Email not found"));
 
         return mapper.toResponseDTO(user);
     }
@@ -46,7 +46,7 @@ public class UserService {
             return null;
         }
 
-        User user = repository.findById(id).orElseThrow(() -> new NotFoundException("Id not found, Sign up"));
+        User user = repository.findById(id).orElseThrow(() -> new NotFoundException("Id not found"));
 
         return mapper.toResponseDTO(user);
     }
@@ -65,7 +65,7 @@ public class UserService {
     @PreAuthorize("isAuthenticated() && #id == principal.id")
     public UserResponseDTO updateUser(UUID id, UserRequestDTO dto) {
         if (dto == null || id == null) {
-            throw  new IllegalArgumentException("new user can't be null");
+            throw  new IllegalArgumentException("New user can't be null");
         }
         User user = repository.findById(id).orElseThrow(() -> new NotFoundException("User not found"));
         user.setFirstName(dto.firstName());

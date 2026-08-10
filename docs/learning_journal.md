@@ -4,6 +4,36 @@ This document serves as a development and learning journal to record key concept
 
 ---
 
+## 📅 2026-08-10 - (Sprint 3) - Controller Layer Unit Testing with @WebMvcTest & MockMvc 
+
+### 💡 Key Concepts Learned & Architectural Decisions
+
+1. **Web Layer Slicing with `@WebMvcTest`:**
+   - `@WebMvcTest(UserController.class)` loads ONLY Spring MVC components (Controllers, `GlobalExceptionHandler`, Jackson Converters) without scanning `@Service` or `@Repository` beans. This keeps unit tests running in milliseconds.
+   - `@AutoConfigureMockMvc(addFilters = false)` disables Spring Security filter evaluation during unit testing to isolate controller mapping and serialization logic.
+
+2. **Filter Component Scanning & Constructor Dependencies (`GoogleAuthFilter`):**
+   - *Key Realization:* `@WebMvcTest` automatically scans all `Filter` beans annotated with `@Component` (such as `GoogleAuthFilter`). Since `GoogleAuthFilter` requires `UserRepository` in its constructor, Spring fails to start the test context (`NoSuchBeanDefinitionException`) unless `@MockitoBean private UserRepository userRepository;` is provided as a mock dependency.
+
+3. **HTTP Request Simulation with `MockMvc`:**
+   - **Path Variables (`@PathVariable`):** Passed using template syntax: `get("/api/user/{id}", sampleId)`.
+   - **Query Parameters (`@RequestParam`):** Passed using `.param("email", sampleEmail)`.
+   - **JSON Request Bodies (`@RequestBody`):** Sent using `.contentType(MediaType.APPLICATION_JSON)` and serialized via `objectMapper.writeValueAsString(requestDTO)`.
+   - **Plain Text Payloads:** Sent using `.contentType(MediaType.TEXT_PLAIN)` for raw string bodies like Google ID Tokens (`POST /api/user/auth/google`).
+
+4. **JSON Response Assertions with `jsonPath`:**
+   - **Single Object:** Evaluates properties using `jsonPath("$.firstName").value("John")`.
+   - **JSON Arrays (`GET /api/user`):** Evaluates list size using `jsonPath("$.length()").value(2)` and indexes elements using `jsonPath("$[0].firstName")` and `jsonPath("$[1].firstName")`.
+
+5. **Jackson 3 / Spring Boot 4 Import Package Convention:**
+   - In Spring Boot 4 / Jackson 3.x, the `ObjectMapper` package path was moved from `com.fasterxml.jackson.databind.ObjectMapper` to `tools.jackson.databind.ObjectMapper`.
+
+6. **Controller Test Scope vs. Service Business Rules:**
+   - Controller tests verify HTTP routing, status codes (`200 OK`, `404 Not Found`), and JSON serialization.
+   - Noticed that `updateUser` in `UserService` only updates `firstName` and `lastName` while preserving `email`. Mock responses in controller tests (`UserResponseDTO`) reflect this behavior accurately.
+
+---
+
 ## 📅 2026-08-07 - Service Layer Unit Testing with Mockito & JUnit 5 (Sprint 2)
 
 ### 💡 Key Concepts Learned & Architectural Decisions
