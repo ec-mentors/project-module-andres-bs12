@@ -1,10 +1,6 @@
-/* App-wide custom overrides matching Figma design tokens */
-#root {
-  width: 100%;
-  max-width: 100%;
-  margin: 0;
-  padding: 0;
-  border-inline: none;
-  text-align: left;
-  min-height: 100vh;
+@import "tailwindcss";
+
+/* Clean Standard System Cursor */
+button, select, [title], .cursor-pointer {
+  cursor: pointer;
 }

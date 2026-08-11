@@ -22,13 +22,15 @@ const DEFAULT_GOAL: NutritionGoal = {
   fat: 65,
 };
 
-// Initial Demo Entries matching Figma layout when backend has no entries yet
+const todayISO = new Date().toISOString();
+
+// Initial Demo Entries matching Figma layout with dates
 const DEMO_INITIAL_ENTRIES: MealEntry[] = [
   {
     id: 'demo-1',
     mealName: 'Grilled Chicken & Rice',
     source: 'Manual',
-    createdOn: new Date().toISOString(),
+    createdOn: todayISO,
     kcal: 450,
     protein: 40,
     carbs: 50,
@@ -38,7 +40,7 @@ const DEMO_INITIAL_ENTRIES: MealEntry[] = [
     id: 'demo-2',
     mealName: 'Protein Shake',
     source: 'Telegram',
-    createdOn: new Date().toISOString(),
+    createdOn: todayISO,
     kcal: 250,
     protein: 30,
     carbs: 10,
@@ -91,9 +93,18 @@ function App() {
     loadBackendData();
   }, []);
 
-  // 2. COMPUTE DAILY TOTALS ON THE FLY FROM THE ENTRIES ARRAY
+  // 2. DYNAMICALLY FILTER ENTRIES FOR THE CURRENTLY SELECTED DATE
+  const visibleEntries = useMemo(() => {
+    const selectedDateStr = selectedDate.toDateString();
+    return entries.filter((item) => {
+      if (!item.createdOn) return true;
+      return new Date(item.createdOn).toDateString() === selectedDateStr;
+    });
+  }, [entries, selectedDate]);
+
+  // 3. COMPUTE DAILY TOTALS ON THE FLY FROM VISIBLE ENTRIES FOR THE SELECTED DATE
   const summary: DailySummary = useMemo(() => {
-    return entries.reduce(
+    return visibleEntries.reduce(
       (acc, entry) => ({
         consumedKcal: acc.consumedKcal + (Number(entry.kcal) || 0),
         consumedProtein: acc.consumedProtein + (Number(entry.protein) || 0),
@@ -102,25 +113,28 @@ function App() {
       }),
       { consumedKcal: 0, consumedProtein: 0, consumedCarbs: 0, consumedFat: 0 }
     );
-  }, [entries]);
+  }, [visibleEntries]);
 
-  // 3. HANDLER: CREATE MEAL FOR SELECTED DATE (INLINE POST TO SPRING BOOT)
+  // 4. HANDLER: CREATE MEAL (POST TO SPRING BOOT) FOR THE SELECTED DATE
   const handleAddMeal = async (payload: CreateMealEntryPayload) => {
+    const mealTimestamp = new Date(selectedDate);
+    const now = new Date();
+    mealTimestamp.setHours(now.getHours(), now.getMinutes(), now.getSeconds());
+
     try {
       const newEntry = await api.createEntry(payload);
-      // Attach selectedDate timestamp if creating for a past day
-      const entryWithDate = {
+      const entryWithSelectedDate = {
         ...newEntry,
-        createdOn: selectedDate.toISOString(),
+        createdOn: mealTimestamp.toISOString(),
       };
-      setEntries((prev) => [entryWithDate, ...prev]);
+      setEntries((prev) => [entryWithSelectedDate, ...prev]);
     } catch (err) {
       console.warn('[API Fallback] Backend offline. Adding meal to local state.');
       const localEntry: MealEntry = {
         id: `local-${Date.now()}`,
         mealName: payload.mealName,
         source: payload.source || 'Manual',
-        createdOn: selectedDate.toISOString(),
+        createdOn: mealTimestamp.toISOString(),
         kcal: payload.kcal,
         protein: payload.protein,
         carbs: payload.carbs,
@@ -139,7 +153,42 @@ function App() {
     }
   };
 
-  // 4. HANDLER: DELETE MEAL (DELETE TO SPRING BOOT)
+  // 5. HANDLER: UPDATE MEAL (PUT TO SPRING BOOT)
+  const handleUpdateMeal = async (id: string, payload: CreateMealEntryPayload) => {
+    try {
+      if (!id.startsWith('demo-') && !id.startsWith('local-')) {
+        await fetch(`/api/entry/${id}/update`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+      }
+    } catch (err) {
+      console.warn('[API Warning] Could not update meal on backend');
+    } finally {
+      setEntries((prev) =>
+        prev.map((item) =>
+          item.id === id
+            ? {
+                ...item,
+                mealName: payload.mealName,
+                kcal: payload.kcal,
+                protein: payload.protein,
+                carbs: payload.carbs,
+                fat: payload.fat,
+              }
+            : item
+        )
+      );
+      setToast({
+        id: `toast-${Date.now()}`,
+        title: 'Meal updated',
+        description: 'Meal entry values updated successfully.',
+      });
+    }
+  };
+
+  // 6. HANDLER: DELETE MEAL (DELETE TO SPRING BOOT)
   const handleDeleteMeal = async (entryId: string) => {
     try {
       if (!entryId.startsWith('demo-') && !entryId.startsWith('local-')) {
@@ -157,7 +206,7 @@ function App() {
     }
   };
 
-  // 5. HANDLER: SET GOALS (POST TO SPRING BOOT) -> Triggers Figma SidepopUp
+  // 7. HANDLER: SET GOALS (POST TO SPRING BOOT)
   const handleSaveGoal = async (payload: SetGoalPayload) => {
     try {
       const updatedGoal = await api.createGoal(payload);
@@ -180,10 +229,14 @@ function App() {
     }
   };
 
+  const selectedDateFormatted = selectedDate.toDateString() === new Date().toDateString()
+    ? 'Today'
+    : selectedDate.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+
   return (
     <div className="min-h-screen bg-[#05030d] text-slate-100 font-sans antialiased pb-16 selection:bg-[#6417ff] selection:text-white relative">
       
-      {/* Figma Notification Toast (SidepopUp) with Smooth 700ms Slide-in / Slide-out */}
+      {/* Figma Notification Toast (SidepopUp) */}
       <SidepopUp toast={toast} onClose={() => setToast(null)} />
 
       {/* Glassmorphism Floating Top Navigation Header */}
@@ -195,13 +248,13 @@ function App() {
         onOpenAuth={() => setIsAuthOpen(true)}
       />
 
-      {/* Main Content Area with Smooth Fade & Scale Tab Animation */}
+      {/* Main Content Area */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {isAppLoading ? (
           /* Animated Grey Skeleton Screen Loading State */
           <SkeletonLoader />
         ) : (
-          <div key={activeTab} className="animate-in fade-in zoom-in-95 duration-300">
+          <div key={activeTab} className="animate-in fade-in duration-300">
             {activeTab === 'today' ? (
               /* Today Dashboard View */
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
@@ -209,26 +262,32 @@ function App() {
                 {/* Left Column (Hero Kcal Card + Consumed vs Left Table) */}
                 <div className="lg:col-span-8 space-y-6">
                   
-                  {/* Hero Kcal Card with Date Navigator */}
-                  <HeroKcalCard
-                    summary={summary}
-                    goal={goal}
-                    onOpenSetGoals={() => setIsSetGoalsOpen(true)}
-                    selectedDate={selectedDate}
-                    onDateChange={(newDate) => setSelectedDate(newDate)}
-                  />
+                  {/* Hero Kcal Card */}
+                  <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+                    <HeroKcalCard
+                      summary={summary}
+                      goal={goal}
+                      onOpenSetGoals={() => setIsSetGoalsOpen(true)}
+                      selectedDate={selectedDate}
+                      onDateChange={(newDate) => setSelectedDate(newDate)}
+                    />
+                  </div>
 
                   {/* Consumed vs Left Table */}
-                  <ConsumedVsLeftTable summary={summary} goal={goal} />
+                  <div className="animate-in fade-in slide-in-from-bottom-5 duration-600 delay-100">
+                    <ConsumedVsLeftTable summary={summary} goal={goal} />
+                  </div>
 
                 </div>
 
-                {/* Right Column (Latest Entries Sidebar with Inline Form) */}
-                <div className="lg:col-span-4 h-full">
+                {/* Right Column (Latest Entries Sidebar) */}
+                <div className="lg:col-span-4 h-full animate-in fade-in slide-in-from-bottom-6 duration-700 delay-150">
                   <LatestEntriesSidebar
-                    entries={entries}
+                    entries={visibleEntries}
                     onAddMeal={handleAddMeal}
+                    onUpdateMeal={handleUpdateMeal}
                     onDeleteMeal={handleDeleteMeal}
+                    selectedDateFormatted={selectedDateFormatted}
                   />
                 </div>
 

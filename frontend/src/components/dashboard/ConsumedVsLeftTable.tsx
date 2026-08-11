@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import type { DailySummary, NutritionGoal } from '../../types/nutrition';
 
 interface ConsumedVsLeftTableProps {
@@ -16,6 +16,14 @@ interface RowData {
 }
 
 export const ConsumedVsLeftTable: React.FC<ConsumedVsLeftTableProps> = ({ summary, goal }) => {
+  const [isAnimated, setIsAnimated] = useState(false);
+
+  useEffect(() => {
+    setIsAnimated(false);
+    const timer = setTimeout(() => setIsAnimated(true), 60);
+    return () => clearTimeout(timer);
+  }, [summary, goal]);
+
   // Calculate row metrics
   const kcalExtra = summary.consumedKcal - goal.kcal;
   const kcalPercent = goal.kcal > 0 ? Math.round((summary.consumedKcal / goal.kcal) * 100) : 0;
@@ -60,12 +68,12 @@ export const ConsumedVsLeftTable: React.FC<ConsumedVsLeftTableProps> = ({ summar
       goalText: `${goal.carbs}g`,
       extraText: carbsLeft > 0 ? `${carbsLeft}g left` : `${Math.abs(carbsLeft)}g extra`,
       percentage: carbsPercent,
-      barColor: 'bg-[#e8e2f1]',
+      barColor: 'bg-[#6417ff]',
     },
   ];
 
   return (
-    <div className="bg-white rounded-[32px] p-8 shadow-[0_12px_30px_rgba(15,23,42,0.08)] border border-[#e8e2f1] hover:border-[#6417ff]/30 transition-all duration-300 mt-6">
+    <div className="bg-white rounded-[32px] p-8 shadow-[0_12px_30px_rgba(15,23,42,0.08)] border border-[#e8e2f1] hover:border-[#6417ff]/30 transition-all duration-300">
       {/* Header Row */}
       <div className="flex items-center justify-between mb-6">
         <h3 className="text-2xl font-bold text-[#0f172a]">
@@ -104,8 +112,8 @@ export const ConsumedVsLeftTable: React.FC<ConsumedVsLeftTableProps> = ({ summar
               {/* Progress Bar Container */}
               <div className="flex-1 bg-[#e8e2f1] h-3 rounded-full overflow-hidden relative">
                 <div
-                  className={`h-full rounded-full transition-all duration-500 ${row.barColor}`}
-                  style={{ width: `${Math.min(row.percentage, 100)}%` }}
+                  className={`h-full rounded-full transition-all duration-[1000ms] ease-out ${row.barColor}`}
+                  style={{ width: isAnimated ? `${Math.min(row.percentage, 100)}%` : '0%' }}
                 />
               </div>
 

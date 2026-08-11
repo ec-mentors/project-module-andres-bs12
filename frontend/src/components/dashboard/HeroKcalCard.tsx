@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { ChevronLeft, ChevronRight, Calendar as CalendarIcon } from 'lucide-react';
 import type { DailySummary, NutritionGoal } from '../../types/nutrition';
 
@@ -18,6 +18,7 @@ interface MacroRingProps {
   color: string;
   ringValue?: string;
   onClick: () => void;
+  isAnimated: boolean;
 }
 
 const MacroRingCard: React.FC<MacroRingProps> = ({
@@ -28,10 +29,13 @@ const MacroRingCard: React.FC<MacroRingProps> = ({
   color,
   ringValue,
   onClick,
+  isAnimated,
 }) => {
   const radius = 24;
   const circumference = 2 * Math.PI * radius;
-  const strokeDashoffset = circumference - (Math.min(percentage, 100) / 100) * circumference;
+  // Calculate target strokeDashoffset (0 when 100%, circumference when 0%)
+  const targetOffset = circumference - (Math.min(percentage, 100) / 100) * circumference;
+  const currentOffset = isAnimated ? targetOffset : circumference;
 
   return (
     <div
@@ -51,7 +55,7 @@ const MacroRingCard: React.FC<MacroRingProps> = ({
         </div>
       </div>
 
-      {/* SVG Donut Ring */}
+      {/* SVG Donut Ring with Smooth Fill-up Animation */}
       <div className="relative w-14 h-14 flex items-center justify-center">
         <svg className="w-14 h-14 transform -rotate-90">
           <circle
@@ -69,10 +73,10 @@ const MacroRingCard: React.FC<MacroRingProps> = ({
             stroke={color}
             strokeWidth="5"
             strokeDasharray={circumference}
-            strokeDashoffset={strokeDashoffset}
+            strokeDashoffset={currentOffset}
             strokeLinecap="round"
             fill="transparent"
-            className="transition-all duration-700 ease-out"
+            className="transition-all duration-[1000ms] ease-out"
           />
         </svg>
         <span className="absolute text-xs font-bold text-[#0f172a]">
@@ -90,6 +94,15 @@ export const HeroKcalCard: React.FC<HeroKcalCardProps> = ({
   selectedDate,
   onDateChange,
 }) => {
+  const [isAnimated, setIsAnimated] = useState(false);
+
+  // Trigger ring fill-up animation when summary or selected date changes
+  useEffect(() => {
+    setIsAnimated(false);
+    const timer = setTimeout(() => setIsAnimated(true), 60);
+    return () => clearTimeout(timer);
+  }, [summary, selectedDate]);
+
   const formattedDate = selectedDate.toLocaleDateString('en-US', {
     weekday: 'short',
     day: 'numeric',
@@ -107,7 +120,7 @@ export const HeroKcalCard: React.FC<HeroKcalCardProps> = ({
   };
 
   const handleNextDay = () => {
-    if (isToday || isFutureDate) return; // Prevent navigating to future days
+    if (isToday || isFutureDate) return;
     const next = new Date(selectedDate);
     next.setDate(next.getDate() + 1);
     onDateChange(next);
@@ -137,7 +150,7 @@ export const HeroKcalCard: React.FC<HeroKcalCardProps> = ({
           </p>
         </div>
 
-        {/* Date Navigator Pill (< Previous Day | Date | Next Day >) */}
+        {/* Date Navigator Pill */}
         <div className="flex items-center space-x-1 bg-[#faf8fc] p-1 rounded-full border border-[#f1ecf7] shadow-sm">
           <button
             onClick={handlePrevDay}
@@ -167,7 +180,7 @@ export const HeroKcalCard: React.FC<HeroKcalCardProps> = ({
         </div>
       </div>
 
-      {/* 4 Clickeable Mini Macro Cards */}
+      {/* 4 Clickeable Mini Macro Cards with Animated Rings */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* KCAL */}
         <MacroRingCard
@@ -178,6 +191,7 @@ export const HeroKcalCard: React.FC<HeroKcalCardProps> = ({
           color="#f59e0b"
           ringValue={`${remainingKcal}`}
           onClick={onOpenSetGoals}
+          isAnimated={isAnimated}
         />
 
         {/* CARBS */}
@@ -189,6 +203,7 @@ export const HeroKcalCard: React.FC<HeroKcalCardProps> = ({
           color="#16a34a"
           ringValue={`${Math.round(carbsPercent)}`}
           onClick={onOpenSetGoals}
+          isAnimated={isAnimated}
         />
 
         {/* FAT */}
@@ -200,6 +215,7 @@ export const HeroKcalCard: React.FC<HeroKcalCardProps> = ({
           color="#ef233c"
           ringValue={fatRemaining < 0 ? '100+' : `${Math.round(fatPercent)}`}
           onClick={onOpenSetGoals}
+          isAnimated={isAnimated}
         />
 
         {/* PROTEIN */}
@@ -211,6 +227,7 @@ export const HeroKcalCard: React.FC<HeroKcalCardProps> = ({
           color="#ef233c"
           ringValue={`${proteinRemaining > 0 ? proteinRemaining : 0}`}
           onClick={onOpenSetGoals}
+          isAnimated={isAnimated}
         />
       </div>
     </div>

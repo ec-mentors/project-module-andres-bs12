@@ -15,14 +15,20 @@ interface SidepopUpProps {
 
 export const SidepopUp: React.FC<SidepopUpProps> = ({ toast, onClose }) => {
   const [isExiting, setIsExiting] = useState(false);
+  const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
     if (toast) {
       setIsExiting(false);
+      // Trigger smooth slide-in on mount
+      requestAnimationFrame(() => setIsVisible(true));
+
       const timer = setTimeout(() => {
         handleStartExit();
-      }, 4000); // Stays visible for 4s
+      }, 4500);
       return () => clearTimeout(timer);
+    } else {
+      setIsVisible(false);
     }
   }, [toast]);
 
@@ -31,18 +37,19 @@ export const SidepopUp: React.FC<SidepopUpProps> = ({ toast, onClose }) => {
     setTimeout(() => {
       onClose();
       setIsExiting(false);
-    }, 1000); // 1000ms (1 full second) ultra-smooth slow slide-out transition
+      setIsVisible(false);
+    }, 1400); // 1.4 seconds ultra-slow, gradual transition
   };
 
   if (!toast) return null;
 
   return (
-    <div className="fixed top-24 right-6 z-50 max-w-sm w-full pointer-events-none overflow-hidden p-2">
+    <div className="fixed top-24 right-6 z-50 max-w-sm w-full pointer-events-none">
       <div
-        className={`pointer-events-auto bg-white rounded-[24px] p-5 shadow-[0_20px_50px_rgba(100,23,255,0.25)] border border-[#e8e2f1] relative flex items-start space-x-3 transition-all duration-1000 ease-[cubic-bezier(0.22,1,0.36,1)] transform ${
-          isExiting
-            ? 'translate-x-[130%] opacity-0'
-            : 'translate-x-0 opacity-100'
+        className={`pointer-events-auto bg-white rounded-[24px] p-5 shadow-[0_12px_40px_rgba(15,23,42,0.18)] border border-[#e8e2f1] relative flex items-start space-x-3 transition-all duration-[1400ms] ease-[cubic-bezier(0.16,1,0.3,1)] transform ${
+          isVisible && !isExiting
+            ? 'translate-x-0 opacity-100'
+            : 'translate-x-[140%] opacity-0'
         }`}
       >
         {/* Success Icon */}
