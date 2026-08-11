@@ -1,10 +1,13 @@
 import React from 'react';
+import { ChevronLeft, ChevronRight, Calendar as CalendarIcon } from 'lucide-react';
 import type { DailySummary, NutritionGoal } from '../../types/nutrition';
 
 interface HeroKcalCardProps {
   summary: DailySummary;
   goal: NutritionGoal;
   onOpenSetGoals: () => void;
+  selectedDate: Date;
+  onDateChange: (newDate: Date) => void;
 }
 
 interface MacroRingProps {
@@ -80,12 +83,32 @@ const MacroRingCard: React.FC<MacroRingProps> = ({
   );
 };
 
-export const HeroKcalCard: React.FC<HeroKcalCardProps> = ({ summary, goal, onOpenSetGoals }) => {
-  const currentDate = new Date().toLocaleDateString('en-US', {
-    weekday: 'long',
+export const HeroKcalCard: React.FC<HeroKcalCardProps> = ({
+  summary,
+  goal,
+  onOpenSetGoals,
+  selectedDate,
+  onDateChange,
+}) => {
+  const formattedDate = selectedDate.toLocaleDateString('en-US', {
+    weekday: 'short',
     day: 'numeric',
-    month: 'long',
+    month: 'short',
   });
+
+  const isToday = selectedDate.toDateString() === new Date().toDateString();
+
+  const handlePrevDay = () => {
+    const prev = new Date(selectedDate);
+    prev.setDate(prev.getDate() - 1);
+    onDateChange(prev);
+  };
+
+  const handleNextDay = () => {
+    const next = new Date(selectedDate);
+    next.setDate(next.getDate() + 1);
+    onDateChange(next);
+  };
 
   const remainingKcal = Math.max(0, goal.kcal - summary.consumedKcal);
   const kcalPercent = goal.kcal > 0 ? (summary.consumedKcal / goal.kcal) * 100 : 0;
@@ -100,20 +123,40 @@ export const HeroKcalCard: React.FC<HeroKcalCardProps> = ({ summary, goal, onOpe
 
   return (
     <div className="bg-white rounded-[32px] p-8 shadow-[0_12px_30px_rgba(15,23,42,0.08)] border border-[#e8e2f1]">
-      {/* Top Header Row with Date */}
-      <div className="flex items-start justify-between mb-6">
+      {/* Top Header Row with Date Navigator */}
+      <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-6">
         <div>
           <h2 className="text-6xl font-extrabold text-[#0f172a] tracking-tight">
             {remainingKcal}
           </h2>
           <p className="text-lg font-bold text-[#0f172a] mt-1">
-            Kcal remaining
+            Kcal remaining {!isToday && <span className="text-xs font-semibold text-[#6417ff]">({formattedDate})</span>}
           </p>
         </div>
 
-        <span className="text-xs font-bold text-[#94a3b8] bg-[#faf8fc] px-4 py-2 rounded-full border border-[#f1ecf7]">
-          📅 {currentDate}
-        </span>
+        {/* Date Navigator Pill (< Previous Day | Date | Next Day >) */}
+        <div className="flex items-center space-x-1 bg-[#faf8fc] p-1 rounded-full border border-[#f1ecf7] shadow-sm">
+          <button
+            onClick={handlePrevDay}
+            className="p-1.5 rounded-full hover:bg-[#eee6ff] text-[#5f6573] hover:text-[#6417ff] transition-all"
+            title="Go to previous day"
+          >
+            <ChevronLeft className="w-4 h-4" />
+          </button>
+
+          <div className="flex items-center space-x-1.5 px-3 py-1 text-xs font-bold text-[#0f172a]">
+            <CalendarIcon className="w-3.5 h-3.5 text-[#6417ff]" />
+            <span>{isToday ? `Today, ${formattedDate}` : formattedDate}</span>
+          </div>
+
+          <button
+            onClick={handleNextDay}
+            className="p-1.5 rounded-full hover:bg-[#eee6ff] text-[#5f6573] hover:text-[#6417ff] transition-all"
+            title="Go to next day"
+          >
+            <ChevronRight className="w-4 h-4" />
+          </button>
+        </div>
       </div>
 
       {/* 4 Clickeable Mini Macro Cards */}

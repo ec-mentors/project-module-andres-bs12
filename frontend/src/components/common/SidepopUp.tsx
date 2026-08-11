@@ -21,7 +21,7 @@ export const SidepopUp: React.FC<SidepopUpProps> = ({ toast, onClose }) => {
       setIsExiting(false);
       const timer = setTimeout(() => {
         handleStartExit();
-      }, 4000);
+      }, 4000); // Stays visible for 4s
       return () => clearTimeout(timer);
     }
   }, [toast]);
@@ -31,15 +31,15 @@ export const SidepopUp: React.FC<SidepopUpProps> = ({ toast, onClose }) => {
     setTimeout(() => {
       onClose();
       setIsExiting(false);
-    }, 400); // Wait for slide-out transition
+    }, 700); // 700ms smooth slide-out transition
   };
 
   if (!toast) return null;
 
   return (
-    <div className="fixed top-24 right-6 z-50 max-w-sm w-full pointer-events-none">
+    <div className="fixed top-24 right-6 z-50 max-w-sm w-full pointer-events-none overflow-hidden p-2">
       <div
-        className={`pointer-events-auto bg-white rounded-[24px] p-5 shadow-[0_20px_50px_rgba(100,23,255,0.25)] border border-[#e8e2f1] relative flex items-start space-x-3 transition-all duration-400 ease-out transform ${
+        className={`pointer-events-auto bg-white rounded-[24px] p-5 shadow-[0_20px_50px_rgba(100,23,255,0.25)] border border-[#e8e2f1] relative flex items-start space-x-3 transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] transform ${
           isExiting
             ? 'translate-x-[120%] opacity-0'
             : 'translate-x-0 opacity-100'

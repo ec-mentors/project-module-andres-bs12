@@ -48,6 +48,7 @@ const DEMO_INITIAL_ENTRIES: MealEntry[] = [
 
 function App() {
   const [activeTab, setActiveTab] = useState<'today' | 'overview'>('today');
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [entries, setEntries] = useState<MealEntry[]>(DEMO_INITIAL_ENTRIES);
   const [goal, setGoal] = useState<NutritionGoal>(DEFAULT_GOAL);
   
@@ -103,18 +104,23 @@ function App() {
     );
   }, [entries]);
 
-  // 3. HANDLER: CREATE MEAL (INLINE POST TO SPRING BOOT) -> Triggers Slide-in Toast
+  // 3. HANDLER: CREATE MEAL FOR SELECTED DATE (INLINE POST TO SPRING BOOT)
   const handleAddMeal = async (payload: CreateMealEntryPayload) => {
     try {
       const newEntry = await api.createEntry(payload);
-      setEntries((prev) => [newEntry, ...prev]);
+      // Attach selectedDate timestamp if creating for a past day
+      const entryWithDate = {
+        ...newEntry,
+        createdOn: selectedDate.toISOString(),
+      };
+      setEntries((prev) => [entryWithDate, ...prev]);
     } catch (err) {
       console.warn('[API Fallback] Backend offline. Adding meal to local state.');
       const localEntry: MealEntry = {
         id: `local-${Date.now()}`,
         mealName: payload.mealName,
         source: payload.source || 'Manual',
-        createdOn: new Date().toISOString(),
+        createdOn: selectedDate.toISOString(),
         kcal: payload.kcal,
         protein: payload.protein,
         carbs: payload.carbs,
@@ -122,11 +128,13 @@ function App() {
       };
       setEntries((prev) => [localEntry, ...prev]);
     } finally {
-      // Trigger smooth slide-in/slide-out SidepopUp toast
+      const isToday = selectedDate.toDateString() === new Date().toDateString();
       setToast({
         id: `toast-${Date.now()}`,
         title: 'Meal logged successfully',
-        description: 'New meal entry added to your daily progress tracking.',
+        description: isToday
+          ? 'New meal entry added to your daily progress tracking.'
+          : `Meal logged for ${selectedDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}.`,
       });
     }
   };
@@ -144,7 +152,7 @@ function App() {
       setToast({
         id: `toast-${Date.now()}`,
         title: 'Entry removed',
-        description: 'Meal entry was removed from today’s total.',
+        description: 'Meal entry was removed from total.',
       });
     }
   };
@@ -175,7 +183,7 @@ function App() {
   return (
     <div className="min-h-screen bg-[#05030d] text-slate-100 font-sans antialiased pb-16 selection:bg-[#6417ff] selection:text-white relative">
       
-      {/* Figma Notification Toast (SidepopUp) with Slide-in / Slide-out */}
+      {/* Figma Notification Toast (SidepopUp) with Smooth 700ms Slide-in / Slide-out */}
       <SidepopUp toast={toast} onClose={() => setToast(null)} />
 
       {/* Glassmorphism Floating Top Navigation Header */}
@@ -201,11 +209,13 @@ function App() {
                 {/* Left Column (Hero Kcal Card + Consumed vs Left Table) */}
                 <div className="lg:col-span-8 space-y-6">
                   
-                  {/* Hero Kcal Card */}
+                  {/* Hero Kcal Card with Date Navigator */}
                   <HeroKcalCard
                     summary={summary}
                     goal={goal}
                     onOpenSetGoals={() => setIsSetGoalsOpen(true)}
+                    selectedDate={selectedDate}
+                    onDateChange={(newDate) => setSelectedDate(newDate)}
                   />
 
                   {/* Consumed vs Left Table */}

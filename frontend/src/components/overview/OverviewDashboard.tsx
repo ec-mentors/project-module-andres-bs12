@@ -7,10 +7,10 @@ interface OverviewDashboardProps {
 }
 
 export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({ goal }) => {
-  const [selectedMacro, setSelectedMacro] = useState<'protein' | 'kcal' | 'carbs' | 'fat'>('protein');
+  const [selectedMacro, setSelectedMacro] = useState<'general' | 'protein' | 'kcal' | 'carbs' | 'fat'>('general');
   const [selectedMonth, setSelectedMonth] = useState('August 2026');
 
-  // Weekly Balance Metric State (negative = red, positive = green)
+  // Weekly Balance Metric State
   const weeklyChangePercent = -4.2;
 
   // Simulated 31-day monthly intake dataset
@@ -18,7 +18,10 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({ goal }) =>
   const mockDailyData = Array.from({ length: daysInMonth }, (_, i) => {
     const day = i + 1;
     let value = 0;
-    if (selectedMacro === 'protein') {
+    if (selectedMacro === 'general') {
+      // Overall compliance percentage (100% = met all goals)
+      value = (day % 4 === 0 || day % 9 === 0) ? 75 : 100;
+    } else if (selectedMacro === 'protein') {
       value = Math.floor(110 + Math.sin(day) * 35 + (day % 3) * 15);
     } else if (selectedMacro === 'kcal') {
       value = Math.floor(1800 + Math.cos(day) * 400 + (day % 4) * 100);
@@ -32,6 +35,8 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({ goal }) =>
 
   const getTargetValue = () => {
     switch (selectedMacro) {
+      case 'general':
+        return 100; // 100% compliance
       case 'protein':
         return goal.protein || 150;
       case 'kcal':
@@ -44,11 +49,19 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({ goal }) =>
   };
 
   const targetValue = getTargetValue();
-  const monthlyRequired = targetValue * daysInMonth;
-  const maxValue = Math.max(...mockDailyData.map((d) => d.value), targetValue * 1.25);
-  const totalMonthlySum = mockDailyData.reduce((sum, d) => sum + d.value, 0);
-  const dailyAverage = Math.round(totalMonthlySum / daysInMonth);
-  const unit = selectedMacro === 'kcal' ? 'kcal' : 'g';
+  const monthlyRequired = selectedMacro === 'general' ? daysInMonth : targetValue * daysInMonth;
+  const maxValue = selectedMacro === 'general' ? 120 : Math.max(...mockDailyData.map((d) => d.value), targetValue * 1.25);
+  
+  const daysMetCount = mockDailyData.filter((d) => d.value >= targetValue * 0.95).length;
+  const totalMonthlySum = selectedMacro === 'general'
+    ? daysMetCount
+    : mockDailyData.reduce((sum, d) => sum + d.value, 0);
+
+  const dailyAverage = selectedMacro === 'general'
+    ? `${Math.round((daysMetCount / daysInMonth) * 100)}%`
+    : `${Math.round(totalMonthlySum / daysInMonth)} ${selectedMacro === 'kcal' ? 'kcal' : 'g'}`;
+
+  const unit = selectedMacro === 'general' ? 'days' : selectedMacro === 'kcal' ? 'kcal' : 'g';
 
   return (
     <div className="space-y-8 animate-in fade-in zoom-in-95 duration-300">
@@ -62,7 +75,6 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({ goal }) =>
             <span className="text-xs font-bold text-[#94a3b8] uppercase tracking-wider">
               Weekly Balance
             </span>
-            {/* Single line percentage tag (Red if negative, Green if positive) */}
             <span
               className={`px-3 py-1 rounded-full text-xs font-bold flex items-center space-x-1 whitespace-nowrap ${
                 weeklyChangePercent < 0
@@ -82,7 +94,6 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({ goal }) =>
             <div className="text-3xl font-extrabold text-[#0f172a]">
               2,150 <span className="text-sm font-bold text-[#5f6573]">Kcal/day</span>
             </div>
-            {/* Uniform muted text color */}
             <p className="text-xs font-medium text-[#94a3b8] mt-1">
               Same time window comparison
             </p>
@@ -104,7 +115,6 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({ goal }) =>
               <span>14</span>
               <span className="text-sm font-bold text-[#5f6573]">Streak Days 🔥</span>
             </div>
-            {/* Uniform muted text color */}
             <p className="text-xs font-medium text-[#94a3b8] mt-1">
               Logged meals 14 days in a row!
             </p>
@@ -125,7 +135,6 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({ goal }) =>
             <div className="text-3xl font-extrabold text-[#0f172a]">
               92% <span className="text-sm font-bold text-[#5f6573]">Target Hit</span>
             </div>
-            {/* Uniform muted text color */}
             <p className="text-xs font-medium text-[#94a3b8] mt-1">
               Met goals 26 of 28 days
             </p>
@@ -146,7 +155,6 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({ goal }) =>
             <div className="text-3xl font-extrabold text-[#0f172a]">
               142g <span className="text-sm font-bold text-[#5f6573]">Daily Avg</span>
             </div>
-            {/* Uniform muted text color */}
             <p className="text-xs font-medium text-[#94a3b8] mt-1">
               +12g over target
             </p>
@@ -155,7 +163,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({ goal }) =>
 
       </div>
 
-      {/* 2. MAIN CHART CONTAINER: VERTICAL BAR CHART FOR MONTHLY MACRO INTAKE */}
+      {/* 2. MAIN CHART CONTAINER: VERTICAL BAR CHART WITH GENERAL COMPLIANCE OPTION */}
       <div className="bg-white rounded-[32px] p-8 shadow-[0_12px_30px_rgba(15,23,42,0.08)] border border-[#e8e2f1] hover:border-[#6417ff]/30 transition-all duration-300">
         
         {/* Chart Header & Controls */}
@@ -170,13 +178,14 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({ goal }) =>
           </div>
 
           <div className="flex items-center space-x-3">
-            {/* Macro Selector Dropdown */}
+            {/* Macro & General Selector Dropdown */}
             <div className="relative">
               <select
                 value={selectedMacro}
                 onChange={(e) => setSelectedMacro(e.target.value as any)}
                 className="appearance-none bg-[#faf8fc] border border-[#e8e2f1] hover:border-[#6417ff]/40 text-[#0f172a] text-xs font-bold px-4 py-2.5 pr-8 rounded-2xl focus:outline-none focus:ring-2 focus:ring-[#6417ff] cursor-pointer transition-all"
               >
+                <option value="general">🌟 General Goal Compliance (%)</option>
                 <option value="protein">🥩 Protein (g)</option>
                 <option value="kcal">🔥 Calories (Kcal)</option>
                 <option value="carbs">🍞 Carbs (g)</option>
@@ -210,15 +219,17 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({ goal }) =>
           </div>
           <div>
             <span className="text-[11px] font-bold text-[#94a3b8] uppercase block">Daily Average</span>
-            <span className="text-lg font-bold text-[#0f172a]">{dailyAverage} {unit}</span>
+            <span className="text-lg font-bold text-[#0f172a]">{dailyAverage}</span>
           </div>
           <div>
-            <span className="text-[11px] font-bold text-[#94a3b8] uppercase block">Daily Target</span>
-            <span className="text-lg font-bold text-[#6417ff]">{targetValue} {unit}</span>
+            <span className="text-[11px] font-bold text-[#94a3b8] uppercase block">Target</span>
+            <span className="text-lg font-bold text-[#6417ff]">{targetValue} {selectedMacro === 'general' ? '%' : unit}</span>
           </div>
           <div>
             <span className="text-[11px] font-bold text-[#94a3b8] uppercase block">Consistency</span>
-            <span className="text-lg font-bold text-emerald-600">92% Met</span>
+            <span className="text-lg font-bold text-emerald-600">
+              {Math.round((daysMetCount / daysInMonth) * 100)}% Met
+            </span>
           </div>
         </div>
 
@@ -232,7 +243,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({ goal }) =>
             }}
           >
             <span className="bg-[#6417ff] text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm transform translate-y-[-50%]">
-              Target: {targetValue} {unit}
+              Target: {targetValue}{selectedMacro === 'general' ? '%' : ` ${unit}`}
             </span>
           </div>
 
@@ -248,7 +259,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({ goal }) =>
               >
                 {/* Tooltip on Hover */}
                 <div className="opacity-0 group-hover:opacity-100 transition-opacity absolute -top-10 bg-slate-900 text-white text-[10px] font-bold py-1 px-2 rounded-lg pointer-events-none whitespace-nowrap z-30 shadow-lg">
-                  Day {d.day}: {d.value} {unit} {isTargetMet ? '(Goal Met ✓)' : '(Below Goal)'}
+                  Day {d.day}: {d.value}{selectedMacro === 'general' ? '%' : ` ${unit}`} {isTargetMet ? '(Goal Met ✓)' : '(Below Goal)'}
                 </div>
 
                 {/* Bar Element: App Purple (#6417ff) if Goal Met, Deactivated Grey (#cbd5e1) if Not */}
