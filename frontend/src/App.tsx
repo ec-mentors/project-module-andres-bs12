@@ -55,7 +55,7 @@ function App() {
           setGoal(fetchedGoal);
         }
       } catch (err) {
-        console.info('[Frontend] Backend API offline. Ready for user entries.');
+        console.info('[Frontend] Backend API offline. Start Spring Boot or log entries locally.');
       } finally {
         setTimeout(() => setIsAppLoading(false), 400);
       }
@@ -264,8 +264,8 @@ function App() {
 
               </div>
             ) : (
-              /* Overview Analytics Tab View */
-              <OverviewDashboard goal={goal} />
+              /* Overview Analytics Tab View (Dynamic Real Entries Calculation) */
+              <OverviewDashboard goal={goal} entries={entries} />
             )}
           </div>
         )}

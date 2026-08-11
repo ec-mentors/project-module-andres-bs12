@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { Flame, TrendingDown, TrendingUp, Target, Award, Calendar, ChevronDown } from 'lucide-react';
-import type { NutritionGoal } from '../../types/nutrition';
+import { Flame, TrendingUp, Target, Award, Calendar, ChevronDown } from 'lucide-react';
+import type { NutritionGoal, MealEntry } from '../../types/nutrition';
 
 interface OverviewDashboardProps {
   goal: NutritionGoal;
+  entries: MealEntry[];
 }
 
-export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({ goal }) => {
+export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({ goal, entries }) => {
   const [selectedMacro, setSelectedMacro] = useState<'general' | 'protein' | 'kcal' | 'carbs' | 'fat'>('general');
   const [selectedMonth, setSelectedMonth] = useState('August 2026');
   const [animateBars, setAnimateBars] = useState(false);
@@ -15,39 +16,56 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({ goal }) =>
   const today = new Date();
   const currentDayOfMonth = today.getDate(); // 11
   const isCurrentMonth = selectedMonth === 'August 2026';
+  const currentMonthIndex = isCurrentMonth ? today.getMonth() : today.getMonth() - 1;
+  const currentYear = today.getFullYear();
 
   // Trigger growing bar animation on mount or when macro/month changes
   useEffect(() => {
     setAnimateBars(false);
     const timer = setTimeout(() => setAnimateBars(true), 60);
     return () => clearTimeout(timer);
-  }, [selectedMacro, selectedMonth]);
+  }, [selectedMacro, selectedMonth, entries]);
 
-  // Weekly Balance Metric State
-  const weeklyChangePercent = -4.2;
-
-  // Simulated monthly intake dataset for 31 days (Future days > today are empty)
+  // Real dataset calculated dynamically from logged entries (0 when no entries exist)
   const daysInMonth = 31;
-  const mockDailyData = Array.from({ length: daysInMonth }, (_, i) => {
+  const dailyData = Array.from({ length: daysInMonth }, (_, i) => {
     const day = i + 1;
     const isFutureDay = isCurrentMonth && day > currentDayOfMonth;
 
+    // Filter real entries logged for this specific day of the month
+    const dayEntries = entries.filter((entry) => {
+      if (!entry.createdOn) return false;
+      const d = new Date(entry.createdOn);
+      return d.getDate() === day && d.getMonth() === currentMonthIndex && d.getFullYear() === currentYear;
+    });
+
     let value = 0;
-    if (!isFutureDay) {
+    if (!isFutureDay && dayEntries.length > 0) {
       if (selectedMacro === 'general') {
-        value = (day % 4 === 0 || day % 9 === 0) ? 75 : 100;
-      } else if (selectedMacro === 'protein') {
-        value = Math.floor(110 + Math.sin(day) * 35 + (day % 3) * 15);
-      } else if (selectedMacro === 'kcal') {
-        value = Math.floor(1800 + Math.cos(day) * 400 + (day % 4) * 100);
-      } else if (selectedMacro === 'carbs') {
-        value = Math.floor(160 + Math.sin(day * 2) * 50);
+        const dayKcal = dayEntries.reduce((s, item) => s + (Number(item.kcal) || 0), 0);
+        const dayProtein = dayEntries.reduce((s, item) => s + (Number(item.protein) || 0), 0);
+        const kcalMet = goal.kcal > 0 && dayKcal >= goal.kcal * 0.9;
+        const proteinMet = goal.protein > 0 && dayProtein >= goal.protein * 0.9;
+        
+        if (kcalMet && proteinMet) {
+          value = 100;
+        } else if (kcalMet || proteinMet) {
+          value = 65;
+        } else {
+          value = 35;
+        }
       } else {
-        value = Math.floor(50 + Math.cos(day) * 20);
+        value = dayEntries.reduce((sum, item) => {
+          if (selectedMacro === 'protein') return sum + (Number(item.protein) || 0);
+          if (selectedMacro === 'kcal') return sum + (Number(item.kcal) || 0);
+          if (selectedMacro === 'carbs') return sum + (Number(item.carbs) || 0);
+          if (selectedMacro === 'fat') return sum + (Number(item.fat) || 0);
+          return sum;
+        }, 0);
       }
     }
 
-    return { day, value, isFutureDay };
+    return { day, value, isFutureDay, hasEntries: dayEntries.length > 0 };
   });
 
   const getTargetValue = () => {
@@ -68,10 +86,10 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({ goal }) =>
   const targetValue = getTargetValue();
   const elapsedDays = isCurrentMonth ? currentDayOfMonth : daysInMonth;
   const monthlyRequired = selectedMacro === 'general' ? elapsedDays : targetValue * elapsedDays;
-  const maxValue = selectedMacro === 'general' ? 120 : Math.max(...mockDailyData.map((d) => d.value), targetValue * 1.25);
+  const maxValue = selectedMacro === 'general' ? 120 : Math.max(...dailyData.map((d) => d.value), targetValue * 1.25);
   
-  const elapsedData = mockDailyData.filter((d) => !d.isFutureDay);
-  const daysMetCount = elapsedData.filter((d) => d.value >= targetValue * 0.95).length;
+  const elapsedData = dailyData.filter((d) => !d.isFutureDay);
+  const daysMetCount = elapsedData.filter((d) => d.value >= targetValue * 0.95 && d.hasEntries).length;
   const totalMonthlySum = selectedMacro === 'general'
     ? daysMetCount
     : elapsedData.reduce((sum, d) => sum + d.value, 0);
@@ -94,27 +112,17 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({ goal }) =>
             <span className="text-xs font-bold text-[#94a3b8] uppercase tracking-wider">
               Weekly Balance
             </span>
-            <span
-              className={`px-3 py-1 rounded-full text-xs font-bold flex items-center space-x-1 whitespace-nowrap ${
-                weeklyChangePercent < 0
-                  ? 'bg-red-50 text-red-500 border border-red-200'
-                  : 'bg-emerald-50 text-emerald-600 border border-emerald-200'
-              }`}
-            >
-              {weeklyChangePercent < 0 ? (
-                <TrendingDown className="w-3.5 h-3.5" />
-              ) : (
-                <TrendingUp className="w-3.5 h-3.5" />
-              )}
-              <span>{weeklyChangePercent > 0 ? `+${weeklyChangePercent}%` : `${weeklyChangePercent}%`} vs last week</span>
+            <span className="px-3 py-1 rounded-full text-xs font-bold flex items-center space-x-1 whitespace-nowrap bg-slate-100 text-slate-600 border border-slate-200">
+              <TrendingUp className="w-3.5 h-3.5" />
+              <span>0% vs last week</span>
             </span>
           </div>
           <div>
             <div className="text-3xl font-extrabold text-[#0f172a]">
-              2,150 <span className="text-sm font-bold text-[#5f6573]">Kcal/day</span>
+              {Math.round(totalMonthlySum / elapsedDays)} <span className="text-sm font-bold text-[#5f6573]">Kcal/day</span>
             </div>
             <p className="text-xs font-medium text-[#94a3b8] mt-1">
-              Same time window comparison
+              Real logged entry average
             </p>
           </div>
         </div>
@@ -131,11 +139,11 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({ goal }) =>
           </div>
           <div>
             <div className="text-3xl font-extrabold text-[#0f172a] flex items-center space-x-2">
-              <span>11</span>
+              <span>{entries.length > 0 ? 1 : 0}</span>
               <span className="text-sm font-bold text-[#5f6573]">Streak Days 🔥</span>
             </div>
             <p className="text-xs font-medium text-[#94a3b8] mt-1">
-              Logged meals 11 days in a row!
+              {entries.length > 0 ? 'Active logging streak!' : 'Log a meal to start your streak!'}
             </p>
           </div>
         </div>
@@ -152,10 +160,10 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({ goal }) =>
           </div>
           <div>
             <div className="text-3xl font-extrabold text-[#0f172a]">
-              91% <span className="text-sm font-bold text-[#5f6573]">Target Hit</span>
+              {daysMetCount > 0 ? `${Math.round((daysMetCount / elapsedDays) * 100)}%` : '0%'} <span className="text-sm font-bold text-[#5f6573]">Target Hit</span>
             </div>
             <p className="text-xs font-medium text-[#94a3b8] mt-1">
-              Met goals 10 of 11 days
+              Met goals {daysMetCount} of {elapsedDays} days
             </p>
           </div>
         </div>
@@ -172,10 +180,10 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({ goal }) =>
           </div>
           <div>
             <div className="text-3xl font-extrabold text-[#0f172a]">
-              142g <span className="text-sm font-bold text-[#5f6573]">Daily Avg</span>
+              {Math.round(elapsedData.reduce((s, d) => s + d.value, 0) / elapsedDays)}g <span className="text-sm font-bold text-[#5f6573]">Daily Avg</span>
             </div>
             <p className="text-xs font-medium text-[#94a3b8] mt-1">
-              +12g over target
+              Based on logged entries
             </p>
           </div>
         </div>
@@ -192,7 +200,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({ goal }) =>
               Monthly Intake Analytics
             </h3>
             <p className="text-xs font-semibold text-[#94a3b8] mt-0.5">
-              Daily vertical bar breakdown (Days 1–{elapsedDays} active)
+              Daily vertical bar breakdown (Real user entries logged)
             </p>
           </div>
 
@@ -261,14 +269,14 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({ goal }) =>
               bottom: `${(targetValue / maxValue) * 100}%`,
             }}
           >
-            <span className="bg-[#6417ff] text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm transform translate-y-[-50%]">
+            <span className="bg-[#6417ff] text-[#ffffff] text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm transform translate-y-[-50%]">
               Target: {targetValue}{selectedMacro === 'general' ? '%' : ` ${unit}`}
             </span>
           </div>
 
           {/* Vertical Bars */}
-          {mockDailyData.map((d, index) => {
-            const barHeightPercent = (d.value / maxValue) * 100;
+          {dailyData.map((d, index) => {
+            const barHeightPercent = d.value > 0 ? (d.value / maxValue) * 100 : 0;
             const isTargetMet = d.value >= targetValue * 0.95;
 
             return (
@@ -276,16 +284,16 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({ goal }) =>
                 key={d.day}
                 className="flex-1 flex flex-col items-center group relative h-full justify-end cursor-pointer"
               >
-                {/* Clean Tooltip: Day X: Value% / Value unit (No goal met text) */}
+                {/* Clean Tooltip */}
                 <div className="opacity-0 group-hover:opacity-100 transition-opacity absolute -top-10 bg-slate-900 text-white text-[11px] font-extrabold py-1 px-2.5 rounded-lg pointer-events-none whitespace-nowrap z-30 shadow-lg">
                   {d.isFutureDay
                     ? `Day ${d.day}: Future`
                     : `Day ${d.day}: ${d.value}${selectedMacro === 'general' ? '%' : ` ${unit}`}`}
                 </div>
 
-                {/* Bar Element */}
-                {d.isFutureDay ? (
-                  <div className="w-full max-w-[18px] h-2 bg-slate-100 border border-dashed border-slate-300 rounded-t-md" />
+                {/* Bar Element: Render empty dashed placeholder if no entries or future day */}
+                {!d.hasEntries || d.isFutureDay ? (
+                  <div className="w-full max-w-[18px] h-1 bg-slate-100 border-b border-slate-200 rounded-t-sm" />
                 ) : (
                   <div
                     className={`w-full max-w-[18px] rounded-t-lg origin-bottom transition-all duration-700 ease-out ${
@@ -296,14 +304,14 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({ goal }) =>
                         : 'bg-[#cbd5e1] group-hover:bg-[#94a3b8]'
                     }`}
                     style={{
-                      height: `${barHeightPercent}%`,
+                      height: `${Math.max(barHeightPercent, 4)}%`,
                       transitionDelay: `${index * 15}ms`,
                     }}
                   />
                 )}
 
                 {/* Day Label */}
-                <span className={`text-[10px] font-semibold mt-2 ${d.isFutureDay ? 'text-slate-300' : 'text-[#94a3b8] group-hover:text-[#0f172a]'}`}>
+                <span className={`text-[10px] font-semibold mt-2 ${d.isFutureDay || !d.hasEntries ? 'text-slate-300' : 'text-[#94a3b8] group-hover:text-[#0f172a]'}`}>
                   {d.day}
                 </span>
               </div>
