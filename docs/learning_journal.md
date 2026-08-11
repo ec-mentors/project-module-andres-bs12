@@ -32,6 +32,21 @@ This document serves as a development and learning journal to record key concept
    - Controller tests verify HTTP routing, status codes (`200 OK`, `404 Not Found`), and JSON serialization.
    - Noticed that `updateUser` in `UserService` only updates `firstName` and `lastName` while preserving `email`. Mock responses in controller tests (`UserResponseDTO`) reflect this behavior accurately.
 
+7. **HTTP Response Status Codes Across REST Endpoints:**
+   - **`GET` / `PUT`:** Evaluates `200 OK` (`status().isOk()`).
+   - **`POST` Creation:** Evaluates `201 Created` (`status().isCreated()`) and asserts the `Location` response header (`.andExpect(header().string("Location", "/api/.../" + id))`).
+   - **`DELETE` Removal:** Evaluates `204 No Content` (`status().isNoContent()`) with no payload returned.
+
+8. **Testing `void` Service Methods (`removeEntry`):**
+   - For `void` return service methods, no `when(...)` setup is needed for happy path tests because Mockito mocks perform no operation by default for `void` methods.
+   - For exception testing on `void` methods, Mockito syntax uses `doThrow(new NotFoundException(...)).when(service).removeEntry(id)`.
+
+9. **Mockito Argument Matchers All-or-Nothing Rule (`eq` & `any`):**
+   - When mocking or verifying methods with multiple parameters (e.g. `updateUser(id, dto)` or `updateGoal(id, dto)`), if a matcher (`any(...)` or `isNull()`) is used for one parameter, all other parameters must also use matchers (e.g. `eq(id)`). Mixing raw values with matchers throws `InvalidUseOfMatchersException`.
+
+10. **Sprint 3 Controller Test Suite Completion:**
+    - Achieved 100% unit test coverage across all three REST Controllers: `UserControllerTest`, `EntryControllerTest`, and `GoalControllerTest`.
+
 ---
 
 ## 📅 2026-08-07 - Service Layer Unit Testing with Mockito & JUnit 5 (Sprint 2)
