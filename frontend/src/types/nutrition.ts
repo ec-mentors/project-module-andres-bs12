@@ -1,24 +1,45 @@
+// 1. Matches Spring Boot EntryResponseDTO
 export interface MealEntry {
-    id?: string;
-    mealName: string;
-    source?: string;
-    createdOn?: string;
-    kcal: number;
-    protein: number;
-    carbs: number;
-    fat: number;
+  id?: string;
+  mealName: string;
+  source?: string;
+  createdOn?: string;
+  kcal: number;
+  protein: number;
+  carbs: number;
+  fat: number;
 }
 
-export interface NutritionalGoal {
-    id?: string;
-    startDate?: string;
-    kcal: number;
-    protein: number;
-    carbs: number;
-    fat: number;
+// 2. Matches Spring Boot EntryRequestDTO
+export interface CreateMealEntryPayload {
+  mealName: string;
+  source?: string;
+  kcal: number;
+  protein: number;
+  carbs: number;
+  fat: number;
 }
 
+// 3. Matches Spring Boot GoalResponseDTO
+export interface NutritionGoal {
+  id?: string;
+  startDate?: string;
+  kcal: number;
+  protein: number;
+  carbs: number;
+  fat: number;
+}
 
+// 4. Matches Spring Boot GoalRequestDTO
+export interface SetGoalPayload {
+  startDate?: string;
+  kcal: number;
+  protein: number;
+  carbs: number;
+  fat: number;
+}
+
+// 5. Daily Summary calculations for UI
 export interface DailySummary {
   consumedKcal: number;
   consumedProtein: number;
