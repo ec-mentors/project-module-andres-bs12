@@ -202,23 +202,15 @@ function App() {
                 {/* Left Column (Hero Kcal Card + Consumed vs Left Table) */}
                 <div className="lg:col-span-8 space-y-6">
                   
-                  {/* Clickable Hero Kcal Card */}
-                  <div
-                    onClick={() => setIsSetGoalsOpen(true)}
-                    className="cursor-pointer"
-                    title="Click to update daily targets"
-                  >
-                    <HeroKcalCard summary={summary} goal={goal} />
-                  </div>
+                  {/* Hero Kcal Card (Only the 4 mini cards are clickeable) */}
+                  <HeroKcalCard
+                    summary={summary}
+                    goal={goal}
+                    onOpenSetGoals={() => setIsSetGoalsOpen(true)}
+                  />
 
-                  {/* Clickable Consumed vs Left Table */}
-                  <div
-                    onClick={() => setIsSetGoalsOpen(true)}
-                    className="cursor-pointer"
-                    title="Click to update nutrition goals"
-                  >
-                    <ConsumedVsLeftTable summary={summary} goal={goal} />
-                  </div>
+                  {/* Consumed vs Left Table */}
+                  <ConsumedVsLeftTable summary={summary} goal={goal} />
 
                 </div>
 

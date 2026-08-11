@@ -4,6 +4,7 @@ import type { DailySummary, NutritionGoal } from '../../types/nutrition';
 interface HeroKcalCardProps {
   summary: DailySummary;
   goal: NutritionGoal;
+  onOpenSetGoals: () => void;
 }
 
 interface MacroRingProps {
@@ -13,6 +14,7 @@ interface MacroRingProps {
   percentage: number;
   color: string;
   ringValue?: string;
+  onClick: () => void;
 }
 
 const MacroRingCard: React.FC<MacroRingProps> = ({
@@ -22,15 +24,20 @@ const MacroRingCard: React.FC<MacroRingProps> = ({
   percentage,
   color,
   ringValue,
+  onClick,
 }) => {
   const radius = 24;
   const circumference = 2 * Math.PI * radius;
   const strokeDashoffset = circumference - (Math.min(percentage, 100) / 100) * circumference;
 
   return (
-    <div className="flex-1 bg-white border border-[#e8e2f1] hover:border-[#6417ff]/40 rounded-[24px] p-4 flex items-center justify-between shadow-[0_4px_20px_rgba(15,23,42,0.03)] hover:shadow-lg transition-all duration-300 transform hover:-translate-y-0.5">
+    <div
+      onClick={onClick}
+      className="flex-1 bg-white border border-[#e8e2f1] hover:border-[#6417ff]/50 rounded-[24px] p-4 flex items-center justify-between shadow-[0_4px_20px_rgba(15,23,42,0.03)] hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 cursor-pointer group"
+      title={`Click to edit ${label} goal`}
+    >
       <div>
-        <span className="text-[11px] font-bold tracking-wider text-[#94a3b8] uppercase block mb-1">
+        <span className="text-[11px] font-bold tracking-wider text-[#94a3b8] group-hover:text-[#6417ff] uppercase block mb-1 transition-colors">
           {label}
         </span>
         <div className="text-2xl font-bold text-[#0f172a] leading-tight">
@@ -73,7 +80,7 @@ const MacroRingCard: React.FC<MacroRingProps> = ({
   );
 };
 
-export const HeroKcalCard: React.FC<HeroKcalCardProps> = ({ summary, goal }) => {
+export const HeroKcalCard: React.FC<HeroKcalCardProps> = ({ summary, goal, onOpenSetGoals }) => {
   const currentDate = new Date().toLocaleDateString('en-US', {
     weekday: 'long',
     day: 'numeric',
@@ -92,7 +99,7 @@ export const HeroKcalCard: React.FC<HeroKcalCardProps> = ({ summary, goal }) => 
   const proteinPercent = goal.protein > 0 ? (summary.consumedProtein / goal.protein) * 100 : 0;
 
   return (
-    <div className="bg-white rounded-[32px] p-8 shadow-[0_12px_30px_rgba(15,23,42,0.08)] border border-[#e8e2f1] hover:border-[#6417ff]/30 transition-all duration-300">
+    <div className="bg-white rounded-[32px] p-8 shadow-[0_12px_30px_rgba(15,23,42,0.08)] border border-[#e8e2f1]">
       {/* Top Header Row with Date */}
       <div className="flex items-start justify-between mb-6">
         <div>
@@ -109,7 +116,7 @@ export const HeroKcalCard: React.FC<HeroKcalCardProps> = ({ summary, goal }) => 
         </span>
       </div>
 
-      {/* 4 Macro Cards */}
+      {/* 4 Clickeable Mini Macro Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* KCAL */}
         <MacroRingCard
@@ -119,6 +126,7 @@ export const HeroKcalCard: React.FC<HeroKcalCardProps> = ({ summary, goal }) => 
           percentage={kcalPercent}
           color="#f59e0b"
           ringValue={`${remainingKcal}`}
+          onClick={onOpenSetGoals}
         />
 
         {/* CARBS */}
@@ -129,6 +137,7 @@ export const HeroKcalCard: React.FC<HeroKcalCardProps> = ({ summary, goal }) => 
           percentage={carbsPercent}
           color="#16a34a"
           ringValue={`${Math.round(carbsPercent)}`}
+          onClick={onOpenSetGoals}
         />
 
         {/* FAT */}
@@ -139,6 +148,7 @@ export const HeroKcalCard: React.FC<HeroKcalCardProps> = ({ summary, goal }) => 
           percentage={fatPercent}
           color="#ef233c"
           ringValue={fatRemaining < 0 ? '100+' : `${Math.round(fatPercent)}`}
+          onClick={onOpenSetGoals}
         />
 
         {/* PROTEIN */}
@@ -149,6 +159,7 @@ export const HeroKcalCard: React.FC<HeroKcalCardProps> = ({ summary, goal }) => 
           percentage={proteinPercent}
           color="#ef233c"
           ringValue={`${proteinRemaining > 0 ? proteinRemaining : 0}`}
+          onClick={onOpenSetGoals}
         />
       </div>
     </div>
