@@ -22,45 +22,16 @@ const DEFAULT_GOAL: NutritionGoal = {
   fat: 65,
 };
 
-const todayISO = new Date().toISOString();
-
-// Initial Demo Entries matching Figma layout with dates
-const DEMO_INITIAL_ENTRIES: MealEntry[] = [
-  {
-    id: 'demo-1',
-    mealName: 'Grilled Chicken & Rice',
-    source: 'Manual',
-    createdOn: todayISO,
-    kcal: 450,
-    protein: 40,
-    carbs: 50,
-    fat: 10,
-  },
-  {
-    id: 'demo-2',
-    mealName: 'Protein Shake',
-    source: 'Telegram',
-    createdOn: todayISO,
-    kcal: 250,
-    protein: 30,
-    carbs: 10,
-    fat: 5,
-  },
-];
-
 function App() {
   const [activeTab, setActiveTab] = useState<'today' | 'overview'>('today');
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
-  const [entries, setEntries] = useState<MealEntry[]>(DEMO_INITIAL_ENTRIES);
+  
+  // Clean Production State: Starts 100% empty until user logs meals or fetches from backend
+  const [entries, setEntries] = useState<MealEntry[]>([]);
   const [goal, setGoal] = useState<NutritionGoal>(DEFAULT_GOAL);
   
-  // User & Auth State
-  const [user, setUser] = useState<UserProfile | null>({
-    id: 'google-101',
-    email: 'andres.user@gmail.com',
-    firstName: 'Andres',
-    pictureUrl: 'https://lh3.googleusercontent.com/a/ACg8ocIq9b5g=s96-c',
-  });
+  // User Auth State: Starts null (unauthenticated clean state)
+  const [user, setUser] = useState<UserProfile | null>(null);
 
   // UI Modal & Loading State
   const [isSetGoalsOpen, setIsSetGoalsOpen] = useState(false);
@@ -70,12 +41,12 @@ function App() {
   // SidepopUp Notification Toast State
   const [toast, setToast] = useState<ToastMessage | null>(null);
 
-  // 1. INITIAL LOADING SKELETON SIMULATION & BACKEND FETCH
+  // 1. INITIAL CLEAN BACKEND DATA FETCH
   useEffect(() => {
     async function loadBackendData() {
       try {
         const fetchedEntries = await api.getTodayEntries();
-        if (fetchedEntries && fetchedEntries.length > 0) {
+        if (fetchedEntries && Array.isArray(fetchedEntries)) {
           setEntries(fetchedEntries);
         }
 
@@ -84,9 +55,9 @@ function App() {
           setGoal(fetchedGoal);
         }
       } catch (err) {
-        console.info('[Frontend] Backend API offline. Using fallback demo state.');
+        console.info('[Frontend] Backend API offline. Ready for user entries.');
       } finally {
-        setTimeout(() => setIsAppLoading(false), 500);
+        setTimeout(() => setIsAppLoading(false), 400);
       }
     }
 
@@ -115,7 +86,7 @@ function App() {
     );
   }, [visibleEntries]);
 
-  // 4. HANDLER: CREATE MEAL (POST TO SPRING BOOT) FOR THE SELECTED DATE
+  // 4. HANDLER: CREATE MEAL (POST TO SPRING BOOT REST API)
   const handleAddMeal = async (payload: CreateMealEntryPayload) => {
     const mealTimestamp = new Date(selectedDate);
     const now = new Date();
@@ -153,10 +124,10 @@ function App() {
     }
   };
 
-  // 5. HANDLER: UPDATE MEAL (PUT TO SPRING BOOT)
+  // 5. HANDLER: UPDATE MEAL (PUT TO SPRING BOOT REST API)
   const handleUpdateMeal = async (id: string, payload: CreateMealEntryPayload) => {
     try {
-      if (!id.startsWith('demo-') && !id.startsWith('local-')) {
+      if (!id.startsWith('local-')) {
         await fetch(`/api/entry/${id}/update`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
@@ -188,10 +159,10 @@ function App() {
     }
   };
 
-  // 6. HANDLER: DELETE MEAL (DELETE TO SPRING BOOT)
+  // 6. HANDLER: DELETE MEAL (DELETE TO SPRING BOOT REST API)
   const handleDeleteMeal = async (entryId: string) => {
     try {
-      if (!entryId.startsWith('demo-') && !entryId.startsWith('local-')) {
+      if (!entryId.startsWith('local-')) {
         await api.deleteEntry(entryId);
       }
     } catch (err) {
@@ -206,7 +177,7 @@ function App() {
     }
   };
 
-  // 7. HANDLER: SET GOALS (POST TO SPRING BOOT)
+  // 7. HANDLER: SET GOALS (POST TO SPRING BOOT REST API)
   const handleSaveGoal = async (payload: SetGoalPayload) => {
     try {
       const updatedGoal = await api.createGoal(payload);
