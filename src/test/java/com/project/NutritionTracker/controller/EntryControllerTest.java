@@ -3,8 +3,7 @@ package com.project.NutritionTracker.controller;
 import com.project.NutritionTracker.dto.EntryRequestDTO;
 import com.project.NutritionTracker.dto.EntryResponseDTO;
 import com.project.NutritionTracker.exception.NotFoundException;
-import com.project.NutritionTracker.model.Entry;
-import com.project.NutritionTracker.model.User;
+import com.project.NutritionTracker.repository.UserRepository;
 import com.project.NutritionTracker.service.EntryService;
 import com.project.NutritionTracker.service.UserService;
 import org.junit.jupiter.api.BeforeEach;
@@ -13,10 +12,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
-
-import static org.mockito.Mockito.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -26,8 +21,9 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
-import com.project.NutritionTracker.repository.UserRepository;
-
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -194,6 +190,22 @@ public class EntryControllerTest {
                 .andExpect(jsonPath("$.protein").value(35.0));
 
         verify(entryService).updateEntry(sampleEntryId, sampleEntryRequestDTO2);
+    }
+
+    @Test
+    @DisplayName("PUT /api/entry/{entryId}/update - Not Found (404)")
+    void updateEntry_WhenEntryDoesNotExist_ShouldReturn404() throws Exception {
+        UUID fakeEntryId = UUID.randomUUID();
+
+        when(entryService.updateEntry(eq(fakeEntryId), any(EntryRequestDTO.class)))
+                .thenThrow(new NotFoundException("Entry not found"));
+
+        mockMvc.perform(put("/api/entry/{entryId}/update", fakeEntryId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(sampleEntryRequestDTO2)))
+                .andExpect(status().isNotFound());
+
+        verify(entryService).updateEntry(eq(fakeEntryId), any(EntryRequestDTO.class));
     }
 
 }
