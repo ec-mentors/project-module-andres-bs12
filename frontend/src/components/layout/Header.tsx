@@ -22,25 +22,31 @@ export const Header: React.FC<HeaderProps> = ({
       {/* Floating Glass Container */}
       <div className="bg-[#15111c]/80 backdrop-blur-xl border border-white/10 p-1.5 rounded-full shadow-[0_18px_44px_-24px_rgba(100,23,255,0.24)] flex items-center space-x-3 max-w-xl w-full justify-between px-3">
         
-        {/* Navigation Tabs Pill Container */}
-        <div className="flex bg-transparent p-0.5 rounded-full justify-between space-x-1 flex-1">
+        {/* Navigation Tabs Pill Container with Sliding Purple Background Indicator */}
+        <div className="relative flex bg-[#221c2d]/60 border border-white/5 p-1 rounded-full w-64 justify-between items-center">
+          
+          {/* Animated Sliding Purple Indicator Pill */}
+          <div
+            className={`absolute top-1 bottom-1 w-[calc(50%-4px)] bg-[#6417ff] rounded-full shadow-lg shadow-[#6417ff]/40 transition-all duration-300 ease-out ${
+              activeTab === 'today' ? 'left-1' : 'left-[calc(50%+2px)]'
+            }`}
+          />
+
+          {/* Today Button */}
           <button
             onClick={() => setActiveTab('today')}
-            className={`flex-1 py-2 px-6 rounded-full text-sm font-semibold transition-all duration-300 ${
-              activeTab === 'today'
-                ? 'bg-[#6417ff] text-white shadow-lg shadow-[#6417ff]/40'
-                : 'text-slate-400 hover:text-white'
+            className={`relative z-10 flex-1 py-1.5 text-xs font-bold transition-colors duration-200 text-center ${
+              activeTab === 'today' ? 'text-white' : 'text-slate-400 hover:text-slate-200'
             }`}
           >
             Today
           </button>
 
+          {/* Overview Button */}
           <button
             onClick={() => setActiveTab('overview')}
-            className={`flex-1 py-2 px-6 rounded-full text-sm font-semibold transition-all duration-300 ${
-              activeTab === 'overview'
-                ? 'bg-[#6417ff] text-white shadow-lg shadow-[#6417ff]/40'
-                : 'text-slate-300 hover:text-white'
+            className={`relative z-10 flex-1 py-1.5 text-xs font-bold transition-colors duration-200 text-center ${
+              activeTab === 'overview' ? 'text-white' : 'text-slate-400 hover:text-slate-200'
             }`}
           >
             Overview

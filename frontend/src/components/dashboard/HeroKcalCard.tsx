@@ -96,7 +96,9 @@ export const HeroKcalCard: React.FC<HeroKcalCardProps> = ({
     month: 'short',
   });
 
-  const isToday = selectedDate.toDateString() === new Date().toDateString();
+  const today = new Date();
+  const isToday = selectedDate.toDateString() === today.toDateString();
+  const isFutureDate = selectedDate > today;
 
   const handlePrevDay = () => {
     const prev = new Date(selectedDate);
@@ -105,6 +107,7 @@ export const HeroKcalCard: React.FC<HeroKcalCardProps> = ({
   };
 
   const handleNextDay = () => {
+    if (isToday || isFutureDate) return; // Prevent navigating to future days
     const next = new Date(selectedDate);
     next.setDate(next.getDate() + 1);
     onDateChange(next);
@@ -151,8 +154,13 @@ export const HeroKcalCard: React.FC<HeroKcalCardProps> = ({
 
           <button
             onClick={handleNextDay}
-            className="p-1.5 rounded-full hover:bg-[#eee6ff] text-[#5f6573] hover:text-[#6417ff] transition-all"
-            title="Go to next day"
+            disabled={isToday || isFutureDate}
+            className={`p-1.5 rounded-full transition-all ${
+              isToday || isFutureDate
+                ? 'text-slate-300 cursor-not-allowed opacity-40'
+                : 'hover:bg-[#eee6ff] text-[#5f6573] hover:text-[#6417ff]'
+            }`}
+            title={isToday ? 'Cannot navigate to future days' : 'Go to next day'}
           >
             <ChevronRight className="w-4 h-4" />
           </button>
