@@ -3,7 +3,6 @@ import { Header } from './components/layout/Header';
 import { HeroKcalCard } from './components/dashboard/HeroKcalCard';
 import { ConsumedVsLeftTable } from './components/dashboard/ConsumedVsLeftTable';
 import { LatestEntriesSidebar } from './components/dashboard/LatestEntriesSidebar';
-import { AddMealModal } from './components/forms/AddMealModal';
 import { SetGoalsModal } from './components/forms/SetGoalsModal';
 import { GoogleLoginModal } from './components/auth/GoogleLoginModal';
 import { OverviewDashboard } from './components/overview/OverviewDashboard';
@@ -61,7 +60,6 @@ function App() {
   });
 
   // UI Modal & Loading State
-  const [isAddMealOpen, setIsAddMealOpen] = useState(false);
   const [isSetGoalsOpen, setIsSetGoalsOpen] = useState(false);
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [isAppLoading, setIsAppLoading] = useState(true);
@@ -105,7 +103,7 @@ function App() {
     );
   }, [entries]);
 
-  // 3. HANDLER: CREATE MEAL (POST TO SPRING BOOT)
+  // 3. HANDLER: CREATE MEAL (INLINE POST TO SPRING BOOT) -> Triggers Slide-in Toast
   const handleAddMeal = async (payload: CreateMealEntryPayload) => {
     try {
       const newEntry = await api.createEntry(payload);
@@ -124,6 +122,7 @@ function App() {
       };
       setEntries((prev) => [localEntry, ...prev]);
     } finally {
+      // Trigger smooth slide-in/slide-out SidepopUp toast
       setToast({
         id: `toast-${Date.now()}`,
         title: 'Meal logged successfully',
@@ -176,7 +175,7 @@ function App() {
   return (
     <div className="min-h-screen bg-[#05030d] text-slate-100 font-sans antialiased pb-16 selection:bg-[#6417ff] selection:text-white relative">
       
-      {/* Figma Notification Toast (SidepopUp) */}
+      {/* Figma Notification Toast (SidepopUp) with Slide-in / Slide-out */}
       <SidepopUp toast={toast} onClose={() => setToast(null)} />
 
       {/* Glassmorphism Floating Top Navigation Header */}
@@ -202,7 +201,7 @@ function App() {
                 {/* Left Column (Hero Kcal Card + Consumed vs Left Table) */}
                 <div className="lg:col-span-8 space-y-6">
                   
-                  {/* Hero Kcal Card (Only the 4 mini cards are clickeable) */}
+                  {/* Hero Kcal Card */}
                   <HeroKcalCard
                     summary={summary}
                     goal={goal}
@@ -214,11 +213,11 @@ function App() {
 
                 </div>
 
-                {/* Right Column (Latest Entries Sidebar) */}
+                {/* Right Column (Latest Entries Sidebar with Inline Form) */}
                 <div className="lg:col-span-4 h-full">
                   <LatestEntriesSidebar
                     entries={entries}
-                    onOpenAddMeal={() => setIsAddMealOpen(true)}
+                    onAddMeal={handleAddMeal}
                     onDeleteMeal={handleDeleteMeal}
                   />
                 </div>
@@ -233,12 +232,6 @@ function App() {
       </main>
 
       {/* Modal Dialogs */}
-      <AddMealModal
-        isOpen={isAddMealOpen}
-        onClose={() => setIsAddMealOpen(false)}
-        onAddMeal={handleAddMeal}
-      />
-
       <SetGoalsModal
         isOpen={isSetGoalsOpen}
         onClose={() => setIsSetGoalsOpen(false)}
