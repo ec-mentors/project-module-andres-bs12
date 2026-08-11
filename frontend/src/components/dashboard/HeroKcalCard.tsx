@@ -28,7 +28,7 @@ const MacroRingCard: React.FC<MacroRingProps> = ({
   const strokeDashoffset = circumference - (Math.min(percentage, 100) / 100) * circumference;
 
   return (
-    <div className="flex-1 bg-white border border-[#e8e2f1] rounded-[24px] p-4 flex items-center justify-between shadow-[0_4px_20px_rgba(15,23,42,0.03)]">
+    <div className="flex-1 bg-white border border-[#e8e2f1] hover:border-[#6417ff]/40 rounded-[24px] p-4 flex items-center justify-between shadow-[0_4px_20px_rgba(15,23,42,0.03)] hover:shadow-lg transition-all duration-300 transform hover:-translate-y-0.5">
       <div>
         <span className="text-[11px] font-bold tracking-wider text-[#94a3b8] uppercase block mb-1">
           {label}
@@ -74,6 +74,12 @@ const MacroRingCard: React.FC<MacroRingProps> = ({
 };
 
 export const HeroKcalCard: React.FC<HeroKcalCardProps> = ({ summary, goal }) => {
+  const currentDate = new Date().toLocaleDateString('en-US', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+  });
+
   const remainingKcal = Math.max(0, goal.kcal - summary.consumedKcal);
   const kcalPercent = goal.kcal > 0 ? (summary.consumedKcal / goal.kcal) * 100 : 0;
   
@@ -86,15 +92,21 @@ export const HeroKcalCard: React.FC<HeroKcalCardProps> = ({ summary, goal }) => 
   const proteinPercent = goal.protein > 0 ? (summary.consumedProtein / goal.protein) * 100 : 0;
 
   return (
-    <div className="bg-white rounded-[32px] p-8 shadow-[0_12px_30px_rgba(15,23,42,0.08)] border border-[#e8e2f1]">
-      {/* Top Giant Calorie Counter */}
-      <div className="mb-6">
-        <h2 className="text-6xl font-extrabold text-[#0f172a] tracking-tight">
-          {remainingKcal}
-        </h2>
-        <p className="text-lg font-bold text-[#0f172a] mt-1">
-          Kcal remaining
-        </p>
+    <div className="bg-white rounded-[32px] p-8 shadow-[0_12px_30px_rgba(15,23,42,0.08)] border border-[#e8e2f1] hover:border-[#6417ff]/30 transition-all duration-300">
+      {/* Top Header Row with Date */}
+      <div className="flex items-start justify-between mb-6">
+        <div>
+          <h2 className="text-6xl font-extrabold text-[#0f172a] tracking-tight">
+            {remainingKcal}
+          </h2>
+          <p className="text-lg font-bold text-[#0f172a] mt-1">
+            Kcal remaining
+          </p>
+        </div>
+
+        <span className="text-xs font-bold text-[#94a3b8] bg-[#faf8fc] px-4 py-2 rounded-full border border-[#f1ecf7]">
+          📅 {currentDate}
+        </span>
       </div>
 
       {/* 4 Macro Cards */}

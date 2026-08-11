@@ -16,12 +16,6 @@ interface RowData {
 }
 
 export const ConsumedVsLeftTable: React.FC<ConsumedVsLeftTableProps> = ({ summary, goal }) => {
-  const currentDate = new Date().toLocaleDateString('en-US', {
-    weekday: 'long',
-    day: 'numeric',
-    month: 'long',
-  });
-
   // Calculate row metrics
   const kcalExtra = summary.consumedKcal - goal.kcal;
   const kcalPercent = goal.kcal > 0 ? Math.round((summary.consumedKcal / goal.kcal) * 100) : 0;
@@ -71,15 +65,12 @@ export const ConsumedVsLeftTable: React.FC<ConsumedVsLeftTableProps> = ({ summar
   ];
 
   return (
-    <div className="bg-white rounded-[32px] p-8 shadow-[0_12px_30px_rgba(15,23,42,0.08)] border border-[#e8e2f1] mt-6">
+    <div className="bg-white rounded-[32px] p-8 shadow-[0_12px_30px_rgba(15,23,42,0.08)] border border-[#e8e2f1] hover:border-[#6417ff]/30 transition-all duration-300 mt-6">
       {/* Header Row */}
       <div className="flex items-center justify-between mb-6">
         <h3 className="text-2xl font-bold text-[#0f172a]">
           Consumed vs left
         </h3>
-        <span className="text-sm font-semibold text-[#94a3b8]">
-          {currentDate}
-        </span>
       </div>
 
       {/* Table Headers */}
@@ -95,7 +86,7 @@ export const ConsumedVsLeftTable: React.FC<ConsumedVsLeftTableProps> = ({ summar
         {rows.map((row) => (
           <div
             key={row.kind}
-            className="grid grid-cols-12 gap-4 px-4 py-3.5 items-center rounded-2xl bg-[#faf8fc] border border-[#f1ecf7] text-sm font-semibold text-[#0f172a]"
+            className="grid grid-cols-12 gap-4 px-4 py-3.5 items-center rounded-2xl bg-[#faf8fc] hover:bg-[#f5f0fb] border border-[#f1ecf7] hover:border-[#6417ff]/20 text-sm font-semibold text-[#0f172a] transition-all"
           >
             <div className="col-span-3 font-bold text-[#0f172a]">{row.kind}</div>
             <div className="col-span-2">{row.consumed}</div>

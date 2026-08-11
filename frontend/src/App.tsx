@@ -85,8 +85,7 @@ function App() {
       } catch (err) {
         console.info('[Frontend] Backend API offline. Using fallback demo state.');
       } finally {
-        // Smooth initial loading screen delay
-        setTimeout(() => setIsAppLoading(false), 600);
+        setTimeout(() => setIsAppLoading(false), 500);
       }
     }
 
@@ -125,7 +124,6 @@ function App() {
       };
       setEntries((prev) => [localEntry, ...prev]);
     } finally {
-      // Trigger SidepopUp Toast matching Figma
       setToast({
         id: `toast-${Date.now()}`,
         title: 'Meal logged successfully',
@@ -167,7 +165,6 @@ function App() {
         fat: payload.fat,
       });
     } finally {
-      // Trigger exact Figma SidepopUp notification
       setToast({
         id: `toast-${Date.now()}`,
         title: 'Goal updated',
@@ -191,51 +188,55 @@ function App() {
         onOpenAuth={() => setIsAuthOpen(true)}
       />
 
-      {/* Main Content Area */}
+      {/* Main Content Area with Smooth Fade & Scale Tab Animation */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {isAppLoading ? (
           /* Animated Grey Skeleton Screen Loading State */
           <SkeletonLoader />
-        ) : activeTab === 'today' ? (
-          /* Today Dashboard View */
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-            
-            {/* Left Column (Hero Kcal Card + Consumed vs Left Table) */}
-            <div className="lg:col-span-8 space-y-6">
-              
-              {/* Clickable Hero Kcal Card */}
-              <div
-                onClick={() => setIsSetGoalsOpen(true)}
-                className="cursor-pointer transition-transform transform hover:scale-[1.01]"
-                title="Click to update daily targets"
-              >
-                <HeroKcalCard summary={summary} goal={goal} />
-              </div>
-
-              {/* Clickable Consumed vs Left Table */}
-              <div
-                onClick={() => setIsSetGoalsOpen(true)}
-                className="cursor-pointer transition-transform transform hover:scale-[1.01]"
-                title="Click to update nutrition goals"
-              >
-                <ConsumedVsLeftTable summary={summary} goal={goal} />
-              </div>
-
-            </div>
-
-            {/* Right Column (Latest Entries Sidebar) */}
-            <div className="lg:col-span-4 h-full">
-              <LatestEntriesSidebar
-                entries={entries}
-                onOpenAddMeal={() => setIsAddMealOpen(true)}
-                onDeleteMeal={handleDeleteMeal}
-              />
-            </div>
-
-          </div>
         ) : (
-          /* Overview Analytics Tab View */
-          <OverviewDashboard goal={goal} />
+          <div key={activeTab} className="animate-in fade-in zoom-in-95 duration-300">
+            {activeTab === 'today' ? (
+              /* Today Dashboard View */
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+                
+                {/* Left Column (Hero Kcal Card + Consumed vs Left Table) */}
+                <div className="lg:col-span-8 space-y-6">
+                  
+                  {/* Clickable Hero Kcal Card */}
+                  <div
+                    onClick={() => setIsSetGoalsOpen(true)}
+                    className="cursor-pointer"
+                    title="Click to update daily targets"
+                  >
+                    <HeroKcalCard summary={summary} goal={goal} />
+                  </div>
+
+                  {/* Clickable Consumed vs Left Table */}
+                  <div
+                    onClick={() => setIsSetGoalsOpen(true)}
+                    className="cursor-pointer"
+                    title="Click to update nutrition goals"
+                  >
+                    <ConsumedVsLeftTable summary={summary} goal={goal} />
+                  </div>
+
+                </div>
+
+                {/* Right Column (Latest Entries Sidebar) */}
+                <div className="lg:col-span-4 h-full">
+                  <LatestEntriesSidebar
+                    entries={entries}
+                    onOpenAddMeal={() => setIsAddMealOpen(true)}
+                    onDeleteMeal={handleDeleteMeal}
+                  />
+                </div>
+
+              </div>
+            ) : (
+              /* Overview Analytics Tab View */
+              <OverviewDashboard goal={goal} />
+            )}
+          </div>
         )}
       </main>
 

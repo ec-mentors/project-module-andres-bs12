@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Flame, TrendingDown, Target, Award, Calendar, ChevronDown } from 'lucide-react';
+import { Flame, TrendingDown, TrendingUp, Target, Award, Calendar, ChevronDown } from 'lucide-react';
 import type { NutritionGoal } from '../../types/nutrition';
 
 interface OverviewDashboardProps {
@@ -10,11 +10,13 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({ goal }) =>
   const [selectedMacro, setSelectedMacro] = useState<'protein' | 'kcal' | 'carbs' | 'fat'>('protein');
   const [selectedMonth, setSelectedMonth] = useState('August 2026');
 
-  // Simulated 30-day monthly intake dataset
+  // Weekly Balance Metric State (negative = red, positive = green)
+  const weeklyChangePercent = -4.2;
+
+  // Simulated 31-day monthly intake dataset
   const daysInMonth = 31;
   const mockDailyData = Array.from({ length: daysInMonth }, (_, i) => {
     const day = i + 1;
-    // Generate realistic daily variance
     let value = 0;
     if (selectedMacro === 'protein') {
       value = Math.floor(110 + Math.sin(day) * 35 + (day % 3) * 15);
@@ -42,39 +44,53 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({ goal }) =>
   };
 
   const targetValue = getTargetValue();
-  const maxValue = Math.max(...mockDailyData.map((d) => d.value), targetValue * 1.2);
+  const monthlyRequired = targetValue * daysInMonth;
+  const maxValue = Math.max(...mockDailyData.map((d) => d.value), targetValue * 1.25);
   const totalMonthlySum = mockDailyData.reduce((sum, d) => sum + d.value, 0);
   const dailyAverage = Math.round(totalMonthlySum / daysInMonth);
+  const unit = selectedMacro === 'kcal' ? 'kcal' : 'g';
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-300">
+    <div className="space-y-8 animate-in fade-in zoom-in-95 duration-300">
       
-      {/* 1. TOP ROW: 4 KPI STAT CARDS */}
+      {/* 1. TOP ROW: 4 KPI STAT CARDS WITH HOVER EFFECTS & SINGLE-LINE TAGS */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         
         {/* KPI 1: Weekly Balance vs Last Week */}
-        <div className="bg-white rounded-[28px] p-6 shadow-[0_10px_25px_rgba(15,23,42,0.06)] border border-[#e8e2f1] flex flex-col justify-between">
-          <div className="flex justify-between items-start mb-4">
+        <div className="bg-white rounded-[28px] p-6 shadow-[0_10px_25px_rgba(15,23,42,0.06)] border border-[#e8e2f1] hover:border-[#6417ff]/40 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 flex flex-col justify-between">
+          <div className="flex justify-between items-center mb-4">
             <span className="text-xs font-bold text-[#94a3b8] uppercase tracking-wider">
               Weekly Balance
             </span>
-            <span className="px-2.5 py-1 bg-emerald-50 text-emerald-600 rounded-full text-xs font-bold flex items-center space-x-1">
-              <TrendingDown className="w-3.5 h-3.5" />
-              <span>-4.2% vs last week</span>
+            {/* Single line percentage tag (Red if negative, Green if positive) */}
+            <span
+              className={`px-3 py-1 rounded-full text-xs font-bold flex items-center space-x-1 whitespace-nowrap ${
+                weeklyChangePercent < 0
+                  ? 'bg-red-50 text-red-500 border border-red-200'
+                  : 'bg-emerald-50 text-emerald-600 border border-emerald-200'
+              }`}
+            >
+              {weeklyChangePercent < 0 ? (
+                <TrendingDown className="w-3.5 h-3.5" />
+              ) : (
+                <TrendingUp className="w-3.5 h-3.5" />
+              )}
+              <span>{weeklyChangePercent > 0 ? `+${weeklyChangePercent}%` : `${weeklyChangePercent}%`} vs last week</span>
             </span>
           </div>
           <div>
             <div className="text-3xl font-extrabold text-[#0f172a]">
               2,150 <span className="text-sm font-bold text-[#5f6573]">Kcal/day</span>
             </div>
-            <p className="text-xs font-semibold text-[#94a3b8] mt-1">
+            {/* Uniform muted text color */}
+            <p className="text-xs font-medium text-[#94a3b8] mt-1">
               Same time window comparison
             </p>
           </div>
         </div>
 
         {/* KPI 2: Streak Days */}
-        <div className="bg-white rounded-[28px] p-6 shadow-[0_10px_25px_rgba(15,23,42,0.06)] border border-[#e8e2f1] flex flex-col justify-between">
+        <div className="bg-white rounded-[28px] p-6 shadow-[0_10px_25px_rgba(15,23,42,0.06)] border border-[#e8e2f1] hover:border-[#6417ff]/40 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 flex flex-col justify-between">
           <div className="flex justify-between items-start mb-4">
             <span className="text-xs font-bold text-[#94a3b8] uppercase tracking-wider">
               Active Streak
@@ -88,14 +104,15 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({ goal }) =>
               <span>14</span>
               <span className="text-sm font-bold text-[#5f6573]">Streak Days 🔥</span>
             </div>
-            <p className="text-xs font-semibold text-emerald-600 mt-1">
+            {/* Uniform muted text color */}
+            <p className="text-xs font-medium text-[#94a3b8] mt-1">
               Logged meals 14 days in a row!
             </p>
           </div>
         </div>
 
         {/* KPI 3: Goal Hit Rate */}
-        <div className="bg-white rounded-[28px] p-6 shadow-[0_10px_25px_rgba(15,23,42,0.06)] border border-[#e8e2f1] flex flex-col justify-between">
+        <div className="bg-white rounded-[28px] p-6 shadow-[0_10px_25px_rgba(15,23,42,0.06)] border border-[#e8e2f1] hover:border-[#6417ff]/40 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 flex flex-col justify-between">
           <div className="flex justify-between items-start mb-4">
             <span className="text-xs font-bold text-[#94a3b8] uppercase tracking-wider">
               Goal Accuracy
@@ -108,14 +125,15 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({ goal }) =>
             <div className="text-3xl font-extrabold text-[#0f172a]">
               92% <span className="text-sm font-bold text-[#5f6573]">Target Hit</span>
             </div>
-            <p className="text-xs font-semibold text-[#5f6573] mt-1">
+            {/* Uniform muted text color */}
+            <p className="text-xs font-medium text-[#94a3b8] mt-1">
               Met goals 26 of 28 days
             </p>
           </div>
         </div>
 
         {/* KPI 4: Monthly Avg Protein */}
-        <div className="bg-white rounded-[28px] p-6 shadow-[0_10px_25px_rgba(15,23,42,0.06)] border border-[#e8e2f1] flex flex-col justify-between">
+        <div className="bg-white rounded-[28px] p-6 shadow-[0_10px_25px_rgba(15,23,42,0.06)] border border-[#e8e2f1] hover:border-[#6417ff]/40 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 flex flex-col justify-between">
           <div className="flex justify-between items-start mb-4">
             <span className="text-xs font-bold text-[#94a3b8] uppercase tracking-wider">
               Avg Protein Intake
@@ -128,7 +146,8 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({ goal }) =>
             <div className="text-3xl font-extrabold text-[#0f172a]">
               142g <span className="text-sm font-bold text-[#5f6573]">Daily Avg</span>
             </div>
-            <p className="text-xs font-semibold text-emerald-600 mt-1">
+            {/* Uniform muted text color */}
+            <p className="text-xs font-medium text-[#94a3b8] mt-1">
               +12g over target
             </p>
           </div>
@@ -137,7 +156,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({ goal }) =>
       </div>
 
       {/* 2. MAIN CHART CONTAINER: VERTICAL BAR CHART FOR MONTHLY MACRO INTAKE */}
-      <div className="bg-white rounded-[32px] p-8 shadow-[0_12px_30px_rgba(15,23,42,0.08)] border border-[#e8e2f1]">
+      <div className="bg-white rounded-[32px] p-8 shadow-[0_12px_30px_rgba(15,23,42,0.08)] border border-[#e8e2f1] hover:border-[#6417ff]/30 transition-all duration-300">
         
         {/* Chart Header & Controls */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
@@ -156,7 +175,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({ goal }) =>
               <select
                 value={selectedMacro}
                 onChange={(e) => setSelectedMacro(e.target.value as any)}
-                className="appearance-none bg-[#faf8fc] border border-[#e8e2f1] text-[#0f172a] text-xs font-bold px-4 py-2.5 pr-8 rounded-2xl focus:outline-none focus:ring-2 focus:ring-[#6417ff] cursor-pointer"
+                className="appearance-none bg-[#faf8fc] border border-[#e8e2f1] hover:border-[#6417ff]/40 text-[#0f172a] text-xs font-bold px-4 py-2.5 pr-8 rounded-2xl focus:outline-none focus:ring-2 focus:ring-[#6417ff] cursor-pointer transition-all"
               >
                 <option value="protein">🥩 Protein (g)</option>
                 <option value="kcal">🔥 Calories (Kcal)</option>
@@ -171,7 +190,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({ goal }) =>
               <select
                 value={selectedMonth}
                 onChange={(e) => setSelectedMonth(e.target.value)}
-                className="appearance-none bg-[#faf8fc] border border-[#e8e2f1] text-[#0f172a] text-xs font-bold px-4 py-2.5 pr-8 rounded-2xl focus:outline-none focus:ring-2 focus:ring-[#6417ff] cursor-pointer"
+                className="appearance-none bg-[#faf8fc] border border-[#e8e2f1] hover:border-[#6417ff]/40 text-[#0f172a] text-xs font-bold px-4 py-2.5 pr-8 rounded-2xl focus:outline-none focus:ring-2 focus:ring-[#6417ff] cursor-pointer transition-all"
               >
                 <option value="August 2026">August 2026</option>
                 <option value="July 2026">July 2026</option>
@@ -181,19 +200,21 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({ goal }) =>
           </div>
         </div>
 
-        {/* Summary Stats Row inside Card */}
+        {/* Summary Stats Row inside Card: Displays Total / Monthly Required */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8 bg-[#faf8fc] p-4 rounded-2xl border border-[#f1ecf7]">
           <div>
             <span className="text-[11px] font-bold text-[#94a3b8] uppercase block">Monthly Total</span>
-            <span className="text-lg font-bold text-[#0f172a]">{totalMonthlySum.toLocaleString()} {selectedMacro === 'kcal' ? 'kcal' : 'g'}</span>
+            <span className="text-lg font-bold text-[#0f172a]">
+              {totalMonthlySum.toLocaleString()} / <span className="text-[#6417ff]">{monthlyRequired.toLocaleString()} {unit}</span>
+            </span>
           </div>
           <div>
             <span className="text-[11px] font-bold text-[#94a3b8] uppercase block">Daily Average</span>
-            <span className="text-lg font-bold text-[#0f172a]">{dailyAverage} {selectedMacro === 'kcal' ? 'kcal' : 'g'}</span>
+            <span className="text-lg font-bold text-[#0f172a]">{dailyAverage} {unit}</span>
           </div>
           <div>
             <span className="text-[11px] font-bold text-[#94a3b8] uppercase block">Daily Target</span>
-            <span className="text-lg font-bold text-[#6417ff]">{targetValue} {selectedMacro === 'kcal' ? 'kcal' : 'g'}</span>
+            <span className="text-lg font-bold text-[#6417ff]">{targetValue} {unit}</span>
           </div>
           <div>
             <span className="text-[11px] font-bold text-[#94a3b8] uppercase block">Consistency</span>
@@ -211,11 +232,11 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({ goal }) =>
             }}
           >
             <span className="bg-[#6417ff] text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm transform translate-y-[-50%]">
-              Target: {targetValue}
+              Target: {targetValue} {unit}
             </span>
           </div>
 
-          {/* Vertical Bars */}
+          {/* Vertical Bars: App Brand Purple if Goal Met, Muted Grey if Not */}
           {mockDailyData.map((d) => {
             const barHeightPercent = (d.value / maxValue) * 100;
             const isTargetMet = d.value >= targetValue * 0.95;
@@ -227,15 +248,15 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({ goal }) =>
               >
                 {/* Tooltip on Hover */}
                 <div className="opacity-0 group-hover:opacity-100 transition-opacity absolute -top-10 bg-slate-900 text-white text-[10px] font-bold py-1 px-2 rounded-lg pointer-events-none whitespace-nowrap z-30 shadow-lg">
-                  Day {d.day}: {d.value} {selectedMacro === 'kcal' ? 'kcal' : 'g'}
+                  Day {d.day}: {d.value} {unit} {isTargetMet ? '(Goal Met ✓)' : '(Below Goal)'}
                 </div>
 
-                {/* Bar Element */}
+                {/* Bar Element: App Purple (#6417ff) if Goal Met, Deactivated Grey (#cbd5e1) if Not */}
                 <div
                   className={`w-full max-w-[18px] rounded-t-lg transition-all duration-300 ${
                     isTargetMet
-                      ? 'bg-[#6417ff] group-hover:bg-[#5400e9]'
-                      : 'bg-amber-400 group-hover:bg-amber-500'
+                      ? 'bg-[#6417ff] group-hover:bg-[#5400e9] shadow-sm shadow-[#6417ff]/30'
+                      : 'bg-[#cbd5e1] group-hover:bg-[#94a3b8]'
                   }`}
                   style={{ height: `${barHeightPercent}%` }}
                 />
