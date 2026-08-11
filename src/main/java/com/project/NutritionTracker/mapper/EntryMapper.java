@@ -5,8 +5,10 @@ import com.project.NutritionTracker.dto.EntryResponseDTO;
 import com.project.NutritionTracker.model.Entry;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+import org.mapstruct.ReportingPolicy;
 
-@Mapper(componentModel = "spring")
+
+@Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.ERROR)
 public interface EntryMapper {
 
     @Mapping(target = "id", ignore = true)

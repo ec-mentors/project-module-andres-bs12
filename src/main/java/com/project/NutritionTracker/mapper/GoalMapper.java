@@ -5,8 +5,9 @@ import com.project.NutritionTracker.dto.GoalResponseDTO;
 import com.project.NutritionTracker.model.Goal;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+import org.mapstruct.ReportingPolicy;
 
-@Mapper(componentModel = "spring")
+@Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.ERROR)
 public interface GoalMapper {
 
     @Mapping(target = "startDate", ignore = true)
