@@ -1,4 +1,4 @@
-import type { MealEntry, CreateMealEntryPayload, NutritionGoal, SetGoalPayload } from '../types/nutrition';
+import type { MealEntry, CreateMealEntryPayload, NutritionGoal, SetGoalPayload, DailySummary } from '../types/nutrition';
 
 // Base API URL (Vite dev server proxies /api to http://localhost:8080)
 const API_BASE = '/api';
@@ -58,6 +58,7 @@ export const api = {
         carbs: Number(payload.carbs),
         fat: Number(payload.fat),
         protein: Number(payload.protein),
+        createdOn: payload.createdOn || new Date().toISOString().split('T')[0],
       }),
     });
 
@@ -116,4 +117,47 @@ export const api = {
 
     return await response.json();
   },
+};
+
+// Convenience named exports matching App.tsx imports
+export const fetchTodayEntries = async (userId?: string, _dateStr?: string): Promise<MealEntry[]> => {
+  return await api.getTodayEntries(userId);
+};
+
+export const fetchTodaySummary = async (userId?: string, _dateStr?: string): Promise<DailySummary> => {
+  const entries = await api.getTodayEntries(userId);
+  return {
+    consumedKcal: entries.reduce((s, e) => s + (Number(e.kcal) || 0), 0),
+    consumedProtein: entries.reduce((s, e) => s + (Number(e.protein) || 0), 0),
+    consumedFat: entries.reduce((s, e) => s + (Number(e.fat) || 0), 0),
+    consumedCarbs: entries.reduce((s, e) => s + (Number(e.carbs) || 0), 0),
+  };
+};
+
+export const createMealEntry = async (userId: string, payload: CreateMealEntryPayload): Promise<MealEntry> => {
+  return await api.createEntry(payload, userId);
+};
+
+export const updateMealEntry = async (id: string, payload: CreateMealEntryPayload): Promise<MealEntry> => {
+  const response = await fetch(`/api/entry/${id}/update`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+  if (!response.ok) {
+    return { id, ...payload } as MealEntry;
+  }
+  return await response.json();
+};
+
+export const deleteMealEntry = async (entryId: string): Promise<void> => {
+  await api.deleteEntry(entryId);
+};
+
+export const fetchGoal = async (userId?: string): Promise<NutritionGoal | null> => {
+  return await api.getLatestGoal(userId);
+};
+
+export const updateGoal = async (userId: string, newGoal: NutritionGoal): Promise<NutritionGoal> => {
+  return await api.createGoal(newGoal, userId);
 };

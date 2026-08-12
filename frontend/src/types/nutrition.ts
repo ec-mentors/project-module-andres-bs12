@@ -14,6 +14,7 @@ export interface MealEntry {
 export interface CreateMealEntryPayload {
   mealName: string;
   source?: string;
+  createdOn?: string;
   kcal: number;
   protein: number;
   carbs: number;
@@ -39,10 +40,10 @@ export interface SetGoalPayload {
   fat: number;
 }
 
-// 5. Daily Summary calculations for UI
+// 5. Matches Daily Summary Math
 export interface DailySummary {
   consumedKcal: number;
   consumedProtein: number;
-  consumedCarbs: number;
   consumedFat: number;
+  consumedCarbs: number;
 }

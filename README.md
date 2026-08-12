@@ -2,7 +2,9 @@
 
 NutritionTracker is a modern, high-performance web application and RESTful backend designed to log daily nutrition entries (meals, calories, protein, carbs, fat), track progress against personalized goals, and view interactive monthly analytics.
 
-Built with **Spring Boot 3 (Java 17)** on the backend and **Vite + React + TypeScript + TailwindCSS** on the frontend, featuring a custom **Figma Glassmorphism Design System**.
+Built with **Spring Boot 3 (Java 17)** on the backend and **Vite + React 19 + TypeScript + TailwindCSS v4** on the frontend, featuring a custom **Figma Glassmorphism Design System** with **Light & Dark Glass Mode** support.
+
+> 📖 **Architecture & Design Evolution:** For an in-depth breakdown of architectural decisions, Figma design system refinements, and UX improvements, read the [Learning Journal (LEARNING_JOURNAL.md)](LEARNING_JOURNAL.md).
 
 ---
 
@@ -57,36 +59,37 @@ erDiagram
 - **Testing:** JUnit 5, Mockito, Spring Security Test (**74/74 Unit & Integration Tests Passing**)
 
 ### **Frontend (Vite + React + TypeScript + TailwindCSS)**
-- **UI Architecture:** Vite, React 19, TypeScript, TailwindCSS v4, Lucide React Icons
-- **Design System:** Pixel-perfect replication of Figma *CaloriesTrack Glassmorphism Atomic Design*
-- **State & REST Client:** Custom type-safe API client wrapper with fallback demo showcase mode
+- **UI Architecture:** Vite 8, React 19, TypeScript 5.8, TailwindCSS v4, Lucide React Icons
+- **Design System:** Custom **Dark & Light Glassmorphism System** (8px spatial grid, high-contrast typography, ambient glow cards)
+- **REST Client & State:** Type-safe API client wrapper (`api.ts`) connecting React components to Spring Boot REST endpoints
 
 ---
 
-## ✨ Key Frontend Features
+## ✨ Key Frontend & UX Highlights
 
 1. **📊 Glassmorphism Today Dashboard:**
    - **Hero Kcal Card:** Displays remaining calories with 4 SVG Donut Rings (`KCAL`, `CARBS`, `FAT`, `PROTEIN`).
-   - **Date Navigator:** Navigate to past days (`<` Previous Day | `Today / Date` | `>` Next Day) to log forgotten meals. Future date navigation is automatically blocked.
-   - **Consumed vs Left Table:** Compares consumed values against goals with animated progress bars.
+   - **Fixed-Width Date Navigator Pill (`195px`):** Navigate past days (`<` Previous Day | `Today / Date` | `>` Next Day) without layout shifts or arrow jumping. Future dates are automatically blocked.
+   - **Consumed vs Left Table:** Compares intake against targets with animated progress bars and a **constant neutral Left column** for optimal readability.
 
-2. **📝 Inline Meal Entry & Edit Sidebar:**
-   - Log meals directly inside `LatestEntriesSidebar` with smooth push-down form animations.
-   - Click on any meal card or macro numbers to enter **Inline Edit Mode**, update values, and save to the backend.
-   - Compact height viewport with clean scrollbar alignment.
+2. **📱 Mobile Touch Delete UX & Safety Confirmation:**
+   - Touch action icons are **always visible on mobile viewports**.
+   - Inline edit form includes a prominent red `Delete` button and an **inline confirmation dialog** (`Delete [Meal Name]?`) to prevent accidental deletions on touchscreens.
 
-3. **📈 Monthly Intake Analytics (`Overview` Tab):**
-   - 4 Top KPI Stat Cards (Weekly balance, Active Streak, Goal Accuracy %, Avg Protein).
-   - Monthly Bar Chart with bottom-to-top growing bar animations and **`🌟 General Goal Compliance (%)`** dropdown option.
-   - 100% dynamic calculation calculated directly from real logged entries (shows `0` when no entries exist).
+3. **🎯 Dynamic 85%–115% Target Compliance Math:**
+   - **Goal Hit (`85%-115%`):** Rendered in official **Brand Purple (`#6417ff`)**.
+   - **Goal Exceeded (`>115%`):** Rendered in unified **Rose Red (`#f43f5e`)** across donuts, progress bars, and stats. Over-consuming calories is unhealthy and never marked as "Hit".
+   - **In Progress (`<85%`):** Rendered in neutral slate.
 
-4. **🔑 Google OAuth Modal & Figma `SidepopUp` Notifications:**
-   - Google Sign-In modal popup for user authentication.
-   - Replicated exact Figma toast notification (`SidepopUp`) with ultra-smooth 1.4s slide-in/slide-out animations.
-   - Animated grey skeleton loading screen during initial state initialization.
+4. **📈 Monthly Intake Analytics (`Overview` Tab):**
+   - 4 Top KPI Stat Cards (Weekly balance, Active Streak, Goal Accuracy %, Avg Protein) with softened neutral subtext.
+   - Interactive monthly vertical bar chart with growing animations, goal lines, and dynamic scaling.
 
-5. **🎛️ High-Contrast Header Navigation:**
-   - Floating glass header with high-contrast inner track and animated sliding purple gradient indicator pill (`Today` ↔ `Overview`).
+5. **🌊 Left-to-Right Staggered Wave Theme Transitions:**
+   - Theme toggle (Sun / Moon) triggers a smooth left-to-right color wave across cards (`delay-0`, `delay-75`, `delay-150`), eliminating harsh screen flashes.
+
+6. **🚫 Global Number Input Stepper Arrow Reset:**
+   - `@layer base` CSS reset in `index.css` permanently eliminating browser up/down number arrows across Chrome, Safari, Edge, and Firefox.
 
 ---
 
@@ -113,22 +116,22 @@ cd NutritionTracker
 ### **2. Run Frontend (Vite + React)**
 In a second terminal window:
 ```bash
-# Navigate to frontend directory
 cd frontend
 
 # Install dependencies
 npm install
 
-# Start Vite dev server (runs on http://localhost:5173)
-npm run dev
+# Start Vite dev server exposed to local network (runs on port 5173)
+npm run dev -- --host 0.0.0.0 --port 5173
 ```
+- Access from desktop at `http://localhost:5173` or from any mobile device on Wi-Fi at `http://<your-local-ip>:5173`.
 
 ### **3. Production Bundle Build**
-To build the static frontend bundle into Spring Boot's static resources:
+To build the static frontend bundle for Spring Boot serving:
 ```bash
 npm --prefix frontend run build
 ```
-The static assets are emitted directly to `src/main/resources/static/`, allowing Spring Boot to serve the SPA natively.
+Emits static assets directly to `src/main/resources/static/`, allowing Spring Boot to serve the SPA natively.
 
 ---
 
@@ -138,42 +141,6 @@ Task tracking and sprint planning are managed via **GitHub Issues & Projects** a
 
 * 🚀 **[View Live GitHub Issues & Backlog](https://github.com/ec-mentors/project-module-andres-bs12/issues)**
 * 📊 **[View Interactive GitHub Project Board](https://github.com/users/andres-bs12/projects/3)**
-
----
-
-## 🎯 Sprint History & Status
-
-### ⚙️ **Sprint 1: Back-End Core (Jul 27 – Aug 10, 2026)** — ✅ `Completed`
-- Built foundational Spring Boot architecture (Entities, DTOs, Mappers, Repositories, Services, Controllers, and PostgreSQL Schema).
-- Decoupled DTO payload layer (`RequestDTO` / `ResponseDTO`) with `@Component` Mappers and Google OAuth identity linking (`google_id`).
-
-### 🔒 **Sprint 2: DTO Refactoring, Security Ownership & Testing (Aug 03 – Aug 10, 2026)** — ✅ `Completed`
-- Modernized DTO layer with Java Records & MapStruct (Issue #12).
-- Implemented Spring Security IDOR protection & RBAC `@PreAuthorize` ownership checks (Issue #11).
-- Built automated unit and integration test suite with 74 tests passing (Issue #520).
-
-### 🎨 **Sprint 3: Front-End Architecture, Figma UI & REST Integration (Aug 10 – Aug 24, 2026)** — ✅ `Completed`
-- Designed and built the Vite + React + TypeScript frontend matching the Figma glassmorphism design system.
-- Implemented `HeroKcalCard`, SVG Donut Rings, `ConsumedVsLeftTable`, `LatestEntriesSidebar` with inline editing, and `OverviewDashboard` analytics.
-- Integrated REST client API service (`api.ts`) communicating with Spring Boot controllers.
-- Integrated Figma `SidepopUp` notification toasts, Date Navigator, Skeleton Loader, and Google OAuth login modal.
-
----
-
-## 🧠 Architectural Decision Records (ADRs)
-
-### 💡 ADR-01: Pivot to Google OAuth & Identity Linking
-- **Status:** Approved
-- **Decision:** Replacing manual password auth with Google OAuth eliminates password hashing and reset overhead while offering one-click login. The `User` record in PostgreSQL serves as the core authority, with Google OAuth handling web authentication and Telegram as a secondary channel via token pairing (`/start <token>`).
-
-### 💡 ADR-02: User Data Ownership & IDOR Protection via Spring Security
-- **Status:** Approved
-- **Context & Security Realization:** Passing `requestingUserId` as an HTTP parameter creates severe **IDOR (Insecure Direct Object Reference)** vulnerabilities where malicious users could spoof request IDs.
-- **Solution:** Implemented domain-specific `UserPrincipal` wrapper implementing `UserDetails`. Delegated record-level authorization to Spring Security (`@EnableMethodSecurity` + `@PreAuthorize("@entrySecurity.isOwner(#entryId, principal)")`), performing a 100% type-safe `UUID` to `UUID` comparison against the cryptographically verified security context in memory.
-
-### 💡 ADR-03: Role-Based Access Control (RBAC)
-- **Status:** Approved
-- **Solution:** Implemented standard Spring Security Roles (`hasRole('ADMIN')`) backed by `GrantedAuthority` (`SimpleGrantedAuthority("ROLE_ADMIN")`). Roles decouple security rules from individual user identities, enabling dynamic, environment-based administration in PostgreSQL.
 
 ---
 

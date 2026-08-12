@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { ChevronLeft, ChevronRight, Calendar as CalendarIcon } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import type { DailySummary, NutritionGoal } from '../../types/nutrition';
 
 interface HeroKcalCardProps {
@@ -7,85 +7,9 @@ interface HeroKcalCardProps {
   goal: NutritionGoal;
   onOpenSetGoals: () => void;
   selectedDate: Date;
-  onDateChange: (newDate: Date) => void;
+  onDateChange: (date: Date) => void;
+  theme?: 'dark' | 'light';
 }
-
-interface MacroRingProps {
-  label: string;
-  valueText: string;
-  subText: string;
-  percentage: number;
-  color: string;
-  ringValue?: string;
-  onClick: () => void;
-  isAnimated: boolean;
-}
-
-const MacroRingCard: React.FC<MacroRingProps> = ({
-  label,
-  valueText,
-  subText,
-  percentage,
-  color,
-  ringValue,
-  onClick,
-  isAnimated,
-}) => {
-  const radius = 24;
-  const circumference = 2 * Math.PI * radius;
-  // Calculate target strokeDashoffset (0 when 100%, circumference when 0%)
-  const targetOffset = circumference - (Math.min(percentage, 100) / 100) * circumference;
-  const currentOffset = isAnimated ? targetOffset : circumference;
-
-  return (
-    <div
-      onClick={onClick}
-      className="flex-1 bg-white border border-[#e8e2f1] hover:border-[#6417ff]/50 rounded-[24px] p-4 flex items-center justify-between shadow-[0_4px_20px_rgba(15,23,42,0.03)] hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 cursor-pointer group"
-      title={`Click to edit ${label} goal`}
-    >
-      <div>
-        <span className="text-[11px] font-bold tracking-wider text-[#94a3b8] group-hover:text-[#6417ff] uppercase block mb-1 transition-colors">
-          {label}
-        </span>
-        <div className="text-2xl font-bold text-[#0f172a] leading-tight">
-          {valueText}
-        </div>
-        <div className="text-xs font-semibold text-[#5f6573] mt-0.5">
-          {subText}
-        </div>
-      </div>
-
-      {/* SVG Donut Ring with Smooth Fill-up Animation */}
-      <div className="relative w-14 h-14 flex items-center justify-center">
-        <svg className="w-14 h-14 transform -rotate-90">
-          <circle
-            cx="28"
-            cy="28"
-            r={radius}
-            stroke="#f1f5f9"
-            strokeWidth="5"
-            fill="transparent"
-          />
-          <circle
-            cx="28"
-            cy="28"
-            r={radius}
-            stroke={color}
-            strokeWidth="5"
-            strokeDasharray={circumference}
-            strokeDashoffset={currentOffset}
-            strokeLinecap="round"
-            fill="transparent"
-            className="transition-all duration-[1000ms] ease-out"
-          />
-        </svg>
-        <span className="absolute text-xs font-bold text-[#0f172a]">
-          {ringValue || `${Math.round(percentage)}`}
-        </span>
-      </div>
-    </div>
-  );
-};
 
 export const HeroKcalCard: React.FC<HeroKcalCardProps> = ({
   summary,
@@ -93,25 +17,43 @@ export const HeroKcalCard: React.FC<HeroKcalCardProps> = ({
   onOpenSetGoals,
   selectedDate,
   onDateChange,
+  theme = 'dark',
 }) => {
-  const [isAnimated, setIsAnimated] = useState(false);
+  const [animateDonuts, setAnimateDonuts] = useState(false);
+  const isLight = theme === 'light';
 
-  // Trigger ring fill-up animation when summary or selected date changes
   useEffect(() => {
-    setIsAnimated(false);
-    const timer = setTimeout(() => setIsAnimated(true), 60);
+    setAnimateDonuts(false);
+    const timer = setTimeout(() => setAnimateDonuts(true), 60);
     return () => clearTimeout(timer);
   }, [summary, selectedDate]);
 
-  const formattedDate = selectedDate.toLocaleDateString('en-US', {
-    weekday: 'short',
-    day: 'numeric',
-    month: 'short',
-  });
+  // Clamped Math Calculations
+  const safeConsumedKcal = Math.max(0, summary.consumedKcal || 0);
+  const safeConsumedProtein = Math.max(0, summary.consumedProtein || 0);
+  const safeConsumedFat = Math.max(0, summary.consumedFat || 0);
+  const safeConsumedCarbs = Math.max(0, summary.consumedCarbs || 0);
 
+  const remainingKcal = Math.max(0, goal.kcal - safeConsumedKcal);
+  const kcalPercent = goal.kcal > 0 ? Math.max(0, Math.min(Math.round((safeConsumedKcal / goal.kcal) * 100), 999)) : 0;
+  const proteinPercent = goal.protein > 0 ? Math.max(0, Math.min(Math.round((safeConsumedProtein / goal.protein) * 100), 999)) : 0;
+  const fatPercent = goal.fat > 0 ? Math.max(0, Math.min(Math.round((safeConsumedFat / goal.fat) * 100), 999)) : 0;
+  const carbsPercent = goal.carbs > 0 ? Math.max(0, Math.min(Math.round((safeConsumedCarbs / goal.carbs) * 100), 999)) : 0;
+
+  // DISPLAY HEADLINE %: IF >100%, DISPLAY '100%+'
+  const headlinePercentText = kcalPercent > 100 ? '100%+' : `${kcalPercent}%`;
+
+  // STRICT MULTI-MACRO GOAL COMPLIANCE RULE:
+  const isAnyMacroExceeded = kcalPercent > 115 || proteinPercent > 115 || fatPercent > 115 || carbsPercent > 115;
+  const isAllMacrosHit =
+    kcalPercent >= 85 && kcalPercent <= 115 &&
+    proteinPercent >= 85 && proteinPercent <= 115 &&
+    fatPercent >= 85 && fatPercent <= 115 &&
+    carbsPercent >= 85 && carbsPercent <= 115;
+
+  // Date Navigation Controls
   const today = new Date();
-  const isToday = selectedDate.toDateString() === today.toDateString();
-  const isFutureDate = selectedDate > today;
+  const isTodaySelected = selectedDate.toDateString() === today.toDateString();
 
   const handlePrevDay = () => {
     const prev = new Date(selectedDate);
@@ -120,116 +62,198 @@ export const HeroKcalCard: React.FC<HeroKcalCardProps> = ({
   };
 
   const handleNextDay = () => {
-    if (isToday || isFutureDate) return;
+    if (isTodaySelected) return;
     const next = new Date(selectedDate);
     next.setDate(next.getDate() + 1);
-    onDateChange(next);
+    if (next <= today) {
+      onDateChange(next);
+    }
   };
 
-  const remainingKcal = Math.max(0, goal.kcal - summary.consumedKcal);
-  const kcalPercent = goal.kcal > 0 ? (summary.consumedKcal / goal.kcal) * 100 : 0;
-  
-  const carbsRemaining = goal.carbs - summary.consumedCarbs;
-  const fatRemaining = goal.fat - summary.consumedFat;
-  const proteinRemaining = goal.protein - summary.consumedProtein;
+  const selectedDateFormatted = isTodaySelected
+    ? 'Today'
+    : selectedDate.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
 
-  const carbsPercent = goal.carbs > 0 ? (summary.consumedCarbs / goal.carbs) * 100 : 0;
-  const fatPercent = goal.fat > 0 ? (summary.consumedFat / goal.fat) * 100 : 0;
-  const proteinPercent = goal.protein > 0 ? (summary.consumedProtein / goal.protein) * 100 : 0;
+  // Donut SVG circumference for radius r=18 (2 * PI * 18 ≈ 113.1)
+  const radius = 18;
+  const circumference = 2 * Math.PI * radius;
 
-  return (
-    <div className="bg-white rounded-[32px] p-8 shadow-[0_12px_30px_rgba(15,23,42,0.08)] border border-[#e8e2f1]">
-      {/* Top Header Row with Date Navigator */}
-      <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-6">
-        <div>
-          <h2 className="text-6xl font-extrabold text-[#0f172a] tracking-tight">
-            {remainingKcal}
-          </h2>
-          <p className="text-lg font-bold text-[#0f172a] mt-1">
-            Kcal remaining {!isToday && <span className="text-xs font-semibold text-[#6417ff]">({formattedDate})</span>}
-          </p>
+  // UNIFIED ROSE RED COLOR PALETTE (stroke-rose-500 everywhere for exceeded!):
+  // 1. Electric Purple (#6417ff) = Goal Met (85% to 115%)
+  // 2. Unified Rose Red (stroke-rose-500) = Exceeded (>115%)
+  // 3. Dim Charcoal/Slate = In Progress (<85%)
+  const renderDonutRing = (
+    percent: number,
+    label: string,
+    value: number,
+    unit: string,
+    goalVal: number
+  ) => {
+    const cappedPercentForRing = Math.min(percent, 100);
+    const strokeDashoffset = circumference - (cappedPercentForRing / 100) * circumference;
+
+    const ringColorClass =
+      percent >= 85 && percent <= 115
+        ? 'stroke-[#6417ff]'
+        : percent > 115
+        ? 'stroke-rose-500'
+        : isLight
+        ? 'stroke-slate-300'
+        : 'stroke-white/15';
+
+    return (
+      <div
+        onClick={onOpenSetGoals}
+        className={`flex flex-col items-center p-3 sm:p-4 rounded-2xl cursor-pointer transition-all duration-300 transform hover:scale-[1.02] active:scale-95 group min-w-0 border ${
+          isLight
+            ? 'bg-slate-100/70 hover:bg-slate-200/60 border-slate-200/80 hover:border-[#6417ff]/25'
+            : 'bg-[#231a38] hover:bg-[#2d2248] border-white/10 hover:border-[#6417ff]/50'
+        }`}
+        title={`Set ${label} Goal (${value} / ${goalVal}${unit})`}
+      >
+        {/* Macro Label ABOVE the Circle */}
+        <span className={`text-[10px] sm:text-xs font-bold uppercase tracking-wider mb-2 transition-colors truncate max-w-full ${
+          isLight ? 'text-purple-700 group-hover:text-purple-900' : 'text-purple-300 group-hover:text-white'
+        }`}>
+          {label}
+        </span>
+
+        {/* Donut SVG Ring */}
+        <div className="relative w-12 h-12 flex items-center justify-center">
+          <svg className="w-full h-full transform -rotate-90" viewBox="0 0 44 44">
+            <circle
+              cx="22"
+              cy="22"
+              r={radius}
+              className={isLight ? 'stroke-slate-200' : 'stroke-white/10'}
+              strokeWidth="4"
+              fill="transparent"
+            />
+            <circle
+              cx="22"
+              cy="22"
+              r={radius}
+              className={`${ringColorClass} transition-all duration-[1000ms] ease-out`}
+              strokeWidth="4"
+              strokeDasharray={circumference}
+              strokeDashoffset={animateDonuts ? strokeDashoffset : circumference}
+              strokeLinecap="round"
+              fill="transparent"
+            />
+          </svg>
         </div>
 
-        {/* Date Navigator Pill */}
-        <div className="flex items-center space-x-1 bg-[#faf8fc] p-1 rounded-full border border-[#f1ecf7] shadow-sm">
+        {/* Percentage Number Below Ring */}
+        <span className={`text-xs sm:text-sm font-black mt-1.5 truncate max-w-full ${
+          isLight ? 'text-slate-900' : 'text-white'
+        }`}>
+          {percent}%
+        </span>
+
+        {/* Consumed Value */}
+        <span className={`text-[11px] sm:text-xs font-extrabold mt-0.5 truncate max-w-full ${
+          isLight ? 'text-slate-700' : 'text-slate-200'
+        }`}>
+          {value}{unit}
+        </span>
+      </div>
+    );
+  };
+
+  return (
+    <div className={`border-2 rounded-[32px] p-6 sm:p-8 transition-all duration-300 relative overflow-hidden ${
+      isLight
+        ? 'bg-white/95 backdrop-blur-sm border-slate-200/80 hover:border-[#6417ff]/25 text-slate-900 shadow-[0_4px_20px_rgba(0,0,0,0.03)] hover:shadow-[0_8px_24px_rgba(100,23,255,0.05)]'
+        : 'bg-[#161024] border-white/10 hover:border-[#6417ff]/40 text-white shadow-[0_16px_40px_rgba(0,0,0,0.5)]'
+    }`}>
+      
+      {/* Top Row: Daily Progress Headline on Left, Fixed Width Date Navigator Pill on Right */}
+      <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+        <div className={`flex items-center text-xs font-bold uppercase tracking-wider ${
+          isLight ? 'text-purple-700' : 'text-purple-300'
+        }`}>
+          <span>Daily Progress Today</span>
+        </div>
+
+        {/* Right Side FIXED WIDTH Date Pill */}
+        <div className={`w-full sm:w-[170px] flex items-center justify-between rounded-2xl sm:rounded-full p-1 px-3 shadow-sm border transition-colors shrink-0 ${
+          isLight
+            ? 'bg-slate-100/90 border-slate-300/80 text-slate-800'
+            : 'bg-[#231a38] border-white/15 text-white'
+        }`}>
           <button
             onClick={handlePrevDay}
-            className="p-1.5 rounded-full hover:bg-[#eee6ff] text-[#5f6573] hover:text-[#6417ff] transition-all"
-            title="Go to previous day"
+            className={`p-1 rounded-xl sm:rounded-full transition-all active:scale-95 shrink-0 ${
+              isLight ? 'hover:bg-slate-200/90 text-slate-700' : 'hover:bg-white/10 text-white'
+            }`}
+            title="Previous day"
           >
-            <ChevronLeft className="w-4 h-4" />
+            <ChevronLeft className="w-4 h-4 stroke-[2.5]" />
           </button>
 
-          <div className="flex items-center space-x-1.5 px-3 py-1 text-xs font-bold text-[#0f172a]">
-            <CalendarIcon className="w-3.5 h-3.5 text-[#6417ff]" />
-            <span>{isToday ? `Today, ${formattedDate}` : formattedDate}</span>
+          <div className="flex items-center text-xs font-bold text-center px-1 truncate min-w-0 justify-center flex-1">
+            <span className="truncate">{selectedDateFormatted}</span>
           </div>
 
           <button
             onClick={handleNextDay}
-            disabled={isToday || isFutureDate}
-            className={`p-1.5 rounded-full transition-all ${
-              isToday || isFutureDate
-                ? 'text-slate-300 cursor-not-allowed opacity-40'
-                : 'hover:bg-[#eee6ff] text-[#5f6573] hover:text-[#6417ff]'
+            disabled={isTodaySelected}
+            className={`p-1 rounded-xl sm:rounded-full transition-all active:scale-95 shrink-0 ${
+              isTodaySelected
+                ? 'text-slate-400 cursor-not-allowed opacity-30'
+                : isLight
+                ? 'hover:bg-slate-200/90 text-slate-700'
+                : 'hover:bg-white/10 text-white'
             }`}
-            title={isToday ? 'Cannot navigate to future days' : 'Go to next day'}
+            title={isTodaySelected ? 'Cannot navigate to future days' : 'Next day'}
           >
-            <ChevronRight className="w-4 h-4" />
+            <ChevronRight className="w-4 h-4 stroke-[2.5]" />
           </button>
         </div>
       </div>
 
-      {/* 4 Clickeable Mini Macro Cards with Animated Rings */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {/* KCAL */}
-        <MacroRingCard
-          label="KCAL"
-          valueText={`${remainingKcal}`}
-          subText={remainingKcal === 0 ? 'Goal Met' : 'Left'}
-          percentage={kcalPercent}
-          color="#f59e0b"
-          ringValue={`${remainingKcal}`}
-          onClick={onOpenSetGoals}
-          isAnimated={isAnimated}
-        />
+      {/* Main Headline Display: Daily Progress Percentage */}
+      <div className="relative z-10 space-y-1.5">
+        <div className="flex flex-wrap items-baseline gap-3">
+          <span className={`text-5xl sm:text-6xl font-black tracking-tight drop-shadow-sm ${
+            isLight ? 'text-slate-900' : 'text-white'
+          }`}>
+            {headlinePercentText}
+          </span>
+          <span
+            className={`text-base sm:text-lg font-bold ${
+              isAnyMacroExceeded
+                ? 'text-rose-500'
+                : isAllMacrosHit
+                ? 'text-[#6417ff]'
+                : isLight
+                ? 'text-purple-700'
+                : 'text-purple-300'
+            }`}
+          >
+            {isAnyMacroExceeded
+              ? 'Goal Exceeded'
+              : isAllMacrosHit
+              ? 'Goal Hit! 🎉'
+              : 'In Progress'}
+          </span>
+        </div>
 
-        {/* CARBS */}
-        <MacroRingCard
-          label="CARBS"
-          valueText={`${summary.consumedCarbs}g`}
-          subText={carbsRemaining <= 0 ? 'Perfect' : `${carbsRemaining}g Left`}
-          percentage={carbsPercent}
-          color="#16a34a"
-          ringValue={`${Math.round(carbsPercent)}`}
-          onClick={onOpenSetGoals}
-          isAnimated={isAnimated}
-        />
-
-        {/* FAT */}
-        <MacroRingCard
-          label="FAT"
-          valueText={`${summary.consumedFat}g`}
-          subText={fatRemaining < 0 ? 'Over' : `${fatRemaining}g Left`}
-          percentage={fatPercent}
-          color="#ef233c"
-          ringValue={fatRemaining < 0 ? '100+' : `${Math.round(fatPercent)}`}
-          onClick={onOpenSetGoals}
-          isAnimated={isAnimated}
-        />
-
-        {/* PROTEIN */}
-        <MacroRingCard
-          label="PROTEIN"
-          valueText={`${summary.consumedProtein}g`}
-          subText={proteinRemaining <= 0 ? 'Goal Met' : `${proteinRemaining}g Left`}
-          percentage={proteinPercent}
-          color="#ef233c"
-          ringValue={`${proteinRemaining > 0 ? proteinRemaining : 0}`}
-          onClick={onOpenSetGoals}
-          isAnimated={isAnimated}
-        />
+        <p className={`text-xs font-medium ${isLight ? 'text-slate-600' : 'text-slate-300'}`}>
+          {remainingKcal.toLocaleString()} Kcal remaining ({safeConsumedKcal.toLocaleString()} / {goal.kcal.toLocaleString()} Kcal logged)
+        </p>
       </div>
+
+      {/* Donut Macro Cards */}
+      <div className={`relative z-10 grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mt-5 pt-5 border-t ${
+        isLight ? 'border-slate-200/80' : 'border-white/10'
+      }`}>
+        {renderDonutRing(kcalPercent, 'KCAL', safeConsumedKcal, '', goal.kcal)}
+        {renderDonutRing(proteinPercent, 'PROTEIN', safeConsumedProtein, 'g', goal.protein)}
+        {renderDonutRing(fatPercent, 'FAT', safeConsumedFat, 'g', goal.fat)}
+        {renderDonutRing(carbsPercent, 'CARBS', safeConsumedCarbs, 'g', goal.carbs)}
+      </div>
+
     </div>
   );
 };

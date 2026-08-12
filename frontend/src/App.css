@@ -1,6 +1,33 @@
 @import "tailwindcss";
 
+html, body {
+  min-height: 100%;
+  transition: background-color 0.4s ease-in-out;
+}
+
 /* Clean Standard System Cursor */
 button, select, [title], .cursor-pointer {
   cursor: pointer;
+}
+
+/* Remove Mobile Safari / Chrome Native Blue/Purple Dropdown Arrow Overlay */
+select {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  background-image: none;
+}
+
+/* Remove Browser Native Spinner Arrows on Number Inputs (Chrome, Safari, Edge, Firefox) */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-clear-button {
+  -webkit-appearance: none !important;
+  margin: 0 !important;
+  display: none !important;
+}
+
+input[type="number"] {
+  -moz-appearance: textfield !important;
+  appearance: textfield !important;
 }

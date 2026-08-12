@@ -1,1 +1,90 @@
 @import "tailwindcss";
+
+@layer base {
+  html, body, #root {
+    overflow-x: hidden !important;
+    max-width: 100vw !important;
+    width: 100%;
+    min-height: 100%;
+    transition: background-color 0.4s ease-in-out;
+  }
+
+  body {
+    background-color: #05030d;
+    color: #f1f5f9;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* CRITICAL MOBILE UX FIX: Prevents iOS Safari & Mobile Chrome from auto-zooming on input focus */
+  @media (max-width: 767px) {
+    input, select, textarea {
+      font-size: 16px !important;
+    }
+  }
+
+  /* Clean Standard System Cursor */
+  button, select, [title], .cursor-pointer {
+    cursor: pointer;
+  }
+
+  /* Remove Mobile Safari / Chrome Native Blue/Purple Dropdown Arrow Overlay */
+  select {
+    -webkit-appearance: none !important;
+    -moz-appearance: none !important;
+    appearance: none !important;
+    background-image: none !important;
+  }
+
+  /* ABSOLUTE GLOBAL REMOVAL OF NUMBER INPUT STEPPER ARROWS (CHROME, SAFARI, EDGE, FIREFOX) */
+  input[type="number"]::-webkit-inner-spin-button,
+  input[type="number"]::-webkit-outer-spin-button,
+  input[type="number"]::-webkit-clear-button {
+    -webkit-appearance: none !important;
+    margin: 0 !important;
+    display: none !important;
+  }
+
+  input[type="number"] {
+    -moz-appearance: textfield !important;
+    appearance: textfield !important;
+  }
+}
+
+/* Custom Scrollbar for Dark Mode */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 9999px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 9999px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(100, 23, 255, 0.6);
+}
+
+/* Custom Scrollbar for Light Mode */
+.custom-scrollbar-light::-webkit-scrollbar {
+  width: 6px;
+}
+
+.custom-scrollbar-light::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.03);
+  border-radius: 9999px;
+}
+
+.custom-scrollbar-light::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.15);
+  border-radius: 9999px;
+}
+
+.custom-scrollbar-light::-webkit-scrollbar-thumb:hover {
+  background: rgba(100, 23, 255, 0.5);
+}

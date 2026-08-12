@@ -1,129 +1,188 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import type { DailySummary, NutritionGoal } from '../../types/nutrition';
 
 interface ConsumedVsLeftTableProps {
   summary: DailySummary;
   goal: NutritionGoal;
+  selectedDate?: Date;
+  theme?: 'dark' | 'light';
 }
 
-interface RowData {
-  kind: string;
-  consumed: string;
-  goalText: string;
-  extraText: string;
-  percentage: number;
-  barColor: string;
-}
+export const ConsumedVsLeftTable: React.FC<ConsumedVsLeftTableProps> = ({
+  summary,
+  goal,
+  selectedDate,
+  theme = 'dark',
+}) => {
+  const isLight = theme === 'light';
 
-export const ConsumedVsLeftTable: React.FC<ConsumedVsLeftTableProps> = ({ summary, goal }) => {
-  const [isAnimated, setIsAnimated] = useState(false);
+  // Defensive Math
+  const safeKcalGoal = Math.max(goal.kcal, 1);
+  const safeProteinGoal = Math.max(goal.protein, 1);
+  const safeFatGoal = Math.max(goal.fat, 1);
+  const safeCarbsGoal = Math.max(goal.carbs, 1);
 
-  useEffect(() => {
-    setIsAnimated(false);
-    const timer = setTimeout(() => setIsAnimated(true), 60);
-    return () => clearTimeout(timer);
-  }, [summary, goal]);
+  // Exact difference logic: if exceeded, display negative value (e.g. -20g or -150 kcal)
+  const formatLeft = (consumed: number, target: number, unit: string) => {
+    const diff = target - consumed;
+    if (diff < 0) {
+      return `-${Math.abs(diff).toLocaleString()} ${unit}`;
+    }
+    return `${diff.toLocaleString()} ${unit}`;
+  };
 
-  // Calculate row metrics
-  const kcalExtra = summary.consumedKcal - goal.kcal;
-  const kcalPercent = goal.kcal > 0 ? Math.round((summary.consumedKcal / goal.kcal) * 100) : 0;
+  const pctKcal = Math.round((summary.consumedKcal / safeKcalGoal) * 100);
+  const pctProtein = Math.round((summary.consumedProtein / safeProteinGoal) * 100);
+  const pctFat = Math.round((summary.consumedFat / safeFatGoal) * 100);
+  const pctCarbs = Math.round((summary.consumedCarbs / safeCarbsGoal) * 100);
 
-  const proteinLeft = goal.protein - summary.consumedProtein;
-  const proteinPercent = goal.protein > 0 ? Math.round((summary.consumedProtein / goal.protein) * 100) : 0;
+  // Dynamic date calculation synced with selectedDate
+  const activeDate = selectedDate || new Date();
+  const isToday = activeDate.toDateString() === new Date().toDateString();
+  
+  const dateFormatted = isToday
+    ? `Today, ${activeDate.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}`
+    : activeDate.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
 
-  const fatLeft = goal.fat - summary.consumedFat;
-  const fatPercent = goal.fat > 0 ? Math.round((summary.consumedFat / goal.fat) * 100) : 0;
+  // PROGRESS INFO HELPER:
+  // 1. Below Range (<85%): Gray (bg-slate-500)
+  // 2. Goal Met / Range Hit (85% to 115%): Morado (#6417ff)
+  // 3. Exceeded Range (>115%): Rojo del circulito (bg-rose-500 / text-rose-500)
+  const getProgressInfo = (pct: number) => {
+    const isHit = pct >= 85 && pct <= 115;
+    const isExceeded = pct > 115;
 
-  const carbsLeft = goal.carbs - summary.consumedCarbs;
-  const carbsPercent = goal.carbs > 0 ? Math.round((summary.consumedCarbs / goal.carbs) * 100) : 0;
+    return {
+      color: isHit ? 'bg-[#6417ff]' : isExceeded ? 'bg-rose-500' : isLight ? 'bg-slate-300' : 'bg-slate-500',
+      textColor: isHit
+        ? 'text-[#6417ff] font-extrabold'
+        : isExceeded
+        ? 'text-rose-500 font-extrabold'
+        : isLight
+        ? 'text-slate-500 font-bold'
+        : 'text-slate-400 font-bold',
+      displayText: `${pct}%`,
+      barWidth: Math.min(pct, 100),
+    };
+  };
 
-  const rows: RowData[] = [
+  const infoKcal = getProgressInfo(pctKcal);
+  const infoProtein = getProgressInfo(pctProtein);
+  const infoFat = getProgressInfo(pctFat);
+  const infoCarbs = getProgressInfo(pctCarbs);
+
+  const rows = [
     {
-      kind: 'Calories',
-      consumed: `${summary.consumedKcal} kcal`,
-      goalText: `${goal.kcal} kcal`,
-      extraText: kcalExtra > 0 ? `${kcalExtra} kcal extra` : `${Math.abs(kcalExtra)} kcal left`,
-      percentage: kcalPercent,
-      barColor: kcalExtra > 0 ? 'bg-[#ef233c]' : 'bg-[#16a34a]',
+      label: 'Calories',
+      consumed: `${summary.consumedKcal.toLocaleString()} kcal`,
+      left: formatLeft(summary.consumedKcal, goal.kcal, 'kcal'),
+      info: infoKcal,
     },
     {
-      kind: 'Protein',
+      label: 'Protein',
       consumed: `${summary.consumedProtein}g`,
-      goalText: `${goal.protein}g`,
-      extraText: proteinLeft > 0 ? `${proteinLeft}g left` : `${Math.abs(proteinLeft)}g extra`,
-      percentage: proteinPercent,
-      barColor: 'bg-[#f59e0b]',
+      left: formatLeft(summary.consumedProtein, goal.protein, 'g'),
+      info: infoProtein,
     },
     {
-      kind: 'Fat',
+      label: 'Fat',
       consumed: `${summary.consumedFat}g`,
-      goalText: `${goal.fat}g`,
-      extraText: fatLeft > 0 ? `${fatLeft}g left` : `${Math.abs(fatLeft)}g extra`,
-      percentage: fatPercent,
-      barColor: 'bg-[#16a34a]',
+      left: formatLeft(summary.consumedFat, goal.fat, 'g'),
+      info: infoFat,
     },
     {
-      kind: 'Carbohydrates',
+      label: 'Carbs',
       consumed: `${summary.consumedCarbs}g`,
-      goalText: `${goal.carbs}g`,
-      extraText: carbsLeft > 0 ? `${carbsLeft}g left` : `${Math.abs(carbsLeft)}g extra`,
-      percentage: carbsPercent,
-      barColor: 'bg-[#6417ff]',
+      left: formatLeft(summary.consumedCarbs, goal.carbs, 'g'),
+      info: infoCarbs,
     },
   ];
 
   return (
-    <div className="bg-white rounded-[32px] p-8 shadow-[0_12px_30px_rgba(15,23,42,0.08)] border border-[#e8e2f1] hover:border-[#6417ff]/30 transition-all duration-300">
-      {/* Header Row */}
-      <div className="flex items-center justify-between mb-6">
-        <h3 className="text-2xl font-bold text-[#0f172a]">
-          Consumed vs left
+    <div className={`border-2 rounded-[32px] p-6 sm:p-8 transition-all duration-300 ${
+      isLight
+        ? 'bg-white/95 backdrop-blur-sm border-slate-200/80 hover:border-[#6417ff]/25 text-slate-900 shadow-[0_4px_20px_rgba(0,0,0,0.03)] hover:shadow-[0_8px_24px_rgba(100,23,255,0.05)]'
+        : 'bg-[#161024] border-white/10 hover:border-[#6417ff]/40 text-white shadow-[0_16px_40px_rgba(0,0,0,0.5)]'
+    }`}>
+      
+      {/* Clean Header with Dynamic Selected Date Subtitle */}
+      <div className={`mb-6 pb-4 border-b ${isLight ? 'border-slate-200/80' : 'border-white/10'}`}>
+        <h3 className={`text-xl sm:text-2xl font-bold ${isLight ? 'text-slate-900' : 'text-white'}`}>
+          Consumed vs Left
         </h3>
+        <p className={`text-xs font-semibold mt-0.5 ${isLight ? 'text-purple-700' : 'text-purple-300'}`}>
+          {dateFormatted}
+        </p>
       </div>
 
-      {/* Table Headers */}
-      <div className="grid grid-cols-12 gap-4 px-4 py-2 text-xs font-bold text-[#94a3b8] uppercase tracking-wider mb-2">
-        <div className="col-span-3">Kind</div>
-        <div className="col-span-2">Consumed</div>
-        <div className="col-span-2">Goal</div>
-        <div className="col-span-5">Extra / Progress</div>
+      {/* Table Header Row */}
+      <div className={`grid grid-cols-12 gap-2 text-xs font-extrabold uppercase tracking-wider mb-3 px-2 ${
+        isLight ? 'text-slate-500' : 'text-slate-400'
+      }`}>
+        <div className="col-span-4 sm:col-span-3">Nutrient</div>
+        <div className="col-span-4 sm:col-span-3 text-center sm:text-left">Consumed</div>
+        <div className="col-span-4 sm:col-span-3 text-right sm:text-left">Left</div>
+        <div className="hidden sm:block sm:col-span-3 text-right">Progress</div>
       </div>
 
       {/* Rows */}
       <div className="space-y-3">
-        {rows.map((row) => (
-          <div
-            key={row.kind}
-            className="grid grid-cols-12 gap-4 px-4 py-3.5 items-center rounded-2xl bg-[#faf8fc] hover:bg-[#f5f0fb] border border-[#f1ecf7] hover:border-[#6417ff]/20 text-sm font-semibold text-[#0f172a] transition-all"
-          >
-            <div className="col-span-3 font-bold text-[#0f172a]">{row.kind}</div>
-            <div className="col-span-2">{row.consumed}</div>
-            <div className="col-span-2 text-[#5f6573]">{row.goalText}</div>
-            
-            <div className="col-span-5 flex items-center space-x-4">
-              <span
-                className={`text-xs font-bold w-24 ${
-                  row.extraText.includes('extra') ? 'text-[#ef233c]' : 'text-[#f59e0b]'
-                }`}
-              >
-                {row.extraText}
-              </span>
-              
-              {/* Progress Bar Container */}
-              <div className="flex-1 bg-[#e8e2f1] h-3 rounded-full overflow-hidden relative">
-                <div
-                  className={`h-full rounded-full transition-all duration-[1000ms] ease-out ${row.barColor}`}
-                  style={{ width: isAnimated ? `${Math.min(row.percentage, 100)}%` : '0%' }}
-                />
-              </div>
+        {rows.map((r) => {
+          return (
+            <div
+              key={r.label}
+              className={`p-3.5 sm:p-4 rounded-2xl transition-all duration-200 shadow-sm border ${
+                isLight
+                  ? 'bg-slate-100/70 hover:bg-slate-200/60 border-slate-200/80'
+                  : 'bg-[#231a38] hover:bg-[#2d2248] border-white/10 hover:border-white/20'
+              }`}
+            >
+              <div className="grid grid-cols-12 gap-2 items-center text-xs sm:text-sm">
+                
+                {/* Nutrient Label */}
+                <div className={`col-span-4 sm:col-span-3 font-bold min-w-0 truncate ${
+                  isLight ? 'text-slate-900' : 'text-white'
+                }`}>
+                  {r.label}
+                </div>
 
-              <span className="text-xs font-bold text-[#0f172a] w-10 text-right">
-                {row.percentage}%
-              </span>
+                {/* Consumed */}
+                <div className={`col-span-4 sm:col-span-3 font-bold text-center sm:text-left truncate ${
+                  isLight ? 'text-slate-900' : 'text-white'
+                }`}>
+                  {r.consumed}
+                </div>
+
+                {/* Left (NEVER CHANGES COLOR! ALWAYS CONSTANT NEUTRAL SLATE) */}
+                <div
+                  className={`col-span-4 sm:col-span-3 font-semibold text-right sm:text-left truncate ${
+                    isLight ? 'text-slate-700 font-bold' : 'text-slate-300 font-bold'
+                  }`}
+                >
+                  {r.left}
+                </div>
+
+                {/* Progress Bar & Percentage */}
+                <div className="hidden sm:flex sm:col-span-3 items-center justify-end space-x-3">
+                  <div className={`w-20 rounded-full h-2 overflow-hidden border ${
+                    isLight ? 'bg-slate-200 border-slate-300/80' : 'bg-[#161024] border-white/10'
+                  }`}>
+                    <div
+                      className={`h-full ${r.info.color} rounded-full transition-all duration-700 ease-out`}
+                      style={{ width: `${r.info.barWidth}%` }}
+                    />
+                  </div>
+                  <span className={`text-xs font-bold w-10 text-right ${r.info.textColor}`}>
+                    {r.info.displayText}
+                  </span>
+                </div>
+
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
+
     </div>
   );
 };

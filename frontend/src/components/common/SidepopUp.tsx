@@ -1,11 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { X, CheckCircle2 } from 'lucide-react';
+import { CheckCircle2, X } from 'lucide-react';
 
 export interface ToastMessage {
   id: string;
   title: string;
   description: string;
-  type?: 'success' | 'info' | 'warning';
 }
 
 interface SidepopUpProps {
@@ -14,63 +13,55 @@ interface SidepopUpProps {
 }
 
 export const SidepopUp: React.FC<SidepopUpProps> = ({ toast, onClose }) => {
-  const [isExiting, setIsExiting] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
     if (toast) {
-      setIsExiting(false);
-      // Trigger smooth slide-in on mount
-      requestAnimationFrame(() => setIsVisible(true));
+      setIsVisible(true);
 
+      // Auto-hide after 4 seconds
       const timer = setTimeout(() => {
-        handleStartExit();
-      }, 4500);
-      return () => clearTimeout(timer);
-    } else {
-      setIsVisible(false);
-    }
-  }, [toast]);
+        setIsVisible(false);
+        setTimeout(onClose, 800);
+      }, 4000);
 
-  const handleStartExit = () => {
-    setIsExiting(true);
-    setTimeout(() => {
-      onClose();
-      setIsExiting(false);
-      setIsVisible(false);
-    }, 1400); // 1.4 seconds ultra-slow, gradual transition
-  };
+      return () => clearTimeout(timer);
+    }
+  }, [toast, onClose]);
 
   if (!toast) return null;
 
   return (
-    <div className="fixed top-24 right-6 z-50 max-w-sm w-full pointer-events-none">
+    <div className="fixed top-5 left-1/2 -translate-x-1/2 sm:translate-x-0 sm:left-auto sm:right-6 z-50 pointer-events-none max-w-[calc(100vw-32px)]">
       <div
-        className={`pointer-events-auto bg-white rounded-[24px] p-5 shadow-[0_12px_40px_rgba(15,23,42,0.18)] border border-[#e8e2f1] relative flex items-start space-x-3 transition-all duration-[1400ms] ease-[cubic-bezier(0.16,1,0.3,1)] transform ${
-          isVisible && !isExiting
-            ? 'translate-x-0 opacity-100'
-            : 'translate-x-[140%] opacity-0'
+        className={`pointer-events-auto flex items-center space-x-3 bg-[#161024]/95 backdrop-blur-2xl border-2 border-white/15 text-white p-3 px-4 rounded-2xl shadow-[0_16px_40px_rgba(0,0,0,0.6)] transition-all duration-500 ease-out transform ${
+          isVisible
+            ? 'translate-y-0 opacity-100 scale-100'
+            : '-translate-y-6 opacity-0 scale-95'
         }`}
       >
-        {/* Success Icon */}
-        <div className="p-2 bg-[#eee6ff] text-[#6417ff] rounded-2xl flex-shrink-0 mt-0.5">
-          <CheckCircle2 className="w-5 h-5" />
+        {/* Purple Accent Success Icon */}
+        <div className="p-1.5 bg-[#6417ff]/20 text-[#6417ff] rounded-xl border border-[#6417ff]/40 shrink-0">
+          <CheckCircle2 className="w-4 h-4 stroke-[2.5]" />
         </div>
 
-        {/* Content */}
-        <div className="flex-1 pr-6">
-          <h4 className="text-base font-bold text-[#6417ff] leading-tight mb-1">
+        {/* Message Content */}
+        <div className="space-y-0.5 min-w-0">
+          <h4 className="text-xs font-extrabold text-white truncate">
             {toast.title}
           </h4>
-          <p className="text-xs font-medium text-[#5f6573] leading-relaxed">
+          <p className="text-[11px] font-medium text-slate-300 truncate">
             {toast.description}
           </p>
         </div>
 
         {/* Close Button */}
         <button
-          onClick={handleStartExit}
-          className="absolute top-4 right-4 text-[#94a3b8] hover:text-[#0f172a] p-1 rounded-full hover:bg-slate-100 transition-all"
+          onClick={() => {
+            setIsVisible(false);
+            setTimeout(onClose, 800);
+          }}
+          className="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-white/10 transition-colors ml-1 shrink-0"
         >
           <X className="w-4 h-4" />
         </button>
