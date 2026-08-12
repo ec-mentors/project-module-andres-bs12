@@ -1,6 +1,42 @@
-# 📖 NutritionTracker Frontend - Learning Journal & Architectural Decisions (ADR)
+# 📖 NutritionTracker Frontend - Learning Journal, Architecture & Design Decisions (ADR)
 
-This document captures the design philosophy, architectural decisions, and UX evolution of the **NutritionTracker Frontend**. It details why specific deviations from initial Figma prototypes were implemented to deliver a state-of-the-art, production-grade application.
+This document captures the **Frontend Component Architecture**, **Design Philosophy**, **Architectural Decisions (ADR)**, and **UX Evolution** of the NutritionTracker Frontend. It details how the React + Vite + TypeScript application works, how it connects to the Spring Boot REST API, and why specific design decisions evolved beyond initial Figma mockups.
+
+---
+
+## 🏗️ Frontend Component & Data Flow Architecture
+
+The frontend source code is structured inside `frontend/src/`:
+
+```
+frontend/src/
+├── App.tsx                        # Root Application Layout & State Synchronizer
+├── main.tsx                       # React 19 Entry Point & Global Stylesheet Loader
+├── index.css                      # Tailwind v4 Base & Global CSS Resets
+├── App.css                        # Custom Scrollbars & Input Number Spinner Resets
+├── types/
+│   ├── nutrition.ts               # TypeScript DTOs (MealEntry, NutritionGoal, DailySummary)
+│   └── user.ts                    # UserProfile DTO
+├── services/
+│   └── api.ts                     # Type-Safe REST Client API Service for Spring Boot Controllers
+└── components/
+    ├── layout/
+    │   └── Header.tsx             # Glass Navigation Bar & Theme Selector
+    ├── dashboard/
+    │   ├── HeroKcalCard.tsx       # Kcal Overview, Donut SVG Rings & Fixed Date Navigator
+    │   ├── ConsumedVsLeftTable.tsx# Nutrient Progress Table (Neutral Left Column)
+    │   └── LatestEntriesSidebar.tsx# Meal Entry Feed, Inline Add/Edit & Touch Delete UX
+    ├── overview/
+    │   └── OverviewDashboard.tsx  # Monthly/Weekly Analytics Bar Chart & Top 4 KPI Cards
+    ├── forms/
+    │   └── SetGoalsModal.tsx      # Target Kcal/Macro Goal Editor Modal (Light Glass Support)
+    ├── auth/
+    │   ├── GoogleLoginModal.tsx   # Google OAuth Identity Modal
+    │   ├── AuthModal.tsx          # Login Flow Component
+    │   └── UserProfileModal.tsx   # User Settings Modal
+    └── common/
+        └── SidepopUp.tsx          # Figma Notification Toast Banner
+```
 
 ---
 
