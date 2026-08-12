@@ -57,13 +57,16 @@ export function App() {
   // Default demo user UUID matching Spring Boot PostgreSQL UUID schema
   const userId: string = user?.id || DEMO_USER_ID;
 
-  // 1. Initial load for User Goal
+  // 1. Initial load for User Goal with First-Time Onboarding Prompt
   useEffect(() => {
     async function loadGoals() {
       try {
         const fetchedGoal = await fetchGoal(userId);
         if (fetchedGoal) {
           setGoal(fetchedGoal);
+        } else {
+          // ONBOARDING UX: User has 0 goals in PostgreSQL -> Prompt Set Goals modal automatically!
+          setIsSetGoalsOpen(true);
         }
       } catch (err) {
         console.error('Error fetching initial goals:', err);
