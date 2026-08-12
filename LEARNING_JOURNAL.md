@@ -68,18 +68,36 @@ NutritionTracker combines modern **Dark Glassmorphism** and **Light Glassmorphis
 
 ---
 
-## 🛠️ How to Activate & Run Locally
+## 📱 Mobile Device Testing & Access Guide
 
-### 1. Install Dependencies & Start Dev Server
-```bash
-cd frontend
-npm install
-npm run dev -- --host 0.0.0.0 --port 5173
-```
-- Open `http://localhost:5173` or `http://<your-local-ip>:5173` on any mobile device on the local network.
+### How to View & Test on Your Mobile Phone (iPhone / Android)
 
-### 2. Verify Production Build
+1. **Connect Mobile Phone to the Same Wi-Fi Network:**
+   Ensure your mobile phone is connected to the exact same Wi-Fi network as your computer.
+
+2. **Launch Network-Exposed Dev Server:**
+   From the project directory, run:
+   ```bash
+   cd frontend
+   npm run dev -- --host 0.0.0.0 --port 5173
+   ```
+
+3. **Open the Network IP URL in Mobile Browser:**
+   - Open **Safari** (iOS) or **Chrome** (Android) on your phone.
+   - Enter your computer's local Wi-Fi IP address in the address bar:
+     **`http://10.0.0.207:5173`** *(or `http://<your-mac-ip>:5173`)*.
+
+4. **📱 Optional - Add to Home Screen (Native PWA Feel):**
+   - **iOS Safari:** Tap the **Share** button ➔ Select **Add to Home Screen**.
+   - **Android Chrome:** Tap the 3-dots menu ➔ Select **Add to Home Screen**.
+   - The app will now open full-screen without browser bars, feeling like a native iOS/Android application!
+
+---
+
+## 🛠️ How to Run & Verify Production Build
+
+### 1. Run Production Build Check
 ```bash
-npm run build
+npm --prefix frontend run build
 ```
 - Compiles the TypeScript + Vite bundle into `src/main/resources/static` for Spring Boot serving in **< 200ms** with 0 errors and 0 warnings.

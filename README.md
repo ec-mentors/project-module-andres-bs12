@@ -93,6 +93,20 @@ erDiagram
 
 ---
 
+## 📱 How to View on Mobile Phone (iPhone / Android)
+
+1. Connect your mobile phone to the **same Wi-Fi network** as your computer.
+2. Run the Vite dev server with network exposure:
+   ```bash
+   cd frontend
+   npm run dev -- --host 0.0.0.0 --port 5173
+   ```
+3. Open Safari (iOS) or Chrome (Android) on your mobile phone and navigate to:
+   **`http://10.0.0.207:5173`** *(or `http://<your-mac-ip>:5173`)*.
+4. *(Optional)* Tap **Share ➔ Add to Home Screen** on Safari to install as a full-screen mobile app!
+
+---
+
 ## 🚀 Getting Started & Local Development
 
 ### **Prerequisites**
@@ -124,7 +138,6 @@ npm install
 # Start Vite dev server exposed to local network (runs on port 5173)
 npm run dev -- --host 0.0.0.0 --port 5173
 ```
-- Access from desktop at `http://localhost:5173` or from any mobile device on Wi-Fi at `http://<your-local-ip>:5173`.
 
 ### **3. Production Bundle Build**
 To build the static frontend bundle for Spring Boot serving:
