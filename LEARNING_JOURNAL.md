@@ -28,6 +28,7 @@ The frontend of NutritionTracker was developed using **AI-Assisted Pair Programm
 ### 3. Mobile Touch UX Optimization
 - Learned that desktop hover states (`group-hover:opacity-100`) do not translate to touch devices, requiring explicit mobile viewport rules (`opacity-100 sm:opacity-0`).
 - Implemented mobile viewport zoom resets (`font-size: 16px !important` on iOS inputs) to prevent unwanted browser auto-zooming.
+- Applied responsive grid techniques and `flex items-baseline` to enforce strict layout symmetry and typography hierarchy in dense mobile dashboards.
 
 ### 4. REST API Integration & Spring Boot Synergy
 - Built a clean, type-safe API client service (`services/api.ts`) connecting React components to Spring Boot controllers (`EntryController`, `GoalController`, `UserController`).
