@@ -9,7 +9,7 @@ import { OverviewDashboard } from './components/overview/OverviewDashboard';
 
 import type { UserProfile } from './types/user';
 import type { MealEntry, NutritionGoal, DailySummary, CreateMealEntryPayload } from './types/nutrition';
-import { fetchTodayEntries, createMealEntry, updateMealEntry, deleteMealEntry, fetchTodaySummary, fetchGoal, updateGoal } from './services/api';
+import { fetchTodayEntries, createMealEntry, updateMealEntry, deleteMealEntry, fetchTodaySummary, fetchGoal, updateGoal, DEMO_USER_ID } from './services/api';
 
 export function App() {
   const [activeTab, setActiveTab] = useState<'today' | 'overview'>('today');
@@ -54,8 +54,8 @@ export function App() {
     document.body.style.backgroundColor = bgColor;
   }, [isLight]);
 
-  // Default demo user ID
-  const userId: string = user?.id || 'demo-user-1';
+  // Default demo user UUID matching Spring Boot PostgreSQL UUID schema
+  const userId: string = user?.id || DEMO_USER_ID;
 
   // 1. Initial load for User Goal
   useEffect(() => {
