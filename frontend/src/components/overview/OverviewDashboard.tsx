@@ -252,93 +252,96 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({ goal, entr
     <div className="space-y-8 animate-in fade-in duration-500">
       
       {/* 1. TOP ROW: 4 KPI STAT CARDS (ONLY MAIN TITLE IS PURPLE, SUBTEXT IS NEUTRAL SLATE) */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
         
         {/* KPI 1: Weekly Balance */}
-        <div className={`${cardBgClass} rounded-[28px] p-6 transition-all duration-300 transform hover:-translate-y-1 flex flex-col justify-between animate-in fade-in slide-in-from-bottom-4 duration-500`}>
-          <div className="flex justify-between items-center mb-4">
-            <span className={`text-xs font-bold uppercase tracking-wider ${isLight ? 'text-purple-700' : 'text-purple-300'}`}>
+        <div className={`${cardBgClass} rounded-2xl sm:rounded-[28px] p-4 sm:p-6 transition-all duration-300 transform hover:-translate-y-1 flex flex-col justify-between animate-in fade-in slide-in-from-bottom-4 duration-500`}>
+          <div className="flex justify-between items-start mb-2 sm:mb-4">
+            <span className={`text-[10px] sm:text-xs font-bold uppercase tracking-wider truncate mr-2 ${isLight ? 'text-purple-700' : 'text-purple-300'}`}>
               Weekly Balance
             </span>
-            <span className={`px-3 py-1 rounded-full text-xs font-bold flex items-center space-x-1 whitespace-nowrap border ${
+            <span className={`p-2 sm:px-3 sm:py-1 rounded-xl sm:rounded-full text-xs font-bold flex items-center space-x-1 whitespace-nowrap border shrink-0 ${
               isLight ? 'bg-slate-100/80 text-slate-700 border-slate-200' : 'bg-white/10 text-slate-200 border-white/15'
             }`}>
               <TrendingUp className={`w-3.5 h-3.5 ${iconColorClass}`} />
-              <span>0% vs last week</span>
+              <span className="hidden sm:inline">0% vs last week</span>
             </span>
           </div>
           <div>
-            <div className={`text-3xl font-extrabold ${isLight ? 'text-slate-900' : 'text-white'}`}>
-              {Math.round(totalMonthlySum / Math.max(1, elapsedDays))} <span className={`text-sm font-bold ${isLight ? 'text-slate-600' : 'text-slate-300'}`}>Kcal/day</span>
+            <div className={`text-2xl sm:text-3xl font-extrabold flex items-baseline gap-1 ${isLight ? 'text-slate-900' : 'text-white'}`}>
+              <span>{Math.round(totalMonthlySum / Math.max(1, elapsedDays))}</span>
+              <span className={`text-[10px] sm:text-sm font-bold ${isLight ? 'text-slate-600' : 'text-slate-300'}`}>Kcal/day</span>
             </div>
-            <p className={`text-xs font-medium mt-1 ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
+            <p className={`hidden sm:block text-xs font-medium mt-1 ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
               Real logged entry average
             </p>
           </div>
         </div>
 
         {/* KPI 2: Streak Days */}
-        <div className={`${cardBgClass} rounded-[28px] p-6 transition-all duration-300 transform hover:-translate-y-1 flex flex-col justify-between animate-in fade-in slide-in-from-bottom-4 duration-500 delay-100`}>
-          <div className="flex justify-between items-start mb-4">
-            <span className={`text-xs font-bold uppercase tracking-wider ${isLight ? 'text-purple-700' : 'text-purple-300'}`}>
+        <div className={`${cardBgClass} rounded-2xl sm:rounded-[28px] p-4 sm:p-6 transition-all duration-300 transform hover:-translate-y-1 flex flex-col justify-between animate-in fade-in slide-in-from-bottom-4 duration-500 delay-100`}>
+          <div className="flex justify-between items-start mb-2 sm:mb-4">
+            <span className={`text-[10px] sm:text-xs font-bold uppercase tracking-wider truncate mr-2 ${isLight ? 'text-purple-700' : 'text-purple-300'}`}>
               Active Streak
             </span>
-            <div className={`p-2 rounded-xl border ${
+            <div className={`p-2 rounded-xl border shrink-0 ${
               isLight ? 'bg-slate-100 border-slate-200 text-purple-700' : 'bg-white/10 border-white/15 text-purple-200'
             }`}>
               <Flame className={`w-4 h-4 ${iconColorClass}`} />
             </div>
           </div>
           <div>
-            <div className={`text-3xl font-extrabold flex items-center space-x-2 ${isLight ? 'text-slate-900' : 'text-white'}`}>
+            <div className={`text-2xl sm:text-3xl font-extrabold flex items-baseline gap-1 ${isLight ? 'text-slate-900' : 'text-white'}`}>
               <span>{entries.length > 0 ? 1 : 0}</span>
-              <span className={`text-sm font-bold ${isLight ? 'text-slate-600' : 'text-slate-300'}`}>Streak Days</span>
+              <span className={`text-[10px] sm:text-sm font-bold ${isLight ? 'text-slate-600' : 'text-slate-300'}`}>Streak Days</span>
             </div>
-            <p className={`text-xs font-medium mt-1 ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
+            <p className={`hidden sm:block text-xs font-medium mt-1 ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
               {entries.length > 0 ? 'Active logging streak!' : 'Log a meal to start your streak!'}
             </p>
           </div>
         </div>
 
         {/* KPI 3: Goal Hit Rate */}
-        <div className={`${cardBgClass} rounded-[28px] p-6 transition-all duration-300 transform hover:-translate-y-1 flex flex-col justify-between animate-in fade-in slide-in-from-bottom-4 duration-500 delay-200`}>
-          <div className="flex justify-between items-start mb-4">
-            <span className={`text-xs font-bold uppercase tracking-wider ${isLight ? 'text-purple-700' : 'text-purple-300'}`}>
+        <div className={`${cardBgClass} rounded-2xl sm:rounded-[28px] p-4 sm:p-6 transition-all duration-300 transform hover:-translate-y-1 flex flex-col justify-between animate-in fade-in slide-in-from-bottom-4 duration-500 delay-200`}>
+          <div className="flex justify-between items-start mb-2 sm:mb-4">
+            <span className={`text-[10px] sm:text-xs font-bold uppercase tracking-wider truncate mr-2 ${isLight ? 'text-purple-700' : 'text-purple-300'}`}>
               Goal Accuracy
             </span>
-            <div className={`p-2 rounded-xl border ${
+            <div className={`p-2 rounded-xl border shrink-0 ${
               isLight ? 'bg-slate-100 border-slate-200 text-purple-700' : 'bg-white/10 border-white/15 text-purple-200'
             }`}>
               <Target className={`w-4 h-4 ${iconColorClass}`} />
             </div>
           </div>
           <div>
-            <div className={`text-3xl font-extrabold ${isLight ? 'text-slate-900' : 'text-white'}`}>
-              {daysMetCount > 0 ? `${Math.round((daysMetCount / Math.max(1, elapsedDays)) * 100)}%` : '0%'} <span className={`text-sm font-bold ${isLight ? 'text-slate-600' : 'text-slate-300'}`}>Target Hit</span>
+            <div className={`text-2xl sm:text-3xl font-extrabold flex items-baseline gap-1 ${isLight ? 'text-slate-900' : 'text-white'}`}>
+              <span>{daysMetCount > 0 ? `${Math.round((daysMetCount / Math.max(1, elapsedDays)) * 100)}%` : '0%'}</span>
+              <span className={`text-[10px] sm:text-sm font-bold ${isLight ? 'text-slate-600' : 'text-slate-300'}`}>Target Hit</span>
             </div>
-            <p className={`text-xs font-medium mt-1 ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
+            <p className={`hidden sm:block text-xs font-medium mt-1 ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
               Met goals (85-115%) {daysMetCount} of {elapsedDays} days
             </p>
           </div>
         </div>
 
         {/* KPI 4: Monthly Avg Protein */}
-        <div className={`${cardBgClass} rounded-[28px] p-6 transition-all duration-300 transform hover:-translate-y-1 flex flex-col justify-between animate-in fade-in slide-in-from-bottom-4 duration-500 delay-300`}>
-          <div className="flex justify-between items-start mb-4">
-            <span className={`text-xs font-bold uppercase tracking-wider ${isLight ? 'text-purple-700' : 'text-purple-300'}`}>
+        <div className={`${cardBgClass} rounded-2xl sm:rounded-[28px] p-4 sm:p-6 transition-all duration-300 transform hover:-translate-y-1 flex flex-col justify-between animate-in fade-in slide-in-from-bottom-4 duration-500 delay-300`}>
+          <div className="flex justify-between items-start mb-2 sm:mb-4">
+            <span className={`text-[10px] sm:text-xs font-bold uppercase tracking-wider truncate mr-2 ${isLight ? 'text-purple-700' : 'text-purple-300'}`}>
               Avg Protein Intake
             </span>
-            <div className={`p-2 rounded-xl border ${
+            <div className={`p-2 rounded-xl border shrink-0 ${
               isLight ? 'bg-slate-100 border-slate-200 text-purple-700' : 'bg-white/10 border-white/15 text-purple-200'
             }`}>
               <Award className={`w-4 h-4 ${iconColorClass}`} />
             </div>
           </div>
           <div>
-            <div className={`text-3xl font-extrabold ${isLight ? 'text-slate-900' : 'text-white'}`}>
-              {Math.round(elapsedData.reduce((s, d) => s + d.value, 0) / Math.max(1, elapsedDays))}g <span className={`text-sm font-bold ${isLight ? 'text-slate-600' : 'text-slate-300'}`}>Daily Avg</span>
+            <div className={`text-2xl sm:text-3xl font-extrabold flex items-baseline gap-1 ${isLight ? 'text-slate-900' : 'text-white'}`}>
+              <span>{Math.round(elapsedData.reduce((s, d) => s + d.value, 0) / Math.max(1, elapsedDays))}g</span>
+              <span className={`text-[10px] sm:text-sm font-bold ${isLight ? 'text-slate-600' : 'text-slate-300'}`}>Daily Avg</span>
             </div>
-            <p className={`text-xs font-medium mt-1 ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
+            <p className={`hidden sm:block text-xs font-medium mt-1 ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
               Based on logged entries
             </p>
           </div>
@@ -347,7 +350,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({ goal, entr
       </div>
 
       {/* 2. MAIN CHART CONTAINER */}
-      <div className={`${cardBgClass} rounded-[32px] p-6 sm:p-8 transition-all duration-300 animate-in fade-in slide-in-from-bottom-6 duration-600`}>
+      <div className={`${cardBgClass} rounded-[32px] p-6 sm:p-8 transition-all duration-300 delay-[400ms] lg:delay-0 animate-in fade-in slide-in-from-bottom-6 duration-600`}>
         
         {/* STEP 1: CARD TITLE & SELECTORS */}
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-4">

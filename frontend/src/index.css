@@ -51,40 +51,100 @@
   }
 }
 
-/* Custom Scrollbar for Dark Mode */
+/* Minimalist 3px Scrollbar — Dark Mode (soft purple, shortened track on mobile, auto-hide on desktop) */
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(100, 23, 255, 0.15) transparent;
+}
+
 .custom-scrollbar::-webkit-scrollbar {
-  width: 6px;
+  width: 3px;
+  height: 3px;
 }
 
 .custom-scrollbar::-webkit-scrollbar-track {
-  background: rgba(255, 255, 255, 0.05);
+  background: transparent;
   border-radius: 9999px;
+  margin: 12px 0;
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(100, 23, 255, 0.15);
   border-radius: 9999px;
+  transition: background-color 0.3s ease;
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: rgba(100, 23, 255, 0.6);
+  background: rgba(100, 23, 255, 0.35);
 }
 
-/* Custom Scrollbar for Light Mode */
+/* Desktop: auto-hide scrollbar (invisible until container hover) */
+@media (min-width: 1024px) {
+  .custom-scrollbar {
+    scrollbar-color: transparent transparent;
+  }
+  .custom-scrollbar:hover {
+    scrollbar-color: rgba(100, 23, 255, 0.15) transparent;
+  }
+  .custom-scrollbar::-webkit-scrollbar-track {
+    margin: 0;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: transparent;
+  }
+  .custom-scrollbar:hover::-webkit-scrollbar-thumb {
+    background: rgba(100, 23, 255, 0.15);
+  }
+  .custom-scrollbar:hover::-webkit-scrollbar-thumb:hover {
+    background: rgba(100, 23, 255, 0.35);
+  }
+}
+
+/* Minimalist 3px Scrollbar — Light Mode (soft purple, shortened track on mobile, auto-hide on desktop) */
+.custom-scrollbar-light {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(100, 23, 255, 0.1) transparent;
+}
+
 .custom-scrollbar-light::-webkit-scrollbar {
-  width: 6px;
+  width: 3px;
+  height: 3px;
 }
 
 .custom-scrollbar-light::-webkit-scrollbar-track {
-  background: rgba(0, 0, 0, 0.03);
+  background: transparent;
   border-radius: 9999px;
+  margin: 12px 0;
 }
 
 .custom-scrollbar-light::-webkit-scrollbar-thumb {
-  background: rgba(0, 0, 0, 0.15);
+  background: rgba(100, 23, 255, 0.1);
   border-radius: 9999px;
+  transition: background-color 0.3s ease;
 }
 
 .custom-scrollbar-light::-webkit-scrollbar-thumb:hover {
-  background: rgba(100, 23, 255, 0.5);
+  background: rgba(100, 23, 255, 0.25);
+}
+
+/* Desktop: auto-hide scrollbar (invisible until container hover) */
+@media (min-width: 1024px) {
+  .custom-scrollbar-light {
+    scrollbar-color: transparent transparent;
+  }
+  .custom-scrollbar-light:hover {
+    scrollbar-color: rgba(100, 23, 255, 0.1) transparent;
+  }
+  .custom-scrollbar-light::-webkit-scrollbar-track {
+    margin: 0;
+  }
+  .custom-scrollbar-light::-webkit-scrollbar-thumb {
+    background: transparent;
+  }
+  .custom-scrollbar-light:hover::-webkit-scrollbar-thumb {
+    background: rgba(100, 23, 255, 0.1);
+  }
+  .custom-scrollbar-light:hover::-webkit-scrollbar-thumb:hover {
+    background: rgba(100, 23, 255, 0.25);
+  }
 }

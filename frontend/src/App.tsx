@@ -201,7 +201,7 @@ export function App() {
         ) : (
           <div className="transition-all duration-500 ease-out">
             {activeTab === 'today' ? (
-              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
                 
                 {/* LEFT MAIN COLUMN */}
                 <div className="lg:col-span-8 flex flex-col space-y-8 order-1">
@@ -219,7 +219,7 @@ export function App() {
                   </div>
 
                   {/* MOBILE INTERMEDIATE PLACEHOLDER FOR SIDEBAR */}
-                  <div className="block lg:hidden order-2 transition-all duration-500 ease-out delay-75">
+                  <div className="block lg:hidden order-2 transition-all duration-500 ease-out delay-100">
                     <LatestEntriesSidebar
                       entries={visibleEntries}
                       onAddMeal={handleAddMeal}
@@ -231,22 +231,24 @@ export function App() {
                   </div>
 
                   {/* Consumed vs Left Table (STAGGER DELAY 75) */}
-                  <div className="transition-all duration-500 ease-out delay-75 animate-in fade-in slide-in-from-bottom-5 order-3 lg:order-2">
+                  <div className="transition-all duration-500 ease-out delay-[200ms] lg:delay-75 animate-in fade-in slide-in-from-bottom-5 order-3 lg:order-2">
                     <ConsumedVsLeftTable summary={summary} goal={goal} selectedDate={selectedDate} theme={theme} />
                   </div>
 
                 </div>
 
                 {/* DESKTOP RIGHT SIDEBAR (STAGGER DELAY 150) */}
-                <div className="hidden lg:flex lg:col-span-4 h-full flex-col order-2 transition-all duration-500 ease-out delay-150 animate-in fade-in slide-in-from-bottom-6">
-                  <LatestEntriesSidebar
-                    entries={visibleEntries}
-                    onAddMeal={handleAddMeal}
-                    onUpdateMeal={handleUpdateMeal}
-                    onDeleteMeal={handleDeleteMeal}
-                    selectedDateFormatted={selectedDateFormatted}
-                    theme={theme}
-                  />
+                <div className="hidden lg:block lg:col-span-4 relative order-2 transition-all duration-500 ease-out delay-150 animate-in fade-in slide-in-from-bottom-6">
+                  <div className="absolute inset-0">
+                    <LatestEntriesSidebar
+                      entries={visibleEntries}
+                      onAddMeal={handleAddMeal}
+                      onUpdateMeal={handleUpdateMeal}
+                      onDeleteMeal={handleDeleteMeal}
+                      selectedDateFormatted={selectedDateFormatted}
+                      theme={theme}
+                    />
+                  </div>
                 </div>
 
               </div>

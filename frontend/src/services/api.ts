@@ -7,6 +7,9 @@ const API_BASE = '/api';
 // Fallback Demo User UUID when no backend user session is set
 export const DEMO_USER_ID = 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11';
 
+// Today's date string YYYY-MM-DD
+const TODAY_STR = new Date().toISOString().split('T')[0];
+
 // Internal In-Memory State for smooth UI fallback when Backend DB is initializing
 let inMemoryEntries: MealEntry[] = [
   {
@@ -17,7 +20,7 @@ let inMemoryEntries: MealEntry[] = [
     carbs: 55,
     fat: 6,
     source: 'MANUAL',
-    createdOn: new Date().toISOString().split('T')[0],
+    createdOn: TODAY_STR,
   },
   {
     id: 'entry-2',
@@ -27,7 +30,7 @@ let inMemoryEntries: MealEntry[] = [
     carbs: 45,
     fat: 12,
     source: 'MANUAL',
-    createdOn: new Date().toISOString().split('T')[0],
+    createdOn: TODAY_STR,
   },
   {
     id: 'entry-3',
@@ -37,7 +40,7 @@ let inMemoryEntries: MealEntry[] = [
     carbs: 15,
     fat: 8,
     source: 'MANUAL',
-    createdOn: new Date().toISOString().split('T')[0],
+    createdOn: TODAY_STR,
   },
 ];
 
@@ -47,7 +50,7 @@ let inMemoryGoal: NutritionGoal = {
   protein: 150,
   carbs: 200,
   fat: 65,
-  startDate: new Date().toISOString().split('T')[0],
+  startDate: TODAY_STR,
 };
 
 /**
@@ -87,21 +90,27 @@ export const api = {
 
   // --- ENTRIES (Meal Logs) ---
   
-  /** GET /api/entry/{userId}/today - Fetch today's meals for a user */
-  async getTodayEntries(userId: string = DEMO_USER_ID): Promise<MealEntry[]> {
+  /** GET /api/entry/{userId}/today - Fetch meals for a user on a specific date */
+  async getTodayEntries(userId: string = DEMO_USER_ID, dateStr?: string): Promise<MealEntry[]> {
+    const targetDateStr = dateStr || TODAY_STR;
     try {
-      const response = await fetch(`${API_BASE}/entry/${userId}/today`);
+      const response = await fetch(`${API_BASE}/entry/${userId}/date/${targetDateStr}`);
       if (response.ok) {
         const data = await response.json();
-        if (Array.isArray(data) && data.length > 0) {
-          inMemoryEntries = data;
+        if (Array.isArray(data)) {
           return data;
         }
       }
     } catch (error) {
       console.info('[REST API] Backend offline/connecting. Using active state mode.');
     }
-    return inMemoryEntries;
+
+    // Filter inMemoryEntries strictly by targetDateStr
+    return inMemoryEntries.filter((e) => {
+      if (!e.createdOn) return targetDateStr === TODAY_STR;
+      const entryDateFormatted = new Date(e.createdOn).toISOString().split('T')[0];
+      return entryDateFormatted === targetDateStr || e.createdOn === targetDateStr;
+    });
   },
 
   /** GET /api/entry/{userId} - Fetch all meal entries for a user */
@@ -127,7 +136,7 @@ export const api = {
       carbs: Number(payload.carbs),
       fat: Number(payload.fat),
       protein: Number(payload.protein),
-      createdOn: payload.createdOn || new Date().toISOString().split('T')[0],
+      createdOn: payload.createdOn || TODAY_STR,
     };
 
     try {
@@ -141,7 +150,7 @@ export const api = {
           carbs: Number(payload.carbs),
           fat: Number(payload.fat),
           protein: Number(payload.protein),
-          createdOn: payload.createdOn || new Date().toISOString().split('T')[0],
+          createdOn: payload.createdOn || TODAY_STR,
         }),
       });
 
@@ -191,7 +200,7 @@ export const api = {
   async createGoal(payload: SetGoalPayload, userId: string = DEMO_USER_ID): Promise<NutritionGoal> {
     const updatedGoal: NutritionGoal = {
       id: inMemoryGoal.id || 'goal-1',
-      startDate: payload.startDate || new Date().toISOString().split('T')[0],
+      startDate: payload.startDate || TODAY_STR,
       kcal: Number(payload.kcal),
       carbs: Number(payload.carbs),
       fat: Number(payload.fat),
@@ -203,7 +212,7 @@ export const api = {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          startDate: payload.startDate || new Date().toISOString().split('T')[0],
+          startDate: payload.startDate || TODAY_STR,
           kcal: Number(payload.kcal),
           carbs: Number(payload.carbs),
           fat: Number(payload.fat),
@@ -226,12 +235,12 @@ export const api = {
 };
 
 // Convenience named exports matching App.tsx imports
-export const fetchTodayEntries = async (userId?: string, _dateStr?: string): Promise<MealEntry[]> => {
-  return await api.getTodayEntries(userId);
+export const fetchTodayEntries = async (userId?: string, dateStr?: string): Promise<MealEntry[]> => {
+  return await api.getTodayEntries(userId, dateStr);
 };
 
-export const fetchTodaySummary = async (userId?: string, _dateStr?: string): Promise<DailySummary> => {
-  const entries = await api.getTodayEntries(userId);
+export const fetchTodaySummary = async (userId?: string, dateStr?: string): Promise<DailySummary> => {
+  const entries = await api.getTodayEntries(userId, dateStr);
   return {
     consumedKcal: entries.reduce((s, e) => s + (Number(e.kcal) || 0), 0),
     consumedProtein: entries.reduce((s, e) => s + (Number(e.protein) || 0), 0),
