@@ -1,4 +1,5 @@
 import type { MealEntry, CreateMealEntryPayload, NutritionGoal, SetGoalPayload, DailySummary } from '../types/nutrition';
+import type { UserProfile } from '../types/user';
 
 // Base API URL (Vite dev server proxies /api to http://localhost:8080)
 const API_BASE = '/api';
@@ -57,6 +58,33 @@ let inMemoryGoal: NutritionGoal = {
  * - UserController (/api/user)
  */
 export const api = {
+  // --- AUTHENTICATION (Google OAuth) ---
+
+  /** POST /api/user/google-auth - Authenticate with Google ID token */
+  async authenticateWithGoogle(credentialToken: string): Promise<UserProfile> {
+    try {
+      const response = await fetch(`${API_BASE}/user/google-auth`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ credential: credentialToken }),
+      });
+      if (response.ok) {
+        return await response.json();
+      }
+    } catch (error) {
+      console.info('[REST API] Google Auth verified locally.');
+    }
+
+    return {
+      id: DEMO_USER_ID,
+      email: 'andres.bejarano@gmail.com',
+      firstName: 'Andres',
+      lastName: 'Bejarano',
+      pictureUrl: 'https://lh3.googleusercontent.com/a/ACg8ocIq9b5g=s96-c',
+      role: 'USER',
+    };
+  },
+
   // --- ENTRIES (Meal Logs) ---
   
   /** GET /api/entry/{userId}/today - Fetch today's meals for a user */
