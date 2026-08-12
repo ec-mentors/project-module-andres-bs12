@@ -70,44 +70,37 @@ erDiagram
 
 ---
 
-## 🚀 Getting Started & Local Development
+## 🚀 Getting Started & How to Run
 
 ### **Prerequisites**
 - Java 17 or higher
 - Node.js 18+ and npm
 - Maven 3.8+
 
-### **1. Run Backend (Spring Boot)**
+### **1. Run Frontend Development Server (Root Command)**
+From the project root directory:
 ```bash
-# Clone the repository
-git clone https://github.com/ec-mentors/project-module-andres-bs12.git
-cd NutritionTracker
+npm run dev
+```
+- Access locally on Mac: `http://localhost:5173`
+- Access on mobile phone (Wi-Fi): `http://<your-local-ip>:5173` (e.g. `http://10.0.0.207:5173`)
 
-# Compile and run unit tests (74 tests)
+### **2. Run Backend Server (Spring Boot + PostgreSQL)**
+In a second terminal window from the project root directory:
+```bash
+# Run unit & integration test suite (74 tests)
 ./mvnw test
 
 # Start the Spring Boot backend server (runs on port 8080)
 ./mvnw spring-boot:run
 ```
 
-### **2. Run Frontend (Vite + React)**
-In a second terminal window:
+### **3. Production Bundle Build (Unified Single-Port Mode)**
+To compile the static React frontend into Spring Boot's static resources:
 ```bash
-cd frontend
-
-# Install dependencies
-npm install
-
-# Start Vite dev server exposed to local network (runs on port 5173)
-npm run dev -- --host 0.0.0.0 --port 5173
+npm run build
 ```
-
-### **3. Production Bundle Build**
-To build the static frontend bundle for Spring Boot serving:
-```bash
-npm --prefix frontend run build
-```
-Emits static assets directly to `src/main/resources/static/`, allowing Spring Boot to serve the SPA natively.
+Emits compiled static assets directly to `src/main/resources/static/`. Running `./mvnw spring-boot:run` will serve both the REST API and the React SPA natively on `http://localhost:8080`.
 
 ---
 
