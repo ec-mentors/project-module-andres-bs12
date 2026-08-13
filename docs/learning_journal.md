@@ -4,6 +4,31 @@ This document serves as a development and learning journal to record key concept
 
 ---
 
+## 📅 2026-08-13 - (Sprint 3) - Multi-Stage Dockerfile & Local Container Orchestration with Docker Compose (Ticket #532)
+
+### 💡 Key Concepts Learned & Architectural Decisions
+
+1. **Single-Bundle Full-Stack Containerization Strategy:**
+   - Designed a 3-stage `Dockerfile`:
+     - **Stage 1 (`frontend-builder`)**: Uses `node:20-alpine` to compile React/Vite into static HTML/JS/CSS assets.
+     - **Stage 2 (`backend-builder`)**: Uses `maven:3.9-eclipse-temurin-17` to copy compiled frontend assets directly into Spring Boot's `src/main/resources/static/` directory before packaging the executable `.jar`.
+     - **Stage 3 (`runtime`)**: Uses `eclipse-temurin:17-jre` for a lightweight, production-ready runtime container (~180MB).
+   - *Key Realization:* Bundling static assets into Spring Boot eliminates the need for a separate frontend web server in development/testing, reducing infrastructure footprint while maintaining complete separation during source development.
+
+2. **Vite Output Path Integration (`vite.config.ts`):**
+   - Discovered that Vite was configured to output directly to `../src/main/resources/static`. Adjusted the Dockerfile `COPY --from=frontend-builder /app/src/main/resources/static ./src/main/resources/static` step accordingly.
+
+3. **ARM64 (Apple Silicon) & x86_64 Cross-Platform Compatibility:**
+   - Selected `eclipse-temurin:17-jre` to ensure seamless native multi-architecture support across both Apple Silicon Macs (`arm64`) and AWS EC2 Linux instances (`amd64`).
+
+4. **Testing Strategy in CI/CD vs Docker Build (`-DskipTests`):**
+   - Understood that `-DskipTests` in Docker build stages prevents build failures caused by missing external database instances during image creation. Comprehensive unit/integration tests run prior to image build in the CI/CD pipeline (e.g. GitHub Actions).
+
+5. **Local Orchestration with `docker-compose.yml`:**
+   - Configured `docker-compose.yml` with a `db` (PostgreSQL 16) service and `app` service, using healthchecks (`pg_isready`) and dependency ordering (`depends_on.condition: service_healthy`) to ensure the database initializes before Spring Boot starts.
+
+---
+
 ## 📅 2026-08-13 - (Sprint 3) - Cloud Infrastructure Provisioning with AWS EC2, RDS PostgreSQL & Security Groups (Ticket #531)
 
 ### 💡 Key Concepts Learned & Architectural Decisions
