@@ -4,6 +4,20 @@ This document serves as a development and learning journal to record key concept
 
 ---
 
+## 📅 2026-08-13 - (Sprint 3) - Server Deployment on AWS EC2 with Nginx Reverse Proxy & GitHub Deploy Keys (Ticket #533)
+
+### 💡 Key Concepts Learned & Architectural Decisions
+
+1. **Secure Server Authentication via GitHub Deploy Keys (ED25519):**
+   - Instead of storing personal user credentials or Personal Access Tokens (PATs) on remote cloud instances, created an SSH key pair (`ssh-keygen -t ed25519`) directly on the EC2 instance and registered the public key as a read-only **Deploy Key** on GitHub (`https://github.com/.../settings/keys`).
+   - *Key Realization:* Asymmetric cryptography (Private Key stays on EC2, Public Key stays on GitHub) guarantees isolated, passwordless repository access (`git clone git@github.com:...`) without exposing personal GitHub account privileges or organization-wide access.
+
+2. **Nginx Reverse Proxy Architecture:**
+   - Configured Nginx as a reverse proxy listening on Port `80` (HTTP) and forwarding internal traffic to the Spring Boot Docker container listening on Port `8080` (`proxy_pass http://localhost:8080`).
+   - *Key Realization:* Nginx acts as the single public entry point ("the digital doorman"), allowing clean domain/IP routing without exposing internal application ports directly to the internet.
+
+---
+
 ## 📅 2026-08-13 - (Sprint 3) - Multi-Stage Dockerfile & Local Container Orchestration with Docker Compose (Ticket #532)
 
 ### 💡 Key Concepts Learned & Architectural Decisions
