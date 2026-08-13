@@ -4,9 +4,9 @@ This document captures key takeaways, technical learnings, and personal insights
 
 ---
 
-## 🤖 AI-Assisted Frontend Development (Vibe Coding)
+## 🤖 AI-Assisted Frontend Development 
 
-The frontend of NutritionTracker was developed using **AI-Assisted Pair Programming (Vibe Coding)** powered by **Google Antigravity & Gemini AI**. Using AI for frontend development was fully permitted and encouraged for this project module.
+The frontend of NutritionTracker was developed using **AI-Assisted Pair Programming)** powered by **Google Antigravity I**.
 
 ### Key Insights from AI Pair Programming:
 - **Rapid UI Prototyping:** Utilizing AI enabled rapid iteration of component layouts, glassmorphism design tokens, and complex CSS utilities in TailwindCSS v4.
