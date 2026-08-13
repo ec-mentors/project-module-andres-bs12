@@ -4,6 +4,33 @@ This document serves as a development and learning journal to record key concept
 
 ---
 
+## 📅 2026-08-13 - (Sprint 3) - Cloud Infrastructure Provisioning with AWS EC2, RDS PostgreSQL & Security Groups (Ticket #531)
+
+### 💡 Key Concepts Learned & Architectural Decisions
+
+1. **Decoupled Cloud Architecture (EC2 + RDS Separation):**
+   - Separated the web application compute layer (Amazon EC2 `t3.micro` with Ubuntu 24.04 LTS) from the database layer (Amazon RDS PostgreSQL `db.t3.micro`).
+   - *Key Realization:* Isolating database storage on RDS ensures application updates, restarts, or server migrations on EC2 do not risk data loss or corruption.
+
+2. **AWS Free Tier Resource Scoping:**
+   - Both `t3.micro` EC2 (750 hrs/month) and `db.t3.micro` RDS PostgreSQL (750 hrs/month + 20 GB SSD) fit 100% within the AWS Free Tier, incurring $0.00 cost while providing a production-equivalent environment.
+
+3. **VPC Region Scoping & Latency Optimization:**
+   - Realized that resources must be provisioned within the same AWS Region (`eu-central-1` Frankfurt). Cross-region communication causes high network latency and prevents Security Group ID referencing.
+
+4. **Security Group Referencing & Principle of Least Privilege:**
+   - **EC2 Inbound Rules:** Port `22` (SSH for administration), Port `80` (HTTP web traffic), Port `443` (HTTPS secure traffic).
+   - **RDS Inbound Rules:** Restricted Port `5432` (PostgreSQL) exclusively to the Security Group ID of the EC2 instance (`sg-053ea28a1dd9ff624`). The database is kept completely private from public internet access.
+   - *Key Realization:* Referencing Security Group IDs instead of IP CIDR ranges allows dynamic EC2 IP updates without breaking database authorization rules.
+
+5. **SSH Key Pair Security (`.pem` Permissions):**
+   - Learned that SSH clients enforce `400` read-only permissions (`chmod 400 ~/.ssh/nutrition-tracker-key.pem`) to prevent unauthorized process access to private keys.
+
+6. **End-to-End Connectivity Verification (`psql`):**
+   - Successfully verified network routing and credentials from the Ubuntu EC2 terminal to the RDS PostgreSQL instance using `psql -h <endpoint> -U postgres -d postgres`.
+
+---
+
 ## 📅 2026-08-10 - (Sprint 3) - Controller Layer Unit Testing with @WebMvcTest & MockMvc 
 
 ### 💡 Key Concepts Learned & Architectural Decisions
