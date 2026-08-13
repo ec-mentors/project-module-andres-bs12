@@ -37,5 +37,5 @@ The frontend of NutritionTracker was developed using **AI-Assisted Pair Programm
 ---
 
 ## 📄 Related Documentation
-- 🎨 **[Design & UX Documentation](docs/design_and_ux.md):** Detailed breakdown of design philosophy, color system, and Figma evolutions.
-- 📘 **[Project README](README.md):** Architecture overview, database schema, tech stack, and setup guide.
+- 🎨 **[Design & UX Documentation](../docs/design_and_ux.md):** Detailed breakdown of design philosophy, color system, and Figma evolutions.
+- 📘 **[Project README](../README.md):** Architecture overview, database schema, tech stack, and setup guide.

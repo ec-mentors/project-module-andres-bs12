@@ -8,7 +8,7 @@ Built with **Spring Boot 3 (Java 17)** on the backend and **Vite + React 19 + Ty
 
 ## 📖 Documentation Index
 
-- 🤖 **[Learning Journal & AI Reflections (LEARNING_JOURNAL.md)](LEARNING_JOURNAL.md):** Personal takeaways, technical learnings, and AI-assisted frontend development details.
+- 🤖 **[Learning Journal & AI Reflections (LEARNING_JOURNAL.md)](frontend/LEARNING_JOURNAL.md):** Personal takeaways, technical learnings, and AI-assisted frontend development details.
 - 🎨 **[Design & UX Documentation (docs/design_and_ux.md)](docs/design_and_ux.md):** Design philosophy, color system rules, Figma evolutions, and mobile touch UX decisions.
 
 ---
