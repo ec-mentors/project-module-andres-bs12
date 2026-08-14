@@ -9,6 +9,7 @@ interface HeroKcalCardProps {
   selectedDate: Date;
   onDateChange: (date: Date) => void;
   theme?: 'dark' | 'light';
+  isLoading?: boolean;
 }
 
 export const HeroKcalCard: React.FC<HeroKcalCardProps> = ({
@@ -18,6 +19,7 @@ export const HeroKcalCard: React.FC<HeroKcalCardProps> = ({
   selectedDate,
   onDateChange,
   theme = 'dark',
+  isLoading: _isLoading = false,
 }) => {
   const [animateDonuts, setAnimateDonuts] = useState(false);
   const isLight = theme === 'light';
@@ -133,7 +135,7 @@ export const HeroKcalCard: React.FC<HeroKcalCardProps> = ({
               cx="22"
               cy="22"
               r={radius}
-              className={`${ringColorClass} transition-all duration-[1000ms] ease-out`}
+              className={`${ringColorClass} transition-all duration-[800ms] ease-out`}
               strokeWidth="4"
               strokeDasharray={circumference}
               strokeDashoffset={animateDonuts ? strokeDashoffset : circumference}
@@ -144,14 +146,14 @@ export const HeroKcalCard: React.FC<HeroKcalCardProps> = ({
         </div>
 
         {/* Percentage Number Below Ring */}
-        <span className={`text-xs sm:text-sm font-black mt-1.5 truncate max-w-full ${
+        <span className={`text-xs sm:text-sm font-black mt-1.5 truncate max-w-full transition-colors duration-300 ${
           isLight ? 'text-slate-900' : 'text-white'
         }`}>
           {percent}%
         </span>
 
         {/* Consumed Value */}
-        <span className={`text-[11px] sm:text-xs font-extrabold mt-0.5 truncate max-w-full ${
+        <span className={`text-[11px] sm:text-xs font-extrabold mt-0.5 truncate max-w-full transition-colors duration-300 ${
           isLight ? 'text-slate-700' : 'text-slate-200'
         }`}>
           {value}{unit}
@@ -215,13 +217,13 @@ export const HeroKcalCard: React.FC<HeroKcalCardProps> = ({
       {/* Main Headline Display: Daily Progress Percentage */}
       <div className="relative z-10 space-y-1.5">
         <div className="flex flex-wrap items-baseline gap-3">
-          <span className={`text-5xl sm:text-6xl font-black tracking-tight drop-shadow-sm ${
+          <span className={`text-5xl sm:text-6xl font-black tracking-tight drop-shadow-sm transition-all duration-300 ${
             isLight ? 'text-slate-900' : 'text-white'
           }`}>
             {headlinePercentText}
           </span>
           <span
-            className={`text-base sm:text-lg font-bold ${
+            className={`text-base sm:text-lg font-bold transition-colors duration-300 ${
               isAnyMacroExceeded
                 ? 'text-rose-500'
                 : isAllMacrosHit
@@ -239,7 +241,7 @@ export const HeroKcalCard: React.FC<HeroKcalCardProps> = ({
           </span>
         </div>
 
-        <p className={`text-xs font-medium ${isLight ? 'text-slate-600' : 'text-slate-300'}`}>
+        <p className={`text-xs font-medium transition-colors duration-300 ${isLight ? 'text-slate-600' : 'text-slate-300'}`}>
           {remainingKcal.toLocaleString()} Kcal remaining ({safeConsumedKcal.toLocaleString()} / {goal.kcal.toLocaleString()} Kcal logged)
         </p>
       </div>

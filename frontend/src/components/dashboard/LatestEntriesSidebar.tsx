@@ -10,6 +10,7 @@ interface LatestEntriesSidebarProps {
   onDeleteMeal: (entryId: string) => void;
   selectedDateFormatted: string;
   theme?: 'dark' | 'light';
+  isLoading?: boolean;
 }
 
 export const LatestEntriesSidebar: React.FC<LatestEntriesSidebarProps> = ({
@@ -19,6 +20,7 @@ export const LatestEntriesSidebar: React.FC<LatestEntriesSidebarProps> = ({
   onDeleteMeal,
   selectedDateFormatted,
   theme = 'dark',
+  isLoading: _isLoading = false,
 }) => {
   const isLight = theme === 'light';
   const [isAddingInline, setIsAddingInline] = useState(false);
@@ -60,7 +62,7 @@ export const LatestEntriesSidebar: React.FC<LatestEntriesSidebarProps> = ({
     setFat(String(entry.fat));
   };
 
-  const handleSaveAdd = (e: React.FormEvent) => {
+  const handleSubmitAdd = (e: React.FormEvent) => {
     e.preventDefault();
     if (!mealName.trim()) return;
 
@@ -100,134 +102,149 @@ export const LatestEntriesSidebar: React.FC<LatestEntriesSidebarProps> = ({
   const iconColorClass = isLight ? 'text-[#161024]' : 'text-white';
 
   return (
-    <div className={`border-2 rounded-[32px] p-6 sm:p-8 flex flex-col h-full min-h-0 overflow-hidden transition-all duration-300 ${
+    <div className={`border-2 rounded-[32px] p-6 sm:p-8 flex flex-col transition-all duration-300 w-full box-border relative overflow-hidden ${
       isLight
         ? 'bg-white/95 backdrop-blur-sm border-slate-200/80 hover:border-[#6417ff]/25 text-slate-900 shadow-[0_4px_20px_rgba(0,0,0,0.03)] hover:shadow-[0_8px_24px_rgba(100,23,255,0.05)]'
-        : 'bg-[#161024] border-white/10 hover:border-[#6417ff]/40 hover:shadow-[0_20px_50px_-12px_rgba(100,23,255,0.25)] text-white shadow-[0_16px_40px_rgba(0,0,0,0.5)]'
+        : 'bg-[#161024] border-white/10 hover:border-[#6417ff]/40 text-white shadow-[0_16px_40px_rgba(0,0,0,0.5)]'
     }`}>
       
-      {/* Top Header Section */}
-      <div className="shrink-0 mb-4">
-        <div className="flex items-center justify-between gap-2">
-          <div>
-            <h3 className={`text-xl sm:text-2xl font-bold ${isLight ? 'text-slate-900' : 'text-white'}`}>
-              Latest entries
-            </h3>
-            <p className={`text-xs font-semibold mt-0.5 ${
-              isLight ? 'text-purple-700' : 'text-purple-300'
-            }`}>
-              {selectedDateFormatted}
-            </p>
-          </div>
+      {/* Header with Title and Add Meal Button */}
+      <div className={`flex items-center justify-between mb-4 pb-4 border-b ${
+        isLight ? 'border-slate-200/80' : 'border-white/10'
+      }`}>
+        <div>
+          <h3 className={`text-lg sm:text-xl font-bold ${isLight ? 'text-slate-900' : 'text-white'}`}>
+            Meal Intake
+          </h3>
+          <p className={`text-xs font-semibold mt-0.5 ${isLight ? 'text-purple-700' : 'text-purple-300'}`}>
+            {selectedDateFormatted}
+          </p>
+        </div>
 
+        {/* Prominent Add Meal Button */}
+        {!isAddingInline && !editingId && (
           <button
             onClick={handleStartAdd}
-            className="flex items-center space-x-1.5 bg-[#6417ff] hover:bg-[#5400e9] active:scale-95 text-white text-xs font-bold px-3.5 py-2 rounded-2xl shadow-md transition-all border border-white/20 shrink-0"
+            className="flex items-center space-x-1 px-3.5 py-2 rounded-2xl bg-[#6417ff] hover:bg-[#5400e9] text-white text-xs font-bold shadow-md shadow-[#6417ff]/25 active:scale-95 transition-all cursor-pointer border border-white/20"
           >
-            <Plus className="w-4 h-4" />
-            <span>Add meal</span>
+            <Plus className="w-4 h-4 stroke-[2.5]" />
+            <span>Add Meal</span>
           </button>
-        </div>
+        )}
       </div>
 
-      {/* List Container (Fixed 480px mobile height for 3 entries + peek of 4th & flexible fill on desktop with 3px minimal scrollbar) */}
-      <div className={`space-y-3 flex-1 min-h-0 h-[480px] min-h-[480px] max-h-[480px] lg:h-auto lg:min-h-0 lg:max-h-none overflow-y-auto pb-1 touch-pan-y ${
-        isLight ? 'custom-scrollbar-light' : 'custom-scrollbar'
-      }`}>
+      {/* Entries List Area */}
+      <div className="space-y-3 flex-1 overflow-y-auto pr-0 sm:pr-1 custom-scrollbar min-h-0 w-full box-border">
         <AnimatePresence mode="popLayout" initial={false}>
-          {/* Inline Add Form as top item in stack */}
+          
+          {/* INLINE ADD FORM */}
           {isAddingInline && (
             <motion.form
               key="inline-add-form"
-              layout
-              initial={{ opacity: 0, y: -16, scale: 0.98 }}
+              initial={{ opacity: 0, y: -20, scale: 0.95 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.98, transition: { duration: 0.15 } }}
-              transition={{
-                layout: { duration: 0.25, ease: [0.16, 1, 0.3, 1] },
-                opacity: { duration: 0.2 },
-                y: { duration: 0.25, ease: [0.16, 1, 0.3, 1] },
-              }}
-              onSubmit={handleSaveAdd}
-              className={`p-4 sm:p-5 rounded-2xl space-y-3 border overflow-hidden w-full box-border shadow-lg ${
+              exit={{ opacity: 0, scale: 0.95, y: -10 }}
+              transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+              onSubmit={handleSubmitAdd}
+              className={`p-4 rounded-2xl border space-y-3 shadow-lg ${
                 isLight
-                  ? 'bg-slate-100/90 border-slate-300'
-                  : 'bg-[#231a38] border-[#6417ff]/60'
+                  ? 'bg-slate-50 border-slate-300 text-slate-900 shadow-slate-200/50'
+                  : 'bg-[#1e1435] border-[#6417ff]/40 text-white shadow-black/40'
               }`}
             >
-              <div className={`flex items-center justify-between border-b pb-2 ${isLight ? 'border-slate-200' : 'border-white/10'}`}>
-                <span className={`text-xs font-extrabold flex items-center space-x-1.5 ${isLight ? 'text-slate-900' : 'text-white'}`}>
-                  <Utensils className={`w-3.5 h-3.5 ${iconColorClass}`} />
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-[#6417ff] uppercase tracking-wider flex items-center space-x-1.5">
+                  <Utensils className="w-3.5 h-3.5" />
                   <span>Log New Meal</span>
                 </span>
                 <button
                   type="button"
                   onClick={resetForm}
-                  className="text-slate-400 hover:text-slate-600 dark:hover:text-white p-1"
+                  className={`p-1 rounded-lg transition-colors ${
+                    isLight ? 'hover:bg-slate-200 text-slate-500' : 'hover:bg-white/10 text-slate-400'
+                  }`}
                 >
                   <X className="w-4 h-4" />
                 </button>
               </div>
 
-              <input
-                type="text"
-                placeholder="Meal Name (e.g. Chicken & Rice)"
-                value={mealName}
-                onChange={(e) => setMealName(e.target.value)}
-                className={`w-full border rounded-xl px-3.5 py-2.5 text-xs sm:text-sm font-semibold placeholder-slate-400 focus:outline-none focus:border-[#6417ff] ${
-                  isLight ? 'bg-white border-slate-300 text-slate-900' : 'bg-[#161024] border-white/15 text-white'
-                }`}
-                required
-                autoFocus
-              />
+              {/* Meal Name Input */}
+              <div>
+                <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">Meal / Food Name</label>
+                <input
+                  type="text"
+                  placeholder="e.g. Grilled Chicken Salad"
+                  value={mealName}
+                  onChange={(e) => setMealName(e.target.value)}
+                  className={`w-full border rounded-xl px-3 py-2 text-xs sm:text-sm font-semibold focus:outline-none focus:border-[#6417ff] ${
+                    isLight ? 'bg-white border-slate-300 text-slate-900' : 'bg-[#161024] border-white/15 text-white'
+                  }`}
+                  required
+                  autoFocus
+                />
+              </div>
 
+              {/* 4 Macro Inputs in Responsive Grid */}
               <div className="grid grid-cols-4 gap-2">
                 <div>
                   <label className="text-[9px] font-bold text-slate-400 uppercase block mb-1">Kcal</label>
                   <input
                     type="number"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
                     placeholder="450"
                     value={kcal}
                     onChange={(e) => setKcal(e.target.value)}
                     className={`w-full border rounded-xl px-2 py-2 text-xs font-bold focus:outline-none focus:border-[#6417ff] ${
                       isLight ? 'bg-white border-slate-300 text-slate-900' : 'bg-[#161024] border-white/15 text-white'
                     }`}
+                    required
+                    autoComplete="off"
                   />
                 </div>
                 <div>
                   <label className="text-[9px] font-bold text-slate-400 uppercase block mb-1">Prot</label>
                   <input
                     type="number"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
                     placeholder="30"
                     value={protein}
                     onChange={(e) => setProtein(e.target.value)}
                     className={`w-full border rounded-xl px-2 py-2 text-xs font-bold focus:outline-none focus:border-[#6417ff] ${
                       isLight ? 'bg-white border-slate-300 text-slate-900' : 'bg-[#161024] border-white/15 text-white'
                     }`}
+                    autoComplete="off"
                   />
                 </div>
                 <div>
                   <label className="text-[9px] font-bold text-slate-400 uppercase block mb-1">Carb</label>
                   <input
                     type="number"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
                     placeholder="40"
                     value={carbs}
                     onChange={(e) => setCarbs(e.target.value)}
                     className={`w-full border rounded-xl px-2 py-2 text-xs font-bold focus:outline-none focus:border-[#6417ff] ${
                       isLight ? 'bg-white border-slate-300 text-slate-900' : 'bg-[#161024] border-white/15 text-white'
                     }`}
+                    autoComplete="off"
                   />
                 </div>
                 <div>
                   <label className="text-[9px] font-bold text-slate-400 uppercase block mb-1">Fat</label>
                   <input
                     type="number"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
                     placeholder="10"
                     value={fat}
                     onChange={(e) => setFat(e.target.value)}
                     className={`w-full border rounded-xl px-2 py-2 text-xs font-bold focus:outline-none focus:border-[#6417ff] ${
                       isLight ? 'bg-white border-slate-300 text-slate-900' : 'bg-[#161024] border-white/15 text-white'
                     }`}
+                    autoComplete="off"
                   />
                 </div>
               </div>
@@ -254,6 +271,7 @@ export const LatestEntriesSidebar: React.FC<LatestEntriesSidebarProps> = ({
             </motion.form>
           )}
 
+          {/* EMPTY STATE OR MEAL ENTRIES */}
           {entries.length === 0 && !isAddingInline ? (
             /* CLICKABLE EMPTY STATE BOX */
             <motion.div
@@ -371,44 +389,56 @@ export const LatestEntriesSidebar: React.FC<LatestEntriesSidebarProps> = ({
                           <label className="text-[9px] font-bold text-slate-400 uppercase block mb-1">Kcal</label>
                           <input
                             type="number"
+                            inputMode="numeric"
+                            pattern="[0-9]*"
                             value={kcal}
                             onChange={(e) => setKcal(e.target.value)}
                             className={`w-full border rounded-xl px-2 py-1.5 text-xs font-bold focus:outline-none focus:border-[#6417ff] ${
                               isLight ? 'bg-white border-slate-300 text-slate-900' : 'bg-[#161024] border-white/15 text-white'
                             }`}
+                            autoComplete="off"
                           />
                         </div>
                         <div>
                           <label className="text-[9px] font-bold text-slate-400 uppercase block mb-1">Prot</label>
                           <input
                             type="number"
+                            inputMode="numeric"
+                            pattern="[0-9]*"
                             value={protein}
                             onChange={(e) => setProtein(e.target.value)}
                             className={`w-full border rounded-xl px-2 py-1.5 text-xs font-bold focus:outline-none focus:border-[#6417ff] ${
                               isLight ? 'bg-white border-slate-300 text-slate-900' : 'bg-[#161024] border-white/15 text-white'
                             }`}
+                            autoComplete="off"
                           />
                         </div>
                         <div>
                           <label className="text-[9px] font-bold text-slate-400 uppercase block mb-1">Carb</label>
                           <input
                             type="number"
+                            inputMode="numeric"
+                            pattern="[0-9]*"
                             value={carbs}
                             onChange={(e) => setCarbs(e.target.value)}
                             className={`w-full border rounded-xl px-2 py-1.5 text-xs font-bold focus:outline-none focus:border-[#6417ff] ${
                               isLight ? 'bg-white border-slate-300 text-slate-900' : 'bg-[#161024] border-white/15 text-white'
                             }`}
+                            autoComplete="off"
                           />
                         </div>
                         <div>
                           <label className="text-[9px] font-bold text-slate-400 uppercase block mb-1">Fat</label>
                           <input
                             type="number"
+                            inputMode="numeric"
+                            pattern="[0-9]*"
                             value={fat}
                             onChange={(e) => setFat(e.target.value)}
                             className={`w-full border rounded-xl px-2 py-1.5 text-xs font-bold focus:outline-none focus:border-[#6417ff] ${
                               isLight ? 'bg-white border-slate-300 text-slate-900' : 'bg-[#161024] border-white/15 text-white'
                             }`}
+                            autoComplete="off"
                           />
                         </div>
                       </div>

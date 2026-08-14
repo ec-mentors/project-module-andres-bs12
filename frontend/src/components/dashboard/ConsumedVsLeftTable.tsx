@@ -6,6 +6,7 @@ interface ConsumedVsLeftTableProps {
   goal: NutritionGoal;
   selectedDate?: Date;
   theme?: 'dark' | 'light';
+  isLoading?: boolean;
 }
 
 export const ConsumedVsLeftTable: React.FC<ConsumedVsLeftTableProps> = ({
@@ -13,6 +14,7 @@ export const ConsumedVsLeftTable: React.FC<ConsumedVsLeftTableProps> = ({
   goal,
   selectedDate,
   theme = 'dark',
+  isLoading: _isLoading = false,
 }) => {
   const isLight = theme === 'light';
 
@@ -147,7 +149,7 @@ export const ConsumedVsLeftTable: React.FC<ConsumedVsLeftTableProps> = ({
                 </div>
 
                 {/* Consumed */}
-                <div className={`col-span-4 sm:col-span-3 font-bold text-center sm:text-left truncate ${
+                <div className={`col-span-4 sm:col-span-3 font-bold text-center sm:text-left truncate transition-colors duration-200 ${
                   isLight ? 'text-slate-900' : 'text-white'
                 }`}>
                   {r.consumed}
@@ -155,7 +157,7 @@ export const ConsumedVsLeftTable: React.FC<ConsumedVsLeftTableProps> = ({
 
                 {/* Left (NEVER CHANGES COLOR! ALWAYS CONSTANT NEUTRAL SLATE) */}
                 <div
-                  className={`col-span-4 sm:col-span-3 font-semibold text-right sm:text-left truncate ${
+                  className={`col-span-4 sm:col-span-3 font-semibold text-right sm:text-left truncate transition-colors duration-200 ${
                     isLight ? 'text-slate-700 font-bold' : 'text-slate-300 font-bold'
                   }`}
                 >
@@ -164,15 +166,15 @@ export const ConsumedVsLeftTable: React.FC<ConsumedVsLeftTableProps> = ({
 
                 {/* Progress Bar & Percentage */}
                 <div className="hidden sm:flex sm:col-span-3 items-center justify-end space-x-3">
-                  <div className={`w-20 rounded-full h-2 overflow-hidden border ${
-                    isLight ? 'bg-slate-200 border-slate-300/80' : 'bg-[#161024] border-white/10'
+                  <div className={`w-20 rounded-full h-2 overflow-hidden ${
+                    isLight ? 'bg-slate-200' : 'bg-white/10'
                   }`}>
                     <div
-                      className={`h-full ${r.info.color} rounded-full transition-all duration-700 ease-out`}
+                      className={`h-full rounded-full ${r.info.color} transition-all duration-500 ease-out`}
                       style={{ width: `${r.info.barWidth}%` }}
                     />
                   </div>
-                  <span className={`text-xs font-bold w-10 text-right ${r.info.textColor}`}>
+                  <span className={`text-xs w-10 text-right ${r.info.textColor} transition-colors duration-200`}>
                     {r.info.displayText}
                   </span>
                 </div>

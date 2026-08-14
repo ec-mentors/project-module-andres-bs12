@@ -7,6 +7,7 @@ interface GoogleLoginModalProps {
   isOpen: boolean;
   onClose: () => void;
   onLoginSuccess: (user: UserProfile) => void;
+  theme?: 'dark' | 'light';
 }
 
 declare global {
@@ -27,14 +28,15 @@ export const GoogleLoginModal: React.FC<GoogleLoginModalProps> = ({
   isOpen,
   onClose,
   onLoginSuccess,
+  theme = 'dark',
 }) => {
+  const isLight = theme === 'light';
   const [isLoggingIn, setIsLoggingIn] = useState(false);
   const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
 
   useEffect(() => {
     if (!isOpen || !googleClientId) return;
 
-    // Load Google Identity Services SDK dynamically if Client ID is configured
     const scriptId = 'google-jssdk';
     if (!document.getElementById(scriptId)) {
       const script = document.createElement('script');
@@ -60,7 +62,7 @@ export const GoogleLoginModal: React.FC<GoogleLoginModalProps> = ({
     const buttonDiv = document.getElementById('google-button-container');
     if (buttonDiv) {
       window.google.accounts.id.renderButton(buttonDiv, {
-        theme: 'filled_black',
+        theme: isLight ? 'outline' : 'filled_black',
         size: 'large',
         shape: 'pill',
         width: 320,
@@ -72,28 +74,37 @@ export const GoogleLoginModal: React.FC<GoogleLoginModalProps> = ({
     setIsLoggingIn(true);
     try {
       if (response.credential) {
-        // Send credential JWT to Spring Boot backend
         const authenticatedUser = await api.authenticateWithGoogle(response.credential);
         onLoginSuccess(authenticatedUser);
         onClose();
         return;
       }
     } catch (err) {
-      console.warn('Real Google Auth backend verification fallback:', err);
+      console.warn('Backend Google Auth verification fallback:', err);
     } finally {
       setIsLoggingIn(false);
     }
 
-    // Fallback to active valid user session
     handleDirectLogin();
   };
+
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+      return () => {
+        document.body.style.overflow = '';
+      };
+    } else {
+      document.body.style.overflow = '';
+    }
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
   const handleDirectLogin = async () => {
     setIsLoggingIn(true);
     try {
-      await new Promise((res) => setTimeout(res, 400));
+      await new Promise((res) => setTimeout(res, 500));
 
       const validUser: UserProfile = {
         id: DEMO_USER_ID,
@@ -114,42 +125,48 @@ export const GoogleLoginModal: React.FC<GoogleLoginModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-lg">
-      <div className="bg-white rounded-[32px] max-w-md w-full p-8 shadow-2xl border border-[#e8e2f1] relative animate-in fade-in zoom-in duration-200 text-center">
-        
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md overscroll-none touch-none animate-in fade-in duration-200">
+      <div 
+        className={`rounded-[32px] max-w-md w-full p-8 sm:p-10 shadow-2xl relative animate-in zoom-in-95 duration-200 text-center ${
+          isLight
+            ? 'bg-white text-slate-900 shadow-[0_20px_60px_rgba(0,0,0,0.15)] [color-scheme:light]'
+            : 'bg-white text-slate-900 shadow-[0_20px_60px_rgba(0,0,0,0.4)] [color-scheme:light]'
+        }`}
+      >
         {/* Close Button */}
         <button
           onClick={onClose}
-          className="absolute top-6 right-6 text-slate-400 hover:text-slate-600 p-1.5 rounded-full hover:bg-slate-100 transition-all"
+          aria-label="Close login modal"
+          className="absolute top-6 right-6 p-2 rounded-full text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-all"
         >
           <X className="w-5 h-5" />
         </button>
 
-        {/* Lock Icon Badge */}
-        <div className="w-16 h-16 bg-[#eee6ff] text-[#6417ff] rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-md shadow-[#6417ff]/10">
-          <Lock className="w-8 h-8" />
+        {/* Lock Icon in soft squircle */}
+        <div className="w-16 h-16 rounded-2xl bg-purple-100 flex items-center justify-center mx-auto mb-6">
+          <Lock className="w-7 h-7 text-[#6417ff]" />
         </div>
 
-        <h3 className="text-2xl font-bold text-[#0f172a] mb-2">
+        <h3 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight mb-3">
           Welcome to NutritionTracker
         </h3>
-        <p className="text-xs font-semibold text-[#5f6573] max-w-xs mx-auto mb-8">
-          Sign in with Google to sync your meals, set daily macro goals, and save your historical logs safely in Spring Boot.
+        <p className="text-sm leading-relaxed text-slate-600 max-w-xs mx-auto mb-8 font-medium">
+          Sign in with Google to sync your meals, customize daily macro goals, and track your nutrition progress.
         </p>
 
-        {/* Native Google SDK Button Container (Rendered when VITE_GOOGLE_CLIENT_ID is set) */}
+        {/* Native Google SDK Button Container (if configured) */}
         {googleClientId && (
           <div id="google-button-container" className="flex justify-center mb-4" />
         )}
 
-        {/* Fallback Direct Google Sign In Button */}
+        {/* Direct Google SSO Action Button */}
         <button
+          type="button"
           onClick={handleDirectLogin}
           disabled={isLoggingIn}
-          className="w-full py-4 px-6 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white font-semibold text-sm flex items-center justify-center space-x-3 shadow-xl transition-all border border-slate-700 disabled:opacity-50"
+          className="w-full py-4 px-6 rounded-2xl font-bold text-sm flex items-center justify-center space-x-3 bg-[#111827] hover:bg-[#1f2937] text-white shadow-xl transition-all active:scale-[0.98] disabled:opacity-50"
         >
-          {/* Google Color G SVG */}
-          <svg className="w-5 h-5" viewBox="0 0 24 24">
+          <svg className="w-5 h-5 shrink-0" viewBox="0 0 24 24">
             <path
               fill="#4285F4"
               d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
@@ -170,9 +187,11 @@ export const GoogleLoginModal: React.FC<GoogleLoginModalProps> = ({
           <span>{isLoggingIn ? 'Connecting to Google...' : 'Continue with Google'}</span>
         </button>
 
-        <p className="text-[11px] font-medium text-[#94a3b8] mt-6">
+        {/* Security / Privacy Footer */}
+        <p className="text-xs font-medium text-slate-400 mt-6">
           Protected by Spring Security IDOR Authorization (ADR-02)
         </p>
+
       </div>
     </div>
   );

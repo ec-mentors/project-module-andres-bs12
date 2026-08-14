@@ -8,7 +8,7 @@ This document contains all design decisions, UI aesthetics, color palettes, and 
 
 NutritionTracker implements a custom **Dual-Glassmorphism System** combining high-end visual aesthetics with responsive mobile usability:
 
-- **Dark Glass Mode (`#05030d` base):** Deep violet-charcoal glass containers (`bg-[#161024]` with `border-white/10`) featuring soft ambient glows (`shadow-[0_16px_40px_rgba(0,0,0,0.5)]`).
+- **Dark Glass Mode (`#05030d` / `#090516` base):** Deep violet-charcoal glass containers (`bg-[#161024]` with `border-white/10`) featuring soft ambient glows (`shadow-[0_16px_40px_rgba(0,0,0,0.5)]`).
 - **Light Glass Mode (`#f8fafc` base):** Soft, desaturated white glass cards (`bg-white/95` with `backdrop-blur-sm` and `border-slate-200/80`) featuring subtle ambient shadows (`shadow-[0_4px_20px_rgba(0,0,0,0.03)]`) and gentle lavender hover borders (`hover:border-[#6417ff]/25`).
 
 ---
@@ -61,3 +61,50 @@ NutritionTracker implements a custom **Dual-Glassmorphism System** combining hig
     appearance: textfield !important;
   }
   ```
+
+---
+
+## 🚀 5-Step Onboarding Architecture & Revolut-Style Mobile Flow
+
+### 6. Full-Screen Exclusive Onboarding Viewport
+- **Architecture:** The Onboarding experience is rendered as a clean, full-screen exclusive takeover (`h-[100dvh] max-h-[100dvh] overflow-hidden`) with fixed header, internally scrollable form body, and pinned action bar.
+- **Step Breakdown:**
+  - **Step 1 of 5:** *Choose Setup Method* (`ChoosePathStep.tsx` - 20% progress)
+  - **Step 2 of 5:** *Primary Objective* (`AiGoalWizardStep.tsx` - 40% progress)
+  - **Step 3 of 5:** *Body & Metrics* (`AiGoalWizardStep.tsx` - 60% progress)
+  - **Step 4 of 5:** *Daily Activity Level* (`AiGoalWizardStep.tsx` - 80% progress)
+  - **Step 5 of 5:** *Dietary Preference* (`AiGoalWizardStep.tsx` - 92% progress)
+  - **Finalization:** *Review & Finalize* (`GoalReviewStep.tsx` - 100% progress)
+- **Ergonomics:**
+  - On mobile, the AI-Powered Setup button is positioned at the bottom, directly in the comfortable thumb zone.
+  - Features an organic diffuse AI glow aura (`blur-[8px]` with conic gradient sweep).
+  - All dividing lines feature soft feathered fades (`bg-gradient-to-r from-transparent via-... to-transparent`).
+
+---
+
+## 📱 Mobile WebKit & Touch Usability Engineering
+
+### 7. Virtual Keyboard Dismissal ("Tap Eater") Immunity
+- **Problem:** When an `<input type="number">` is focused, tapping a button or preset card triggered an input blur, collapsing the virtual keyboard and shifting the viewport by ~350px between `touchstart` and `touchend`, causing the browser to cancel the `click` event.
+- **Solution:**
+  - Attached `onMouseDown={(e) => e.preventDefault()}` to all buttons, action bars, and preset cards.
+  - Added `touch-action: manipulation` across interactive controls.
+  - Screen coordinates remain anchored during the tap; the action executes instantly, and the keyboard is dismissed gracefully via programmatic `blur()`.
+
+### 8. Action Bar Layer Isolation & Zero Touch Ghosting
+- **Problem:** Transparent action bars (`bg-transparent`) allowed scrolling items to pass beneath the action buttons. Touch hit-testing in iOS Safari overlapped between the button and underlying cards, causing scroll momentum to cancel button clicks.
+- **Solution:**
+  - Pinned action bar with `z-30` and solid theme background (`bg-[#090516]` Dark / `bg-[#f8fafc]` Light).
+  - Added `touch-manipulation` and `select-none`.
+  - Added generous `pb-8 sm:pb-10` padding to scrollable containers, ensuring a 40px breathable gap above the action bar.
+
+### 9. Theme Overscroll & Safari Background Seams
+- **Problem:** Pull-to-refresh overscroll in Safari exposed dark background canvases in light mode.
+- **Solution:** Synchronized `html.light`, `body.light` (`#f8fafc`) and dynamically updated `<meta name="theme-color">` on every theme change.
+
+### 10. Apple-Style Inline Skeleton Shimmers & Zero-Flash Date Navigation
+- **Problem:** Changing dates in the *Today* view caused a harsh full-page screen flash and unmounted all dashboard cards to display a full-page spinner (`animate-spin`).
+- **Solution:**
+  - Removed full-page unmount takeovers; card boxes (`HeroKcalCard`, `ConsumedVsLeftTable`, `LatestEntriesSidebar`, `OverviewDashboard`) remain **100% physically anchored and mounted** in the DOM.
+  - Implemented Apple-style soft-rounded pulsing skeleton placeholders (`animate-pulse bg-slate-200` in Light mode / `bg-white/10` in Dark mode) inside the exact number, donut, and meal card slots.
+  - Date navigation buttons (`<` / `>`) remain responsive and stable with zero layout jumping.

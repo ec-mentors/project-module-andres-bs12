@@ -34,6 +34,16 @@ The frontend of NutritionTracker was developed using **AI-Assisted Pair Programm
 - Built a clean, type-safe API client service (`services/api.ts`) connecting React components to Spring Boot controllers (`EntryController`, `GoalController`, `UserController`).
 - Configured Vite build output to emit compiled bundle assets directly into `src/main/resources/static/`, enabling Spring Boot to serve the SPA natively.
 
+### 5. 5-Step Onboarding Architecture & Mobile WebKit Viewport Engineering
+- Built a full-screen exclusive onboarding takeover (`OnboardingModal.tsx` in `h-[100dvh] max-h-[100dvh]`) supporting AI metabolic roadmap formulation and manual macro customization.
+- **Solved the Mobile Keyboard Dismiss Click-Eater:** Prevented viewport resize tap cancellation during input blur using `onMouseDown={(e) => e.preventDefault()}` and `touch-action: manipulation`.
+- **Action Bar Layer Isolation:** Eliminated scroll inertia tap cancellation by isolating the bottom action bar with `z-30` and a solid theme background.
+- **Dynamic Theme & Overscroll Sync:** Synchronized `html.light`, `body.light`, and `<meta name="theme-color">` to guarantee zero dark canvas seams on Safari pull-to-refresh.
+
+### 6. Apple-Style Inline Skeleton Shimmers & Zero-Flash Date Navigation
+- Eliminated full-page unmount loading spin states that caused harsh screen flashes when changing dates.
+- Preserved 100% stable container DOM mounting and integrated in-place Apple-style soft-rounded pulsing placeholders (`animate-pulse bg-slate-200` in Light mode / `bg-white/10` in Dark mode) across hero cards, tables, and meal entry lists.
+
 ---
 
 ## 📄 Related Documentation
