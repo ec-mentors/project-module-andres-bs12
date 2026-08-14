@@ -321,70 +321,73 @@ export function App() {
 
       {/* Main Container */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 pb-12 pt-2 sm:pt-4">
-        {loading && entries.length === 0 ? (
-          <div className="flex items-center justify-center h-64">
-            <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#6417ff]" />
-          </div>
-        ) : (
-          <div className="transition-all duration-500 ease-out">
-            {activeTab === 'today' ? (
-              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
+        <div className="transition-all duration-500 ease-out">
+          {activeTab === 'today' ? (
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
+              
+              {/* LEFT MAIN COLUMN */}
+              <div className="lg:col-span-8 flex flex-col space-y-8 order-1">
                 
-                {/* LEFT MAIN COLUMN */}
-                <div className="lg:col-span-8 flex flex-col space-y-8 order-1">
-                  
-                  {/* Hero Kcal Card (STAGGER DELAY 0) */}
-                  <div className="transition-all duration-500 ease-out delay-0 animate-in fade-in slide-in-from-bottom-4">
-                    <HeroKcalCard
-                      summary={summary}
-                      goal={goal}
-                      onOpenSetGoals={() => setIsSetGoalsOpen(true)}
-                      selectedDate={selectedDate}
-                      onDateChange={(newDate) => setSelectedDate(newDate)}
-                      theme={theme}
-                    />
-                  </div>
-
-                  {/* MOBILE INTERMEDIATE PLACEHOLDER FOR SIDEBAR */}
-                  <div className="block lg:hidden order-2 transition-all duration-500 ease-out delay-100">
-                    <LatestEntriesSidebar
-                      entries={visibleEntries}
-                      onAddMeal={handleAddMeal}
-                      onUpdateMeal={handleUpdateMeal}
-                      onDeleteMeal={handleDeleteMeal}
-                      selectedDateFormatted={selectedDateFormatted}
-                      theme={theme}
-                    />
-                  </div>
-
-                  {/* Consumed vs Left Table (STAGGER DELAY 75) */}
-                  <div className="transition-all duration-500 ease-out delay-[200ms] lg:delay-75 animate-in fade-in slide-in-from-bottom-5 order-3 lg:order-2">
-                    <ConsumedVsLeftTable summary={summary} goal={goal} selectedDate={selectedDate} theme={theme} />
-                  </div>
-
+                {/* Hero Kcal Card */}
+                <div className="transition-all duration-500 ease-out">
+                  <HeroKcalCard
+                    summary={summary}
+                    goal={goal}
+                    onOpenSetGoals={() => setIsSetGoalsOpen(true)}
+                    selectedDate={selectedDate}
+                    onDateChange={(newDate) => setSelectedDate(newDate)}
+                    theme={theme}
+                    isLoading={loading}
+                  />
                 </div>
 
-                {/* DESKTOP RIGHT SIDEBAR (STAGGER DELAY 150) */}
-                <div className="hidden lg:block lg:col-span-4 relative order-2 transition-all duration-500 ease-out delay-150 animate-in fade-in slide-in-from-bottom-6">
-                  <div className="absolute inset-0">
-                    <LatestEntriesSidebar
-                      entries={visibleEntries}
-                      onAddMeal={handleAddMeal}
-                      onUpdateMeal={handleUpdateMeal}
-                      onDeleteMeal={handleDeleteMeal}
-                      selectedDateFormatted={selectedDateFormatted}
-                      theme={theme}
-                    />
-                  </div>
+                {/* MOBILE INTERMEDIATE SIDEBAR */}
+                <div className="block lg:hidden order-2 transition-all duration-500 ease-out">
+                  <LatestEntriesSidebar
+                    entries={visibleEntries}
+                    onAddMeal={handleAddMeal}
+                    onUpdateMeal={handleUpdateMeal}
+                    onDeleteMeal={handleDeleteMeal}
+                    selectedDateFormatted={selectedDateFormatted}
+                    theme={theme}
+                    isLoading={loading}
+                  />
+                </div>
+
+                {/* Consumed vs Left Table */}
+                <div className="transition-all duration-500 ease-out order-3 lg:order-2">
+                  <ConsumedVsLeftTable
+                    summary={summary}
+                    goal={goal}
+                    selectedDate={selectedDate}
+                    theme={theme}
+                    isLoading={loading}
+                  />
                 </div>
 
               </div>
-            ) : (
-              /* Overview Analytics Tab View */
-              <OverviewDashboard goal={goal} entries={entries} theme={theme} />
-            )}
-          </div>
-        )}
+
+              {/* DESKTOP RIGHT SIDEBAR */}
+              <div className="hidden lg:block lg:col-span-4 relative order-2 transition-all duration-500 ease-out">
+                <div className="absolute inset-0">
+                  <LatestEntriesSidebar
+                    entries={visibleEntries}
+                    onAddMeal={handleAddMeal}
+                    onUpdateMeal={handleUpdateMeal}
+                    onDeleteMeal={handleDeleteMeal}
+                    selectedDateFormatted={selectedDateFormatted}
+                    theme={theme}
+                    isLoading={loading}
+                  />
+                </div>
+              </div>
+
+            </div>
+          ) : (
+            /* Overview Analytics Tab View */
+            <OverviewDashboard goal={goal} entries={entries} theme={theme} isLoading={loading} />
+          )}
+        </div>
       </main>
 
       {/* Set Goals Modal */}

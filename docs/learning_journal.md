@@ -34,6 +34,10 @@ This document serves as a development and learning journal to record key concept
 6. **Mobile Safari Theme Overscroll & `<meta name="theme-color">` Sync:**
    - Synchronized `html.light`, `body.light` with `#f8fafc` and dynamically updated `<meta name="theme-color">` on every theme change to completely eliminate dark canvas seams during pull-to-refresh.
 
+7. **Apple-Style Inline Skeleton Loading & Zero-Flash Transitions:**
+   - *The Problem:* Toggling dates in the *Today* view unmounted the entire dashboard to render a spinning logo, creating a disorienting full-screen flash.
+   - *The Solution:* Maintained permanent container DOM stability (`HeroKcalCard`, `ConsumedVsLeftTable`, `LatestEntriesSidebar`) and passed `isLoading` props to display soft-rounded Apple-style pulsing skeleton placeholders in-place (`animate-pulse bg-slate-200` in Light mode / `bg-white/10` in Dark mode) without shifting layout coordinates.
+
 ---
 
 ## 📅 2026-08-13 - (Sprint 3) - Server Deployment on AWS EC2 with Nginx Reverse Proxy & GitHub Deploy Keys (Ticket #533)

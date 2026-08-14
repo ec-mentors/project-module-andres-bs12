@@ -40,6 +40,10 @@ The frontend of NutritionTracker was developed using **AI-Assisted Pair Programm
 - **Action Bar Layer Isolation:** Eliminated scroll inertia tap cancellation by isolating the bottom action bar with `z-30` and a solid theme background.
 - **Dynamic Theme & Overscroll Sync:** Synchronized `html.light`, `body.light`, and `<meta name="theme-color">` to guarantee zero dark canvas seams on Safari pull-to-refresh.
 
+### 6. Apple-Style Inline Skeleton Shimmers & Zero-Flash Date Navigation
+- Eliminated full-page unmount loading spin states that caused harsh screen flashes when changing dates.
+- Preserved 100% stable container DOM mounting and integrated in-place Apple-style soft-rounded pulsing placeholders (`animate-pulse bg-slate-200` in Light mode / `bg-white/10` in Dark mode) across hero cards, tables, and meal entry lists.
+
 ---
 
 ## 📄 Related Documentation

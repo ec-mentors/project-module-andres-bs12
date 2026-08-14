@@ -9,6 +9,7 @@ interface HeroKcalCardProps {
   selectedDate: Date;
   onDateChange: (date: Date) => void;
   theme?: 'dark' | 'light';
+  isLoading?: boolean;
 }
 
 export const HeroKcalCard: React.FC<HeroKcalCardProps> = ({
@@ -18,6 +19,7 @@ export const HeroKcalCard: React.FC<HeroKcalCardProps> = ({
   selectedDate,
   onDateChange,
   theme = 'dark',
+  isLoading = false,
 }) => {
   const [animateDonuts, setAnimateDonuts] = useState(false);
   const isLight = theme === 'light';
@@ -133,10 +135,10 @@ export const HeroKcalCard: React.FC<HeroKcalCardProps> = ({
               cx="22"
               cy="22"
               r={radius}
-              className={`${ringColorClass} transition-all duration-[1000ms] ease-out`}
+              className={`${isLoading ? (isLight ? 'stroke-slate-300 animate-pulse' : 'stroke-white/20 animate-pulse') : ringColorClass} transition-all duration-[1000ms] ease-out`}
               strokeWidth="4"
               strokeDasharray={circumference}
-              strokeDashoffset={animateDonuts ? strokeDashoffset : circumference}
+              strokeDashoffset={isLoading ? circumference * 0.75 : animateDonuts ? strokeDashoffset : circumference}
               strokeLinecap="round"
               fill="transparent"
             />
@@ -144,18 +146,26 @@ export const HeroKcalCard: React.FC<HeroKcalCardProps> = ({
         </div>
 
         {/* Percentage Number Below Ring */}
-        <span className={`text-xs sm:text-sm font-black mt-1.5 truncate max-w-full ${
-          isLight ? 'text-slate-900' : 'text-white'
-        }`}>
-          {percent}%
-        </span>
+        {isLoading ? (
+          <div className={`h-3.5 w-10 rounded-md animate-pulse mt-1.5 ${isLight ? 'bg-slate-200' : 'bg-white/10'}`} />
+        ) : (
+          <span className={`text-xs sm:text-sm font-black mt-1.5 truncate max-w-full ${
+            isLight ? 'text-slate-900' : 'text-white'
+          }`}>
+            {percent}%
+          </span>
+        )}
 
         {/* Consumed Value */}
-        <span className={`text-[11px] sm:text-xs font-extrabold mt-0.5 truncate max-w-full ${
-          isLight ? 'text-slate-700' : 'text-slate-200'
-        }`}>
-          {value}{unit}
-        </span>
+        {isLoading ? (
+          <div className={`h-3 w-12 rounded-md animate-pulse mt-1 ${isLight ? 'bg-slate-200' : 'bg-white/10'}`} />
+        ) : (
+          <span className={`text-[11px] sm:text-xs font-extrabold mt-0.5 truncate max-w-full ${
+            isLight ? 'text-slate-700' : 'text-slate-200'
+          }`}>
+            {value}{unit}
+          </span>
+        )}
       </div>
     );
   };
@@ -215,33 +225,46 @@ export const HeroKcalCard: React.FC<HeroKcalCardProps> = ({
       {/* Main Headline Display: Daily Progress Percentage */}
       <div className="relative z-10 space-y-1.5">
         <div className="flex flex-wrap items-baseline gap-3">
-          <span className={`text-5xl sm:text-6xl font-black tracking-tight drop-shadow-sm ${
-            isLight ? 'text-slate-900' : 'text-white'
-          }`}>
-            {headlinePercentText}
-          </span>
-          <span
-            className={`text-base sm:text-lg font-bold ${
-              isAnyMacroExceeded
-                ? 'text-rose-500'
-                : isAllMacrosHit
-                ? 'text-[#6417ff]'
-                : isLight
-                ? 'text-purple-700'
-                : 'text-purple-300'
-            }`}
-          >
-            {isAnyMacroExceeded
-              ? 'Goal Exceeded'
-              : isAllMacrosHit
-              ? 'Goal Hit! 🎉'
-              : 'In Progress'}
-          </span>
+          {isLoading ? (
+            <>
+              <div className={`h-12 w-28 sm:h-14 sm:w-36 rounded-2xl animate-pulse my-1 ${isLight ? 'bg-slate-200' : 'bg-white/10'}`} />
+              <div className={`h-6 w-24 rounded-full animate-pulse ${isLight ? 'bg-slate-200' : 'bg-white/10'}`} />
+            </>
+          ) : (
+            <>
+              <span className={`text-5xl sm:text-6xl font-black tracking-tight drop-shadow-sm ${
+                isLight ? 'text-slate-900' : 'text-white'
+              }`}>
+                {headlinePercentText}
+              </span>
+              <span
+                className={`text-base sm:text-lg font-bold ${
+                  isAnyMacroExceeded
+                    ? 'text-rose-500'
+                    : isAllMacrosHit
+                    ? 'text-[#6417ff]'
+                    : isLight
+                    ? 'text-purple-700'
+                    : 'text-purple-300'
+                }`}
+              >
+                {isAnyMacroExceeded
+                  ? 'Goal Exceeded'
+                  : isAllMacrosHit
+                  ? 'Goal Hit! 🎉'
+                  : 'In Progress'}
+              </span>
+            </>
+          )}
         </div>
 
-        <p className={`text-xs font-medium ${isLight ? 'text-slate-600' : 'text-slate-300'}`}>
-          {remainingKcal.toLocaleString()} Kcal remaining ({safeConsumedKcal.toLocaleString()} / {goal.kcal.toLocaleString()} Kcal logged)
-        </p>
+        {isLoading ? (
+          <div className={`h-4 w-64 rounded-lg animate-pulse mt-1.5 ${isLight ? 'bg-slate-200' : 'bg-white/10'}`} />
+        ) : (
+          <p className={`text-xs font-medium ${isLight ? 'text-slate-600' : 'text-slate-300'}`}>
+            {remainingKcal.toLocaleString()} Kcal remaining ({safeConsumedKcal.toLocaleString()} / {goal.kcal.toLocaleString()} Kcal logged)
+          </p>
+        )}
       </div>
 
       {/* Donut Macro Cards */}

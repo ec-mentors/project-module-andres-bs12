@@ -6,9 +6,10 @@ interface OverviewDashboardProps {
   goal: NutritionGoal;
   entries: MealEntry[];
   theme?: 'dark' | 'light';
+  isLoading?: boolean;
 }
 
-export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({ goal, entries, theme = 'dark' }) => {
+export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({ goal, entries, theme = 'dark', isLoading: _isLoading = false }) => {
   const isLight = theme === 'light';
   const [selectedMacro, setSelectedMacro] = useState<'general' | 'protein' | 'kcal' | 'carbs' | 'fat'>('general');
   const [timeMode, setTimeMode] = useState<'weekly' | 'monthly'>('weekly');

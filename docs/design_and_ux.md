@@ -101,3 +101,10 @@ NutritionTracker implements a custom **Dual-Glassmorphism System** combining hig
 ### 9. Theme Overscroll & Safari Background Seams
 - **Problem:** Pull-to-refresh overscroll in Safari exposed dark background canvases in light mode.
 - **Solution:** Synchronized `html.light`, `body.light` (`#f8fafc`) and dynamically updated `<meta name="theme-color">` on every theme change.
+
+### 10. Apple-Style Inline Skeleton Shimmers & Zero-Flash Date Navigation
+- **Problem:** Changing dates in the *Today* view caused a harsh full-page screen flash and unmounted all dashboard cards to display a full-page spinner (`animate-spin`).
+- **Solution:**
+  - Removed full-page unmount takeovers; card boxes (`HeroKcalCard`, `ConsumedVsLeftTable`, `LatestEntriesSidebar`, `OverviewDashboard`) remain **100% physically anchored and mounted** in the DOM.
+  - Implemented Apple-style soft-rounded pulsing skeleton placeholders (`animate-pulse bg-slate-200` in Light mode / `bg-white/10` in Dark mode) inside the exact number, donut, and meal card slots.
+  - Date navigation buttons (`<` / `>`) remain responsive and stable with zero layout jumping.
