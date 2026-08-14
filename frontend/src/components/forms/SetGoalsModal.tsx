@@ -98,6 +98,8 @@ export const SetGoalsModal: React.FC<SetGoalsModalProps> = ({
             </label>
             <input
               type="number"
+              inputMode="numeric"
+              pattern="[0-9]*"
               value={kcal}
               onChange={(e) => setKcal(Number(e.target.value))}
               className={`w-full border rounded-2xl px-4 py-3 text-sm font-bold focus:outline-none focus:border-[#6417ff] ${
@@ -108,6 +110,7 @@ export const SetGoalsModal: React.FC<SetGoalsModalProps> = ({
               required
               min={500}
               max={10000}
+              autoComplete="off"
             />
           </div>
 
@@ -120,6 +123,8 @@ export const SetGoalsModal: React.FC<SetGoalsModalProps> = ({
             </label>
             <input
               type="number"
+              inputMode="numeric"
+              pattern="[0-9]*"
               value={protein}
               onChange={(e) => setProtein(Number(e.target.value))}
               className={`w-full border rounded-2xl px-4 py-3 text-sm font-bold focus:outline-none focus:border-[#6417ff] ${
@@ -130,6 +135,7 @@ export const SetGoalsModal: React.FC<SetGoalsModalProps> = ({
               required
               min={0}
               max={1000}
+              autoComplete="off"
             />
           </div>
 
@@ -142,6 +148,8 @@ export const SetGoalsModal: React.FC<SetGoalsModalProps> = ({
             </label>
             <input
               type="number"
+              inputMode="numeric"
+              pattern="[0-9]*"
               value={carbs}
               onChange={(e) => setCarbs(Number(e.target.value))}
               className={`w-full border rounded-2xl px-4 py-3 text-sm font-bold focus:outline-none focus:border-[#6417ff] ${
@@ -152,6 +160,7 @@ export const SetGoalsModal: React.FC<SetGoalsModalProps> = ({
               required
               min={0}
               max={1000}
+              autoComplete="off"
             />
           </div>
 
@@ -164,6 +173,8 @@ export const SetGoalsModal: React.FC<SetGoalsModalProps> = ({
             </label>
             <input
               type="number"
+              inputMode="numeric"
+              pattern="[0-9]*"
               value={fat}
               onChange={(e) => setFat(Number(e.target.value))}
               className={`w-full border rounded-2xl px-4 py-3 text-sm font-bold focus:outline-none focus:border-[#6417ff] ${
@@ -174,6 +185,7 @@ export const SetGoalsModal: React.FC<SetGoalsModalProps> = ({
               required
               min={0}
               max={1000}
+              autoComplete="off"
             />
           </div>
 

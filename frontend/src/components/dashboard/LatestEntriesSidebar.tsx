@@ -190,6 +190,8 @@ export const LatestEntriesSidebar: React.FC<LatestEntriesSidebarProps> = ({
                   <label className="text-[9px] font-bold text-slate-400 uppercase block mb-1">Kcal</label>
                   <input
                     type="number"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
                     placeholder="450"
                     value={kcal}
                     onChange={(e) => setKcal(e.target.value)}
@@ -197,42 +199,52 @@ export const LatestEntriesSidebar: React.FC<LatestEntriesSidebarProps> = ({
                       isLight ? 'bg-white border-slate-300 text-slate-900' : 'bg-[#161024] border-white/15 text-white'
                     }`}
                     required
+                    autoComplete="off"
                   />
                 </div>
                 <div>
                   <label className="text-[9px] font-bold text-slate-400 uppercase block mb-1">Prot</label>
                   <input
                     type="number"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
                     placeholder="30"
                     value={protein}
                     onChange={(e) => setProtein(e.target.value)}
                     className={`w-full border rounded-xl px-2 py-2 text-xs font-bold focus:outline-none focus:border-[#6417ff] ${
                       isLight ? 'bg-white border-slate-300 text-slate-900' : 'bg-[#161024] border-white/15 text-white'
                     }`}
+                    autoComplete="off"
                   />
                 </div>
                 <div>
                   <label className="text-[9px] font-bold text-slate-400 uppercase block mb-1">Carb</label>
                   <input
                     type="number"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
                     placeholder="40"
                     value={carbs}
                     onChange={(e) => setCarbs(e.target.value)}
                     className={`w-full border rounded-xl px-2 py-2 text-xs font-bold focus:outline-none focus:border-[#6417ff] ${
                       isLight ? 'bg-white border-slate-300 text-slate-900' : 'bg-[#161024] border-white/15 text-white'
                     }`}
+                    autoComplete="off"
                   />
                 </div>
                 <div>
                   <label className="text-[9px] font-bold text-slate-400 uppercase block mb-1">Fat</label>
                   <input
                     type="number"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
                     placeholder="10"
                     value={fat}
                     onChange={(e) => setFat(e.target.value)}
                     className={`w-full border rounded-xl px-2 py-2 text-xs font-bold focus:outline-none focus:border-[#6417ff] ${
                       isLight ? 'bg-white border-slate-300 text-slate-900' : 'bg-[#161024] border-white/15 text-white'
                     }`}
+                    autoComplete="off"
                   />
                 </div>
               </div>
@@ -411,44 +423,56 @@ export const LatestEntriesSidebar: React.FC<LatestEntriesSidebarProps> = ({
                           <label className="text-[9px] font-bold text-slate-400 uppercase block mb-1">Kcal</label>
                           <input
                             type="number"
+                            inputMode="numeric"
+                            pattern="[0-9]*"
                             value={kcal}
                             onChange={(e) => setKcal(e.target.value)}
                             className={`w-full border rounded-xl px-2 py-1.5 text-xs font-bold focus:outline-none focus:border-[#6417ff] ${
                               isLight ? 'bg-white border-slate-300 text-slate-900' : 'bg-[#161024] border-white/15 text-white'
                             }`}
+                            autoComplete="off"
                           />
                         </div>
                         <div>
                           <label className="text-[9px] font-bold text-slate-400 uppercase block mb-1">Prot</label>
                           <input
                             type="number"
+                            inputMode="numeric"
+                            pattern="[0-9]*"
                             value={protein}
                             onChange={(e) => setProtein(e.target.value)}
                             className={`w-full border rounded-xl px-2 py-1.5 text-xs font-bold focus:outline-none focus:border-[#6417ff] ${
                               isLight ? 'bg-white border-slate-300 text-slate-900' : 'bg-[#161024] border-white/15 text-white'
                             }`}
+                            autoComplete="off"
                           />
                         </div>
                         <div>
                           <label className="text-[9px] font-bold text-slate-400 uppercase block mb-1">Carb</label>
                           <input
                             type="number"
+                            inputMode="numeric"
+                            pattern="[0-9]*"
                             value={carbs}
                             onChange={(e) => setCarbs(e.target.value)}
                             className={`w-full border rounded-xl px-2 py-1.5 text-xs font-bold focus:outline-none focus:border-[#6417ff] ${
                               isLight ? 'bg-white border-slate-300 text-slate-900' : 'bg-[#161024] border-white/15 text-white'
                             }`}
+                            autoComplete="off"
                           />
                         </div>
                         <div>
                           <label className="text-[9px] font-bold text-slate-400 uppercase block mb-1">Fat</label>
                           <input
                             type="number"
+                            inputMode="numeric"
+                            pattern="[0-9]*"
                             value={fat}
                             onChange={(e) => setFat(e.target.value)}
                             className={`w-full border rounded-xl px-2 py-1.5 text-xs font-bold focus:outline-none focus:border-[#6417ff] ${
                               isLight ? 'bg-white border-slate-300 text-slate-900' : 'bg-[#161024] border-white/15 text-white'
                             }`}
+                            autoComplete="off"
                           />
                         </div>
                       </div>
