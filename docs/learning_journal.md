@@ -4,6 +4,38 @@ This document serves as a development and learning journal to record key concept
 
 ---
 
+## 📅 2026-08-14 - Google OAuth2 Integration, 5-Step AI/Manual Onboarding & Mobile WebKit Viewport Architecture
+
+### 💡 Key Concepts Learned & Architectural Decisions
+
+1. **Google OAuth2 Authentication Lifecycle & User Profile Modal:**
+   - Implemented a dedicated Google Login modal (`GoogleLoginModal.tsx`) and User Profile settings modal (`UserProfileModal.tsx`) with instant demo user fallback and token handling.
+   - Connected user profile states dynamically with header navigation and goal formulation.
+
+2. **5-Step Onboarding Architecture (`OnboardingModal.tsx`):**
+   - Designed a full-screen exclusive takeover (`h-[100dvh] max-h-[100dvh] overflow-hidden`) that guarantees zero double scrollbars.
+   - Built a dual-path onboarding setup:
+     - **Path A (AI Setup):** 4 metabolic calculation sub-steps (Primary Objective, Body Stats, Activity Level, Dietary Preference) producing personalized BMR/TDEE targets.
+     - **Path B (Manual Setup):** Direct macro and calorie configuration with verified presets (Balanced, High Protein Deficit, Hypertrophy Bulk, Keto).
+   - Synchronized a 5-step progress bar and tag pill indicators across all views.
+
+3. **Solving the "Keyboard Dismiss Click-Eater" in Mobile WebKit:**
+   - *The Problem:* When an input was focused on mobile, tapping a button or preset card triggered an input blur, collapsing the virtual keyboard and shifting the viewport by ~350px between `touchstart` and `touchend`. The browser cancelled the `click` event because the touch coordinates moved under the finger.
+   - *The Solution:* Attached `onMouseDown={(e) => e.preventDefault()}` on interactive buttons and preset cards + added `touch-action: manipulation`. This anchors coordinates during the tap, executes the action immediately, and dismisses the keyboard via programmatic `blur()`.
+
+4. **Action Bar Layer Isolation & Eliminating Kinetic Scroll Interference:**
+   - *The Problem:* Transparent action bars allowed scrolling lists to pass beneath action buttons. When touching a button while list inertia was stopping, WebKit's hit-test engine absorbed the click as a "stop scrolling" gesture.
+   - *The Solution:* Isolated the action bar with `z-30`, solid theme background (`bg-[#090516]` / `bg-[#f8fafc]`), `touch-manipulation`, and generous `pb-8 sm:pb-10` padding on the scrollable container.
+
+5. **Resolving the Chained Modal `overflow: hidden` Lock Trap:**
+   - *The Problem:* When `GoogleLoginModal` closed and immediately opened `OnboardingModal`, `document.body.style.overflow` captured `'hidden'` as `prevOverflow`. When onboarding finished, it restored `'hidden'` to the body, permanently locking vertical scrolling on the Dashboard.
+   - *The Solution:* Ensured all modals explicitly reset `document.body.style.overflow = ''` upon closing/unmounting and added a scroll guardian in `App.tsx`.
+
+6. **Mobile Safari Theme Overscroll & `<meta name="theme-color">` Sync:**
+   - Synchronized `html.light`, `body.light` with `#f8fafc` and dynamically updated `<meta name="theme-color">` on every theme change to completely eliminate dark canvas seams during pull-to-refresh.
+
+---
+
 ## 📅 2026-08-13 - (Sprint 3) - Server Deployment on AWS EC2 with Nginx Reverse Proxy & GitHub Deploy Keys (Ticket #533)
 
 ### 💡 Key Concepts Learned & Architectural Decisions
