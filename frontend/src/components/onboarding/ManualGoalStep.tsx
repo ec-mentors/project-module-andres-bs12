@@ -189,6 +189,8 @@ export const ManualGoalStep: React.FC<ManualGoalStepProps> = ({
               </label>
               <input
                 type="number"
+                inputMode="numeric"
+                pattern="[0-9]*"
                 min={800}
                 max={10000}
                 value={kcal}
@@ -202,6 +204,7 @@ export const ManualGoalStep: React.FC<ManualGoalStepProps> = ({
                     : 'bg-[#0f0a1d] border-white/15 text-white'
                 }`}
                 required
+                autoComplete="off"
               />
             </div>
 
@@ -213,6 +216,8 @@ export const ManualGoalStep: React.FC<ManualGoalStepProps> = ({
                 </label>
                 <input
                   type="number"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
                   min={0}
                   max={600}
                   value={protein}
@@ -226,6 +231,7 @@ export const ManualGoalStep: React.FC<ManualGoalStepProps> = ({
                       : 'bg-[#0f0a1d] border-white/15 text-white'
                   }`}
                   required
+                  autoComplete="off"
                 />
                 <span className="text-[10px] font-semibold text-slate-400 mt-1 block">
                   {protein * 4} kcal ({proteinPct}%)
@@ -238,6 +244,8 @@ export const ManualGoalStep: React.FC<ManualGoalStepProps> = ({
                 </label>
                 <input
                   type="number"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
                   min={0}
                   max={1000}
                   value={carbs}
@@ -251,6 +259,7 @@ export const ManualGoalStep: React.FC<ManualGoalStepProps> = ({
                       : 'bg-[#0f0a1d] border-white/15 text-white'
                   }`}
                   required
+                  autoComplete="off"
                 />
                 <span className="text-[10px] font-semibold text-slate-400 mt-1 block">
                   {carbs * 4} kcal ({carbsPct}%)
@@ -263,6 +272,8 @@ export const ManualGoalStep: React.FC<ManualGoalStepProps> = ({
                 </label>
                 <input
                   type="number"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
                   min={0}
                   max={400}
                   value={fat}
@@ -276,6 +287,7 @@ export const ManualGoalStep: React.FC<ManualGoalStepProps> = ({
                       : 'bg-[#0f0a1d] border-white/15 text-white'
                   }`}
                   required
+                  autoComplete="off"
                 />
                 <span className="text-[10px] font-semibold text-slate-400 mt-1 block">
                   {fat * 9} kcal ({fatPct}%)

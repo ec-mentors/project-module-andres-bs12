@@ -54,7 +54,6 @@ export const AiGoalWizardStep: React.FC<AiGoalWizardStepProps> = ({
   }, [currentStep, onStepChange]);
 
   const updateField = <K extends keyof AiOnboardingState>(field: K, value: AiOnboardingState[K]) => {
-    (document.activeElement as HTMLElement)?.blur();
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
@@ -288,6 +287,8 @@ export const AiGoalWizardStep: React.FC<AiGoalWizardStepProps> = ({
                     </label>
                     <input
                       type="number"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
                       min={14}
                       max={120}
                       placeholder="e.g. 28"
@@ -299,6 +300,7 @@ export const AiGoalWizardStep: React.FC<AiGoalWizardStepProps> = ({
                           : 'bg-[#150e26] border-white/15 text-white placeholder:text-slate-500'
                       }`}
                       required
+                      autoComplete="off"
                     />
                   </div>
 
@@ -308,6 +310,8 @@ export const AiGoalWizardStep: React.FC<AiGoalWizardStepProps> = ({
                     </label>
                     <input
                       type="number"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
                       min={100}
                       max={250}
                       placeholder="e.g. 175"
@@ -319,6 +323,7 @@ export const AiGoalWizardStep: React.FC<AiGoalWizardStepProps> = ({
                           : 'bg-[#150e26] border-white/15 text-white placeholder:text-slate-500'
                       }`}
                       required
+                      autoComplete="off"
                     />
                   </div>
                 </div>
@@ -331,6 +336,7 @@ export const AiGoalWizardStep: React.FC<AiGoalWizardStepProps> = ({
                     </label>
                     <input
                       type="number"
+                      inputMode="decimal"
                       step="0.5"
                       min={30}
                       max={300}
@@ -343,6 +349,7 @@ export const AiGoalWizardStep: React.FC<AiGoalWizardStepProps> = ({
                           : 'bg-[#150e26] border-white/15 text-white placeholder:text-slate-500'
                       }`}
                       required
+                      autoComplete="off"
                     />
                   </div>
 
@@ -352,6 +359,7 @@ export const AiGoalWizardStep: React.FC<AiGoalWizardStepProps> = ({
                     </label>
                     <input
                       type="number"
+                      inputMode="decimal"
                       step="0.5"
                       min={30}
                       max={300}
@@ -364,6 +372,7 @@ export const AiGoalWizardStep: React.FC<AiGoalWizardStepProps> = ({
                           : 'bg-[#150e26] border-white/15 text-white placeholder:text-slate-500'
                       }`}
                       required
+                      autoComplete="off"
                     />
                   </div>
                 </div>

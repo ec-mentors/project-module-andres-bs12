@@ -38,6 +38,10 @@ This document serves as a development and learning journal to record key concept
    - *The Problem:* Toggling dates in the *Today* view unmounted the entire dashboard to render a spinning logo, creating a disorienting full-screen flash.
    - *The Solution:* Maintained permanent container DOM stability (`HeroKcalCard`, `ConsumedVsLeftTable`, `LatestEntriesSidebar`) and passed `isLoading` props to display soft-rounded Apple-style pulsing skeleton placeholders in-place (`animate-pulse bg-slate-200` in Light mode / `bg-white/10` in Dark mode) without shifting layout coordinates.
 
+8. **Mobile Native Numeric Keypad & Typing Blur Isolation:**
+   - *The Problem:* In Step 2 (Body & Profile Stats), typing a single digit caused the keyboard to dismiss because `updateField` was calling `blur()` on every state change. Additionally, mobile browsers were showing the full alphanumeric keyboard.
+   - *The Solution:* Removed `blur()` from keystroke change handlers so multi-digit typing stays active, and added `inputMode="numeric"` / `inputMode="decimal"` with `pattern="[0-9]*"` so mobile devices automatically open the 10-key numeric keypad.
+
 ---
 
 ## 📅 2026-08-13 - (Sprint 3) - Server Deployment on AWS EC2 with Nginx Reverse Proxy & GitHub Deploy Keys (Ticket #533)
