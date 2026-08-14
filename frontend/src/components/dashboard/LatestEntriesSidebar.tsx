@@ -20,7 +20,7 @@ export const LatestEntriesSidebar: React.FC<LatestEntriesSidebarProps> = ({
   onDeleteMeal,
   selectedDateFormatted,
   theme = 'dark',
-  isLoading = false,
+  isLoading: _isLoading = false,
 }) => {
   const isLight = theme === 'light';
   const [isAddingInline, setIsAddingInline] = useState(false);
@@ -271,42 +271,8 @@ export const LatestEntriesSidebar: React.FC<LatestEntriesSidebarProps> = ({
             </motion.form>
           )}
 
-          {/* APPLE-STYLE SKELETON PLACEHOLDERS DURING LOADING */}
-          {isLoading ? (
-            <div className="space-y-3 w-full">
-              {[1, 2, 3].map((skeletonIdx) => (
-                <div
-                  key={skeletonIdx}
-                  className={`p-4 sm:p-5 rounded-2xl border w-full box-border ${
-                    isLight
-                      ? 'bg-slate-100/80 border-slate-200/90'
-                      : 'bg-[#231a38] border-white/10'
-                  }`}
-                >
-                  <div className="flex items-start justify-between mb-3">
-                    <div className="space-y-1.5">
-                      <div className={`h-4 w-32 rounded-md animate-pulse ${isLight ? 'bg-slate-200' : 'bg-white/10'}`} />
-                      <div className={`h-3 w-16 rounded-md animate-pulse ${isLight ? 'bg-slate-200' : 'bg-white/10'}`} />
-                    </div>
-                    <div className={`h-6 w-14 rounded-xl animate-pulse ${isLight ? 'bg-slate-200' : 'bg-white/10'}`} />
-                  </div>
-                  <div className="grid grid-cols-4 gap-2">
-                    {[1, 2, 3, 4].map((macroIdx) => (
-                      <div
-                        key={macroIdx}
-                        className={`p-2 rounded-xl border flex flex-col items-center justify-center space-y-1 ${
-                          isLight ? 'bg-white border-slate-200/80' : 'bg-[#161024] border-white/5'
-                        }`}
-                      >
-                        <div className={`h-3.5 w-8 rounded-md animate-pulse ${isLight ? 'bg-slate-200' : 'bg-white/10'}`} />
-                        <div className={`h-2.5 w-6 rounded-md animate-pulse ${isLight ? 'bg-slate-200' : 'bg-white/10'}`} />
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : entries.length === 0 && !isAddingInline ? (
+          {/* EMPTY STATE OR MEAL ENTRIES */}
+          {entries.length === 0 && !isAddingInline ? (
             /* CLICKABLE EMPTY STATE BOX */
             <motion.div
               key="empty-state"

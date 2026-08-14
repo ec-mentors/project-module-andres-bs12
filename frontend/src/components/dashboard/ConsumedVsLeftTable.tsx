@@ -14,7 +14,7 @@ export const ConsumedVsLeftTable: React.FC<ConsumedVsLeftTableProps> = ({
   goal,
   selectedDate,
   theme = 'dark',
-  isLoading = false,
+  isLoading: _isLoading = false,
 }) => {
   const isLight = theme === 'light';
 
@@ -149,51 +149,34 @@ export const ConsumedVsLeftTable: React.FC<ConsumedVsLeftTableProps> = ({
                 </div>
 
                 {/* Consumed */}
-                <div className={`col-span-4 sm:col-span-3 font-bold text-center sm:text-left truncate ${
+                <div className={`col-span-4 sm:col-span-3 font-bold text-center sm:text-left truncate transition-colors duration-200 ${
                   isLight ? 'text-slate-900' : 'text-white'
                 }`}>
-                  {isLoading ? (
-                    <div className={`h-4 w-16 rounded-md animate-pulse my-0.5 mx-auto sm:mx-0 ${isLight ? 'bg-slate-200' : 'bg-white/10'}`} />
-                  ) : (
-                    r.consumed
-                  )}
+                  {r.consumed}
                 </div>
 
                 {/* Left (NEVER CHANGES COLOR! ALWAYS CONSTANT NEUTRAL SLATE) */}
                 <div
-                  className={`col-span-4 sm:col-span-3 font-semibold text-right sm:text-left truncate ${
+                  className={`col-span-4 sm:col-span-3 font-semibold text-right sm:text-left truncate transition-colors duration-200 ${
                     isLight ? 'text-slate-700 font-bold' : 'text-slate-300 font-bold'
                   }`}
                 >
-                  {isLoading ? (
-                    <div className={`h-4 w-16 rounded-md animate-pulse my-0.5 ml-auto sm:ml-0 ${isLight ? 'bg-slate-200' : 'bg-white/10'}`} />
-                  ) : (
-                    r.left
-                  )}
+                  {r.left}
                 </div>
 
                 {/* Progress Bar & Percentage */}
                 <div className="hidden sm:flex sm:col-span-3 items-center justify-end space-x-3">
-                  {isLoading ? (
-                    <>
-                      <div className={`w-20 rounded-full h-2 animate-pulse ${isLight ? 'bg-slate-200' : 'bg-white/10'}`} />
-                      <div className={`h-3.5 w-8 rounded-md animate-pulse ${isLight ? 'bg-slate-200' : 'bg-white/10'}`} />
-                    </>
-                  ) : (
-                    <>
-                      <div className={`w-20 rounded-full h-2 overflow-hidden border ${
-                        isLight ? 'bg-slate-200 border-slate-300/80' : 'bg-[#161024] border-white/10'
-                      }`}>
-                        <div
-                          className={`h-full ${r.info.color} rounded-full transition-all duration-700 ease-out`}
-                          style={{ width: `${r.info.barWidth}%` }}
-                        />
-                      </div>
-                      <span className={`text-xs font-bold w-10 text-right ${r.info.textColor}`}>
-                        {r.info.displayText}
-                      </span>
-                    </>
-                  )}
+                  <div className={`w-20 rounded-full h-2 overflow-hidden ${
+                    isLight ? 'bg-slate-200' : 'bg-white/10'
+                  }`}>
+                    <div
+                      className={`h-full rounded-full ${r.info.color} transition-all duration-500 ease-out`}
+                      style={{ width: `${r.info.barWidth}%` }}
+                    />
+                  </div>
+                  <span className={`text-xs w-10 text-right ${r.info.textColor} transition-colors duration-200`}>
+                    {r.info.displayText}
+                  </span>
                 </div>
 
               </div>
