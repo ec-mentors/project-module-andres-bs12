@@ -5,5 +5,7 @@ public record AiGoalRequest (
     Integer age,
     Integer height,
     Integer weight,
-    Integer targetWeight
+    Integer targetWeight,
+    String dailyActivity,
+    String dietaryPreference
 ) {}
