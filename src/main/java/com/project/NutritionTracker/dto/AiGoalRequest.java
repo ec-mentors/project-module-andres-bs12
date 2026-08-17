@@ -10,9 +10,9 @@ public record AiGoalRequest (
         PrimaryObjective primaryObjective,
     Gender gender,
     Integer age,
-    Integer height,
-    Integer weight,
-    Integer targetWeight,
+    Integer heightCm,
+    Integer currentWeightKg,
+    Integer targetWeightKg,
     DailyActivityLevel dailyActivityLevel,
         DietPreference dietaryPreference
 ) {}
