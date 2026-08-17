@@ -2,7 +2,7 @@ package com.project.NutritionTracker.enums;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public enum DailyActivityLevel {
+public enum ActivityLevel {
     @JsonProperty("sedentary")
     SEDENTARY,
     @JsonProperty("light")
