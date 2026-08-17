@@ -1,12 +1,18 @@
 package com.project.NutritionTracker.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.project.NutritionTracker.enums.DailyActivityLevel;
+import com.project.NutritionTracker.enums.DietPreference;
+import com.project.NutritionTracker.enums.Gender;
+import com.project.NutritionTracker.enums.PrimaryObjective;
+
 public record AiGoalRequest (
-    String objective,
-    String gender,
+        PrimaryObjective primaryObjective,
+    Gender gender,
     Integer age,
     Integer height,
     Integer weight,
     Integer targetWeight,
-    String dailyActivity,
-    String dietaryPreference
+    DailyActivityLevel dailyActivityLevel,
+        DietPreference dietaryPreference
 ) {}
