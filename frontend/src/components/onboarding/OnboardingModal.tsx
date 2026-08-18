@@ -14,6 +14,7 @@ import { GoalReviewStep } from './GoalReviewStep';
 import { ManualGoalStep } from './ManualGoalStep';
 import { ProcessingStep } from './ProcessingStep';
 import { calculateAiNutritionGoal } from './utils';
+import { calculateAiGoalRoadmap } from '../../services/api';
 
 interface OnboardingModalProps {
   isOpen: boolean;
@@ -50,6 +51,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
   const [aiWizardSubStep, setAiWizardSubStep] = useState<number>(1);
   const [aiState, setAiState] = useState<AiOnboardingState>(DEFAULT_AI_STATE);
   const [showDiscardModal, setShowDiscardModal] = useState<boolean>(false);
+  const [isAiCalculationReady, setIsAiCalculationReady] = useState<boolean>(true);
   const [pendingGoal, setPendingGoal] = useState<NutritionGoal>(
     initialGoal || {
       kcal: 2000,
@@ -140,12 +142,22 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
     }
   };
 
-  // Step 2A: AI Wizard Complete -> Trigger Processing Screen
-  const handleAiWizardComplete = (data: AiOnboardingState) => {
+  // Step 2A: AI Wizard Complete -> Trigger Processing Screen & Call Backend AI Service
+  const handleAiWizardComplete = async (data: AiOnboardingState) => {
     setAiState(data);
-    const calculated = calculateAiNutritionGoal(data);
-    setPendingGoal(calculated);
+    setIsAiCalculationReady(false);
     setCurrentStep('processing');
+
+    try {
+      const calculated = await calculateAiGoalRoadmap(data);
+      setPendingGoal(calculated);
+    } catch (error) {
+      console.warn('[Onboarding] Error calculating AI goal from backend, using fallback.', error);
+      const fallback = calculateAiNutritionGoal(data);
+      setPendingGoal(fallback);
+    } finally {
+      setIsAiCalculationReady(true);
+    }
   };
 
   // Step 2B: Manual Setup Complete -> Trigger Processing Screen
@@ -319,6 +331,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
               <ProcessingStep
                 path={selectedPath}
                 onFinished={handleProcessingFinish}
+                isReady={selectedPath === 'ai' ? isAiCalculationReady : true}
                 theme={theme}
               />
             </motion.div>

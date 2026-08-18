@@ -13,48 +13,39 @@ export const ChoosePathStep: React.FC<ChoosePathStepProps> = ({
 }) => {
   const isLight = theme === 'light';
 
-  // Render AI-Powered Setup Card Component with Diffuse AI Glow Border
+  // Render AI-Powered Setup Card Component with Crisp, Responsive Border Glow
   const renderAiCard = () => (
     <button
       type="button"
       onClick={() => onSelectPath('ai')}
-      className="group relative w-full p-[2px] rounded-2xl sm:rounded-3xl overflow-hidden cursor-pointer hover:scale-[1.01] active:scale-[0.98] transition-all duration-300 shadow-lg shadow-[#6417ff]/15 hover:shadow-[#6417ff]/30"
-    >
-      {/* Diffuse Outer Glow Layer (Soft Blurred AI Aura) */}
-      <div className="absolute inset-[-100%] animate-[spin_5s_linear_infinite] bg-[conic-gradient(from_0deg_at_50%_50%,transparent_0deg,transparent_160deg,#6417ff_240deg,#d946ef_300deg,#818cf8_340deg,transparent_360deg)] opacity-70 group-hover:opacity-100 transition-opacity blur-[8px]" />
-
-      {/* Primary Glowing Border Layer */}
-      <div className="absolute inset-[-100%] animate-[spin_5s_linear_infinite] bg-[conic-gradient(from_0deg_at_50%_50%,transparent_0deg,transparent_180deg,#6417ff_250deg,#e879f9_310deg,#a78bfa_345deg,transparent_360deg)] opacity-90 group-hover:opacity-100 transition-opacity" />
-
-      {/* Inner Card Surface */}
-      <div className={`relative w-full p-4 sm:p-5 rounded-[14px] sm:rounded-[22px] flex items-center justify-between text-left transition-all ${
+      className={`group relative w-full p-4 sm:p-5 rounded-2xl sm:rounded-3xl border-2 flex items-center justify-between text-left transition-all duration-200 cursor-pointer hover:scale-[1.01] active:scale-[0.98] ${
         isLight
-          ? 'bg-white hover:bg-purple-50/40 text-slate-900'
-          : 'bg-[#150e26] hover:bg-[#1a1130] text-white'
-      }`}>
-        {/* Left: Squircle Icon & Titles */}
-        <div className="flex items-center space-x-3.5 sm:space-x-4">
-          <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-[#6417ff]/15 text-[#6417ff] flex items-center justify-center shrink-0 border border-[#6417ff]/30 group-hover:scale-105 transition-transform">
-            <Sparkles className="w-6 h-6 sm:w-7 sm:h-7" />
-          </div>
-          <div>
-            <div className="flex items-center space-x-2">
-              <h3 className={`text-sm sm:text-base font-bold ${isLight ? 'text-slate-900' : 'text-white'}`}>
-                AI-Powered Setup
-              </h3>
-              <span className="px-2 py-0.5 rounded-full bg-gradient-to-r from-[#6417ff] to-[#8b46ff] text-white text-[9px] font-bold uppercase tracking-wider shadow-sm">
-                Recommended
-              </span>
-            </div>
-            <p className={`text-xs mt-0.5 ${isLight ? 'text-slate-500' : 'text-slate-300'}`}>
-              Personalized calculation in 4 quick steps
-            </p>
-          </div>
+          ? 'bg-white hover:bg-purple-50/50 border-[#6417ff]/40 hover:border-[#6417ff] shadow-md shadow-[#6417ff]/10 hover:shadow-lg hover:shadow-[#6417ff]/20'
+          : 'bg-[#150e26] hover:bg-[#1c1236] border-[#6417ff]/50 hover:border-[#8b46ff] shadow-md shadow-[#6417ff]/20 hover:shadow-xl hover:shadow-[#6417ff]/30'
+      }`}
+    >
+      {/* Left: Squircle Icon & Titles */}
+      <div className="flex items-center space-x-3.5 sm:space-x-4">
+        <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-[#6417ff]/15 text-[#6417ff] flex items-center justify-center shrink-0 border border-[#6417ff]/30 group-hover:scale-105 transition-transform shadow-sm">
+          <Sparkles className="w-6 h-6 sm:w-7 sm:h-7" />
         </div>
-
-        {/* Right: Affordance Arrow */}
-        <ChevronRight className="w-5 h-5 text-slate-400 group-hover:text-[#6417ff] group-hover:translate-x-0.5 transition-all shrink-0 ml-2" />
+        <div>
+          <div className="flex items-center space-x-2">
+            <h3 className={`text-sm sm:text-base font-bold ${isLight ? 'text-slate-900' : 'text-white'}`}>
+              AI-Powered Setup
+            </h3>
+            <span className="px-2 py-0.5 rounded-full bg-gradient-to-r from-[#6417ff] to-[#8b46ff] text-white text-[9px] font-bold uppercase tracking-wider shadow-sm">
+              Recommended
+            </span>
+          </div>
+          <p className={`text-xs mt-0.5 ${isLight ? 'text-slate-500' : 'text-slate-300'}`}>
+            Personalized calculation in 4 quick steps
+          </p>
+        </div>
       </div>
+
+      {/* Right: Affordance Arrow */}
+      <ChevronRight className="w-5 h-5 text-slate-400 group-hover:text-[#6417ff] group-hover:translate-x-0.5 transition-all shrink-0 ml-2" />
     </button>
   );
 

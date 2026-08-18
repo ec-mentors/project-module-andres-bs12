@@ -29,6 +29,7 @@ export interface NutritionGoal {
   protein: number;
   carbs: number;
   fat: number;
+  rationale?: string;
 }
 
 // 4. Matches Spring Boot GoalRequestDTO

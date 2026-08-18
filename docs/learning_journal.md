@@ -4,6 +4,46 @@ This document serves as a development and learning journal to record key concept
 
 ---
 
+## 📅 2026-08-18 - End-to-End React & Spring AI Integration, Dynamic Rationale & Resilient Onboarding State
+
+### 💡 Key Concepts Learned & Architectural Decisions
+
+1. **End-to-End Type Safety & Data Contract Translation (TypeScript ➔ Java DTO):**
+   - Implemented `calculateAiGoalRoadmap` in [`frontend/src/services/api.ts`](file:///Users/andresbejarano/dev/NutritionTracker/frontend/src/services/api.ts) connecting React's 4-step onboarding questionnaire directly to Spring Boot's `POST /api/ai/calculate-goal`.
+   - Verified that client snake_case strings (`"fat_loss"`, `"moderate"`, `"high_protein"`) deserialize seamlessly into Java domain Enums via Jackson `@JsonProperty`.
+
+2. **Asynchronous Processing State & Progress Synchronization (`ProcessingStep.tsx`):**
+   - *UX Challenge:* Real LLM inference (with reasoning models like GPT-5.6 Luna) requires variable time (1.5s - 3.5s). A rigid client-side timer risks navigating before data arrives or freezing the progress bar.
+   - *Solution:* Added an `isReady` synchronization hook to [`ProcessingStep.tsx`](file:///Users/andresbejarano/dev/NutritionTracker/frontend/src/components/onboarding/ProcessingStep.tsx). The progress indicator advances smoothly to 88% while the API call is in-flight, leaps to 100% and turns green the instant the LLM completes, and navigates seamlessly to Goal Review.
+
+3. **Dynamic AI Rationale Display & Macro Fine-Tuning (`GoalReviewStep.tsx`):**
+   - Designed a responsive, glassmorphic "GPT-5.6 Luna Metabolic Strategy" card displaying the AI's clinical reasoning alongside interactive calorie & macronutrient adjustment inputs.
+   - Preserved the rationale in the final payload so users can review the metabolic logic before persisting their goal to the database.
+
+4. **Spring AI Model Constraints & Reasoning Models:**
+   - Discovered that next-generation reasoning models (GPT-5.x, o1/o3) reject custom temperatures (e.g. `0.7`), enforcing strict `temperature: 1.0`. Configured Spring AI's chat options accordingly in `application.properties`.
+
+---
+
+## 📅 2026-08-17 - Stateless AI Nutrition Roadmap, KISS Persistence & Server-Side Enum Hardening
+
+### 💡 Key Concepts Learned & Architectural Decisions
+
+1. **Stateless AI Processing vs. Database Bloat (KISS Principle):**
+   - *Architectural Decision:* Decided against creating new `@Entity` classes or altering PostgreSQL database schemas for transient onboarding inputs (age, height, weight, activity level, diet preferences).
+   - *Rationale:* The onboarding questionnaire acts solely as an input vector to formulate daily macronutrient targets (`kcal`, `protein`, `carbs`, `fat`). Once calculated and approved by the user, only the final `Goal` is saved to the existing `goal` table via `POST /api/goal/{userId}`.
+   - *Benefits:* Zero schema migrations, eliminated database bloat, heightened user data privacy (no sensitive physical body metrics stored), and clean architectural decoupling.
+
+2. **DTO (`record`) Isolation vs. Entity Lifecycle in Memory:**
+   - *Key Realization:* DTOs (Java `record`) live exclusively in RAM during the HTTP request lifecycle and are cleaned up by the Garbage Collector upon completion.
+   - *Why a Dedicated AI DTO instead of `GoalResponseDTO`:* `GoalResponseDTO` represents a persisted entity containing a database `UUID id`. An AI-generated roadmap is an unpersisted draft. Creating a dedicated `AiGoalRequest` / `AiGoalResponse` prevents `null` ID fields and allows future enriched AI metadata (e.g., rationale, meal timing tips).
+
+3. **Backend Hardening ("Never Trust the Client") via Enums:**
+   - *The Principle:* While the React UI confines user selections to valid options, public REST APIs must assume arbitrary external callers (Postman, cURL, scripts).
+   - *Decision:* Grouping domain types under `com.project.NutritionTracker.enums` (`Gender`, `PrimaryObjective`, `ActivityLevel`, `DietPreference`) provides strict compile-time and runtime validation. Invalid inputs are rejected with `400 Bad Request` before reaching the LLM, protecting API token budgets and preventing prompt injection vulnerabilities.
+
+---
+
 ## 📅 2026-08-14 - Google OAuth2 Integration, 5-Step AI/Manual Onboarding & Mobile WebKit Viewport Architecture
 
 ### 💡 Key Concepts Learned & Architectural Decisions

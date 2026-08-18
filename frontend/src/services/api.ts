@@ -1,5 +1,7 @@
 import type { MealEntry, CreateMealEntryPayload, NutritionGoal, SetGoalPayload, DailySummary } from '../types/nutrition';
 import type { UserProfile } from '../types/user';
+import type { AiOnboardingState } from '../components/onboarding/types';
+import { calculateAiNutritionGoal } from '../components/onboarding/utils';
 
 // Base API URL (Vite dev server proxies /api to http://localhost:8080)
 const API_BASE = '/api';
@@ -232,9 +234,58 @@ export const api = {
     inMemoryGoal = updatedGoal;
     return updatedGoal;
   },
+
+  // --- AI GOAL ROADMAP (GPT-5.6 Luna Service) ---
+
+  /** POST /api/ai/calculate-goal - Calculate tailored AI goal using GPT-5.6 Luna */
+  async calculateAiGoalRoadmap(data: AiOnboardingState): Promise<NutritionGoal> {
+    try {
+      const response = await fetch(`${API_BASE}/ai/calculate-goal`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          primaryObjective: data.objective || 'fat_loss',
+          gender: data.gender || 'male',
+          age: Number(data.age) || 28,
+          heightCm: Number(data.heightCm) || 175,
+          currentWeightKg: Number(data.currentWeightKg) || 75,
+          targetWeightKg: Number(data.targetWeightKg) || Number(data.currentWeightKg) || 75,
+          activityLevel: data.activityLevel || 'moderate',
+          dietPreference: data.dietPreference || 'balanced',
+        }),
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        return {
+          id: 'ai-goal-generated',
+          kcal: Number(result.kcal),
+          protein: Number(result.protein),
+          carbs: Number(result.carbs),
+          fat: Number(result.fat),
+          rationale: result.rationale,
+          startDate: TODAY_STR,
+        };
+      }
+    } catch (error) {
+      console.warn('[REST API] Backend AI service offline, using client-side fallback calculation.', error);
+    }
+
+    // Client-side fallback if backend is unreachable
+    const fallback = calculateAiNutritionGoal(data);
+    return {
+      ...fallback,
+      rationale: 'Calibrated using Mifflin-St Jeor metabolic equations and sports nutrition macronutrient ratios for your selected profile.',
+      startDate: TODAY_STR,
+    };
+  },
 };
 
 // Convenience named exports matching App.tsx imports
+export const calculateAiGoalRoadmap = async (data: AiOnboardingState): Promise<NutritionGoal> => {
+  return await api.calculateAiGoalRoadmap(data);
+};
+
 export const fetchTodayEntries = async (userId?: string, dateStr?: string): Promise<MealEntry[]> => {
   return await api.getTodayEntries(userId, dateStr);
 };
