@@ -6,53 +6,36 @@ import { calculateAiNutritionGoal } from '../components/onboarding/utils';
 // Base API URL (Vite dev server proxies /api to http://localhost:8080)
 const API_BASE = '/api';
 
-// Fallback Demo User UUID when no backend user session is set
-export const DEMO_USER_ID = 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11';
 
 // Today's date string YYYY-MM-DD
 const TODAY_STR = new Date().toISOString().split('T')[0];
 
-// Internal In-Memory State for smooth UI fallback when Backend DB is initializing
-let inMemoryEntries: MealEntry[] = [
-  {
-    id: 'entry-1',
-    mealName: 'Oatmeal & Berries',
-    kcal: 350,
-    protein: 12,
-    carbs: 55,
-    fat: 6,
-    source: 'MANUAL',
-    createdOn: TODAY_STR,
-  },
-  {
-    id: 'entry-2',
-    mealName: 'Grilled Chicken Breast & Quinoa',
-    kcal: 580,
-    protein: 48,
-    carbs: 45,
-    fat: 12,
-    source: 'MANUAL',
-    createdOn: TODAY_STR,
-  },
-  {
-    id: 'entry-3',
-    mealName: 'Greek Yogurt & Almonds',
-    kcal: 220,
-    protein: 20,
-    carbs: 15,
-    fat: 8,
-    source: 'MANUAL',
-    createdOn: TODAY_STR,
-  },
-];
+// Internal In-Memory State initialized clean (no mock data in production)
+const AUTH_TOKEN_KEY = 'google_id_token';
 
-let inMemoryGoal: NutritionGoal = {
-  id: 'goal-1',
-  kcal: 2000,
-  protein: 150,
-  carbs: 200,
-  fat: 65,
-  startDate: TODAY_STR,
+export const getAuthToken = (): string | null => {
+  return sessionStorage.getItem(AUTH_TOKEN_KEY);
+};
+
+export const setAuthToken = (token: string): void => {
+  sessionStorage.setItem(AUTH_TOKEN_KEY, token);
+};
+
+export const clearAuthToken = (): void => {
+  sessionStorage.removeItem(AUTH_TOKEN_KEY);
+};
+
+const authHeaders = (contentType?: string): HeadersInit => {
+  const headers: Record<string, string> = {};
+  if (contentType) {
+    headers['Content-Type'] = contentType;
+  }
+  const token = getAuthToken();
+
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  return headers;
 };
 
 /**
@@ -65,38 +48,59 @@ let inMemoryGoal: NutritionGoal = {
 export const api = {
   // --- AUTHENTICATION (Google OAuth) ---
 
-  /** POST /api/user/google-auth - Authenticate with Google ID token */
+  /** POST /api/user/auth/google - Authenticate with Google ID token */
   async authenticateWithGoogle(credentialToken: string): Promise<UserProfile> {
-    try {
-      const response = await fetch(`${API_BASE}/user/google-auth`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ credential: credentialToken }),
-      });
-      if (response.ok) {
-        return await response.json();
-      }
-    } catch (error) {
-      console.info('[REST API] Google Auth verified locally.');
+    const response = await fetch(`${API_BASE}/user/auth/google`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain' },
+      body: credentialToken,
+    });
+
+    if (!response.ok) {
+      throw new Error(`Google Authentication failed with status ${response.status}`);
     }
 
-    return {
-      id: DEMO_USER_ID,
-      email: 'andres.bejarano@gmail.com',
-      firstName: 'Andres',
-      lastName: 'Bejarano',
-      pictureUrl: 'https://lh3.googleusercontent.com/a/ACg8ocIq9b5g=s96-c',
-      role: 'USER',
-    };
+    setAuthToken(credentialToken);
+
+    const user: UserProfile = await response.json();
+    return user;
   },
 
   // --- ENTRIES (Meal Logs) ---
   
-  /** GET /api/entry/{userId}/today - Fetch meals for a user on a specific date */
-  async getTodayEntries(userId: string = DEMO_USER_ID, dateStr?: string): Promise<MealEntry[]> {
+  /** GET /api/entry/{userId} - Fetch meals for a user on a specific date */
+  async getTodayEntries(userId?: string, dateStr?: string): Promise<MealEntry[]> {
+    if (!userId) {
+      return [];
+    }
     const targetDateStr = dateStr || TODAY_STR;
     try {
-      const response = await fetch(`${API_BASE}/entry/${userId}/date/${targetDateStr}`);
+      const response = await fetch(`${API_BASE}/entry/${userId}`, {
+        headers: authHeaders(),
+      });
+      if (response.ok) {
+        const data: MealEntry[] = await response.json();
+        if (Array.isArray(data)) {
+          return data.filter((e) => {
+            if (!e.createdOn) return true;
+            const entryDate = typeof e.createdOn === 'string' ? e.createdOn.split('T')[0] : '';
+            return entryDate === targetDateStr;
+          });
+        }
+      }
+    } catch (error) {
+      console.info('[REST API] Could not fetch entries from server.');
+    }
+    return [];
+  },
+
+  /** GET /api/entry/{userId} - Fetch all meal entries for a user */
+  async getAllEntries(userId?: string): Promise<MealEntry[]> {
+    if (!userId) return [];
+    try {
+      const response = await fetch(`${API_BASE}/entry/${userId}`, {
+        headers: authHeaders(),
+      });
       if (response.ok) {
         const data = await response.json();
         if (Array.isArray(data)) {
@@ -104,135 +108,85 @@ export const api = {
         }
       }
     } catch (error) {
-      console.info('[REST API] Backend offline/connecting. Using active state mode.');
+      console.info('[REST API] Could not fetch entries from server.');
     }
-
-    // Filter inMemoryEntries strictly by targetDateStr
-    return inMemoryEntries.filter((e) => {
-      if (!e.createdOn) return targetDateStr === TODAY_STR;
-      const entryDateFormatted = new Date(e.createdOn).toISOString().split('T')[0];
-      return entryDateFormatted === targetDateStr || e.createdOn === targetDateStr;
-    });
-  },
-
-  /** GET /api/entry/{userId} - Fetch all meal entries for a user */
-  async getAllEntries(userId: string = DEMO_USER_ID): Promise<MealEntry[]> {
-    try {
-      const response = await fetch(`${API_BASE}/entry/${userId}`);
-      if (response.ok) {
-        return await response.json();
-      }
-    } catch (error) {
-      console.info('[REST API] Backend offline/connecting. Using active state mode.');
-    }
-    return inMemoryEntries;
+    return [];
   },
 
   /** POST /api/entry/{userId} - Create a new meal entry */
-  async createEntry(payload: CreateMealEntryPayload, userId: string = DEMO_USER_ID): Promise<MealEntry> {
-    const newEntry: MealEntry = {
-      id: typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : `entry-${Date.now()}`,
-      mealName: payload.mealName,
-      source: payload.source || 'MANUAL',
-      kcal: Number(payload.kcal),
-      carbs: Number(payload.carbs),
-      fat: Number(payload.fat),
-      protein: Number(payload.protein),
-      createdOn: payload.createdOn || TODAY_STR,
-    };
+  async createEntry(payload: CreateMealEntryPayload, userId: string): Promise<MealEntry> {
+    const response = await fetch(`${API_BASE}/entry/${userId}`, {
+      method: 'POST',
+      headers: authHeaders('application/json'),
+      body: JSON.stringify({
+        mealName: payload.mealName,
+        source: payload.source || 'MANUAL',
+        kcal: Number(payload.kcal),
+        carbs: Number(payload.carbs),
+        fat: Number(payload.fat),
+        protein: Number(payload.protein),
+        createdOn: payload.createdOn || TODAY_STR,
+      }),
+    });
 
-    try {
-      const response = await fetch(`${API_BASE}/entry/${userId}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          mealName: payload.mealName,
-          source: payload.source || 'MANUAL',
-          kcal: Number(payload.kcal),
-          carbs: Number(payload.carbs),
-          fat: Number(payload.fat),
-          protein: Number(payload.protein),
-          createdOn: payload.createdOn || TODAY_STR,
-        }),
-      });
-
-      if (response.ok) {
-        const created = await response.json();
-        inMemoryEntries.unshift(created);
-        return created;
-      }
-    } catch (error) {
-      console.info('[REST API] Created entry in active local state.');
+    if (response.ok) {
+      return await response.json();
     }
-
-    inMemoryEntries.unshift(newEntry);
-    return newEntry;
+    throw new Error(`Failed to create entry with status: ${response.status}`);
   },
 
   /** DELETE /api/entry/{entryId} - Delete a meal entry */
   async deleteEntry(entryId: string): Promise<void> {
     try {
-      await fetch(`${API_BASE}/entry/${entryId}`, { method: 'DELETE' });
+      await fetch(`${API_BASE}/entry/${entryId}`, { 
+        method: 'DELETE',
+        headers: authHeaders(),
+      });
     } catch (error) {
-      console.info('[REST API] Deleted entry in active local state.');
+      console.info('[REST API] Failed to delete entry from server.');
     }
-    inMemoryEntries = inMemoryEntries.filter((e) => e.id !== entryId);
   },
 
   // --- GOALS (Nutritional Target Goals) ---
 
   /** GET /api/goal/user/{userId}/all - Get goals for user */
-  async getLatestGoal(userId: string = DEMO_USER_ID): Promise<NutritionGoal | null> {
+  async getLatestGoal(userId?: string): Promise<NutritionGoal | null> {
+    if (!userId) return null;
     try {
-      const response = await fetch(`${API_BASE}/goal/user/${userId}/all`);
+      const response = await fetch(`${API_BASE}/goal/user/${userId}/all`, {
+        headers: authHeaders(),
+      });
       if (response.ok) {
         const goals: NutritionGoal[] = await response.json();
-        if (goals.length > 0) {
-          inMemoryGoal = goals[goals.length - 1];
-          return inMemoryGoal;
+        if (Array.isArray(goals) && goals.length > 0) {
+          return goals[goals.length - 1];
         }
+        return null;
       }
     } catch (error) {
-      console.info('[REST API] Fetching goal in active local state.');
+      console.info('[REST API] Error fetching goals from server.');
     }
-    return inMemoryGoal;
+    return null;
   },
 
   /** POST /api/goal/{userId} - Set or create daily goal */
-  async createGoal(payload: SetGoalPayload, userId: string = DEMO_USER_ID): Promise<NutritionGoal> {
-    const updatedGoal: NutritionGoal = {
-      id: inMemoryGoal.id || 'goal-1',
-      startDate: payload.startDate || TODAY_STR,
-      kcal: Number(payload.kcal),
-      carbs: Number(payload.carbs),
-      fat: Number(payload.fat),
-      protein: Number(payload.protein),
-    };
+  async createGoal(payload: SetGoalPayload, userId: string): Promise<NutritionGoal> {
+    const response = await fetch(`${API_BASE}/goal/${userId}`, {
+      method: 'POST',
+      headers: authHeaders('application/json'),
+      body: JSON.stringify({
+        startDate: payload.startDate || TODAY_STR,
+        kcal: Number(payload.kcal),
+        carbs: Number(payload.carbs),
+        fat: Number(payload.fat),
+        protein: Number(payload.protein),
+      }),
+    });
 
-    try {
-      const response = await fetch(`${API_BASE}/goal/${userId}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          startDate: payload.startDate || TODAY_STR,
-          kcal: Number(payload.kcal),
-          carbs: Number(payload.carbs),
-          fat: Number(payload.fat),
-          protein: Number(payload.protein),
-        }),
-      });
-
-      if (response.ok) {
-        const saved = await response.json();
-        inMemoryGoal = saved;
-        return saved;
-      }
-    } catch (error) {
-      console.info('[REST API] Saved goal in active local state.');
+    if (response.ok) {
+      return await response.json();
     }
-
-    inMemoryGoal = updatedGoal;
-    return updatedGoal;
+    throw new Error(`Failed to save goal with status: ${response.status}`);
   },
 
   // --- AI GOAL ROADMAP (GPT-5.6 Luna Service) ---
@@ -242,7 +196,7 @@ export const api = {
     try {
       const response = await fetch(`${API_BASE}/ai/calculate-goal`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: authHeaders('application/json'),
         body: JSON.stringify({
           primaryObjective: data.objective || 'fat_loss',
           gender: data.gender || 'male',
@@ -305,24 +259,15 @@ export const createMealEntry = async (userId: string, payload: CreateMealEntryPa
 };
 
 export const updateMealEntry = async (id: string, payload: CreateMealEntryPayload): Promise<MealEntry> => {
-  try {
-    const response = await fetch(`/api/entry/${id}/update`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-    });
-    if (response.ok) {
-      const updated = await response.json();
-      inMemoryEntries = inMemoryEntries.map((e) => (e.id === id ? updated : e));
-      return updated;
-    }
-  } catch (error) {
-    console.info('[REST API] Updated meal in active local state.');
+  const response = await fetch(`/api/entry/${id}/update`, {
+    method: 'PUT',
+    headers: authHeaders('application/json'),
+    body: JSON.stringify(payload),
+  });
+  if (response.ok) {
+    return await response.json();
   }
-
-  const updatedMeal: MealEntry = { id, ...payload };
-  inMemoryEntries = inMemoryEntries.map((e) => (e.id === id ? updatedMeal : e));
-  return updatedMeal;
+  throw new Error(`Failed to update meal entry with status: ${response.status}`);
 };
 
 export const deleteMealEntry = async (entryId: string): Promise<void> => {
