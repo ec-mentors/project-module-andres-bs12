@@ -5,37 +5,55 @@ import type { OnboardingPath } from './types';
 interface ProcessingStepProps {
   path: OnboardingPath;
   onFinished: () => void;
+  isReady?: boolean;
   theme?: 'dark' | 'light';
 }
 
 export const ProcessingStep: React.FC<ProcessingStepProps> = ({
   path,
   onFinished,
+  isReady = true,
   theme = 'dark',
 }) => {
   const isLight = theme === 'light';
   const [progress, setProgress] = useState<number>(12);
 
   useEffect(() => {
-    const progressInterval = setInterval(() => {
-      setProgress((prev) => {
-        if (prev >= 100) {
-          clearInterval(progressInterval);
-          return 100;
-        }
-        return prev + 4;
-      });
-    }, 85);
+    let interval: ReturnType<typeof setInterval>;
 
-    const finishTimer = setTimeout(() => {
-      onFinished();
-    }, 2400);
+    if (!isReady) {
+      // Advance smoothly up to 88% while waiting for the LLM response
+      interval = setInterval(() => {
+        setProgress((prev) => {
+          if (prev >= 88) return 88;
+          return prev + 3;
+        });
+      }, 70);
+    } else {
+      // Once data is ready, transition to 100% and finish
+      interval = setInterval(() => {
+        setProgress((prev) => {
+          if (prev >= 100) {
+            clearInterval(interval);
+            return 100;
+          }
+          return prev + 6;
+        });
+      }, 35);
+    }
 
-    return () => {
-      clearInterval(progressInterval);
-      clearTimeout(finishTimer);
-    };
-  }, [onFinished]);
+    return () => clearInterval(interval);
+  }, [isReady]);
+
+  // When progress reaches 100%, trigger completion with slight pause to admire the checkmark
+  useEffect(() => {
+    if (progress >= 100) {
+      const timer = setTimeout(() => {
+        onFinished();
+      }, 450);
+      return () => clearTimeout(timer);
+    }
+  }, [progress, onFinished]);
 
   const isComplete = progress >= 100;
 

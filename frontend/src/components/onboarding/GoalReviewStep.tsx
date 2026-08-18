@@ -39,6 +39,7 @@ export const GoalReviewStep: React.FC<GoalReviewStepProps> = ({
       protein: Number(protein) || 150,
       carbs: Number(carbs) || 200,
       fat: Number(fat) || 65,
+      rationale: calculatedGoal.rationale,
     });
   };
 
@@ -65,6 +66,29 @@ export const GoalReviewStep: React.FC<GoalReviewStepProps> = ({
             Here are your calculated daily targets. Fine-tune any metric or launch directly into your dashboard.
           </p>
         </div>
+
+        {/* AI Rationale / Strategy Insight Card */}
+        {calculatedGoal.rationale && (
+          <div className={`mb-4 sm:mb-5 p-4 sm:p-5 rounded-2xl sm:rounded-3xl border transition-all ${
+            isLight
+              ? 'bg-purple-50/80 border-purple-200/80 text-purple-950 shadow-sm'
+              : 'bg-gradient-to-br from-[#6417ff]/15 via-[#1a0f35] to-[#120a26] border-[#6417ff]/30 text-purple-100 shadow-md'
+          }`}>
+            <div className="flex items-center space-x-2 mb-1.5">
+              <div className="w-5 h-5 rounded-md bg-[#6417ff]/20 text-[#6417ff] flex items-center justify-center border border-[#6417ff]/30">
+                <Sparkles className="w-3 h-3" />
+              </div>
+              <span className="text-[11px] sm:text-xs font-bold uppercase tracking-wider text-[#6417ff]">
+                NutriAI Strategy
+              </span>
+            </div>
+            <p className={`text-xs sm:text-sm font-normal leading-relaxed ${
+              isLight ? 'text-slate-700' : 'text-slate-200'
+            }`}>
+              {calculatedGoal.rationale}
+            </p>
+          </div>
+        )}
 
         {/* Unified Single Container for Energy Target & Macros */}
         <div className={`p-4 sm:p-6 rounded-3xl border transition-all ${

@@ -4,6 +4,27 @@ This document serves as a development and learning journal to record key concept
 
 ---
 
+## 📅 2026-08-18 - End-to-End React & Spring AI Integration, Dynamic Rationale & Resilient Onboarding State
+
+### 💡 Key Concepts Learned & Architectural Decisions
+
+1. **End-to-End Type Safety & Data Contract Translation (TypeScript ➔ Java DTO):**
+   - Implemented `calculateAiGoalRoadmap` in [`frontend/src/services/api.ts`](file:///Users/andresbejarano/dev/NutritionTracker/frontend/src/services/api.ts) connecting React's 4-step onboarding questionnaire directly to Spring Boot's `POST /api/ai/calculate-goal`.
+   - Verified that client snake_case strings (`"fat_loss"`, `"moderate"`, `"high_protein"`) deserialize seamlessly into Java domain Enums via Jackson `@JsonProperty`.
+
+2. **Asynchronous Processing State & Progress Synchronization (`ProcessingStep.tsx`):**
+   - *UX Challenge:* Real LLM inference (with reasoning models like GPT-5.6 Luna) requires variable time (1.5s - 3.5s). A rigid client-side timer risks navigating before data arrives or freezing the progress bar.
+   - *Solution:* Added an `isReady` synchronization hook to [`ProcessingStep.tsx`](file:///Users/andresbejarano/dev/NutritionTracker/frontend/src/components/onboarding/ProcessingStep.tsx). The progress indicator advances smoothly to 88% while the API call is in-flight, leaps to 100% and turns green the instant the LLM completes, and navigates seamlessly to Goal Review.
+
+3. **Dynamic AI Rationale Display & Macro Fine-Tuning (`GoalReviewStep.tsx`):**
+   - Designed a responsive, glassmorphic "GPT-5.6 Luna Metabolic Strategy" card displaying the AI's clinical reasoning alongside interactive calorie & macronutrient adjustment inputs.
+   - Preserved the rationale in the final payload so users can review the metabolic logic before persisting their goal to the database.
+
+4. **Spring AI Model Constraints & Reasoning Models:**
+   - Discovered that next-generation reasoning models (GPT-5.x, o1/o3) reject custom temperatures (e.g. `0.7`), enforcing strict `temperature: 1.0`. Configured Spring AI's chat options accordingly in `application.properties`.
+
+---
+
 ## 📅 2026-08-17 - Stateless AI Nutrition Roadmap, KISS Persistence & Server-Side Enum Hardening
 
 ### 💡 Key Concepts Learned & Architectural Decisions

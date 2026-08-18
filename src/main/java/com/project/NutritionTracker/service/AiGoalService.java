@@ -34,7 +34,7 @@ public class AiGoalService {
                 "     * PLANT_BASED: Optimize plant-derived protein thresholds and complex carbohydrates for sustained energy.\n" +
                 "   - Consistency check: Ensure (protein * 4) + (carbs * 4) + (fat * 9) aligns with the calculated total kcal.\n" +
                 "3. Rationale:\n" +
-                "   - Provide a concise (1-2 sentences), motivating, and personalized explanation in the 'rationale' field explaining WHY this specific caloric target and macro distribution were chosen for their unique profile.";
+                "   - Provide a short, punchy explanation (1 sentence, max 25 words) in the 'rationale' field explaining why this calorie target and macro split fit their goal.";
 
         String userPrompt = """
                 Please analyze and calculate the optimal daily nutrition roadmap for this individual:
