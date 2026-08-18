@@ -4,6 +4,32 @@ This document serves as a development and learning journal to record key concept
 
 ---
 
+## 📅 2026-08-18 - Stateless Bearer Token Pattern, Spring Security Method-Level `@PreAuthorize` & IDOR Defense
+
+### 💡 Key Concepts Learned & Architectural Decisions
+
+1. **Stateless HTTP & The "Bearer Token Passport" Pattern:**
+   - *The Mental Model:* HTTP is inherently stateless. A successful OAuth login (`POST /api/user/auth/google`) authenticates that single request, but subsequent client calls (`GET /api/goal/...`, `GET /api/entry/...`) are anonymous unless the frontend explicitly attaches the token in the `Authorization: Bearer <google_id_token>` header.
+   - *Client Session Storage:* Saved the token in `sessionStorage` upon Google login and created an `authHeaders()` utility to inject `Authorization: Bearer <token>` on all downstream REST requests.
+
+2. **Spring Security Filter Chain & `@PreAuthorize` Evaluation:**
+   - *How the Filter Works:* [`GoogleAuthFilter.java`](file:///Users/andresbejarano/dev/NutritionTracker/src/main/java/com/project/NutritionTracker/security/GoogleAuthFilter.java) intercepts requests, extracts the Bearer token, cryptographically verifies the signature with Google's public keys, resolves the `User` entity, and places an authenticated `UserPrincipal` into Spring's `SecurityContextHolder`.
+   - *Root Cause Analysis (RCA) on 400 Expression Failure:* When a request lacks the `Authorization` header, the principal is anonymous (`"anonymousUser"` string). Evaluating `@PreAuthorize("#userId == principal.id")` fails SpEL expression evaluation because anonymous users lack an `.id` field, returning `400 Bad Request` or `403 Forbidden`.
+   - *Resolution:* Transmitting the Bearer header fulfills `#userId == principal.id`, allowing authenticated users to fetch and update their personal goals and meal logs securely.
+
+3. **Insecure Direct Object Reference (IDOR) Prevention (ADR-02):**
+   - Verified that users can only query and mutate resources matching their authenticated UUID (`#userId == principal.id` or `@goalSecurity.isOwner(#id, principal)`). Any attempt to query another user's UUID is blocked at the service boundary.
+
+4. **Session State Isolation & Elimination of Cross-Account Memory Leakage:**
+   - *The Bug:* In-memory static variables at the module level (`let inMemoryGoal`) retained previous user data across logouts within the same browser tab lifecycle. When a new account logged in, an empty database response (`[]`) caused the function to fall back to the old cached goal in memory instead of returning `null`.
+   - *The Resolution:* Completely eliminated all static in-memory caching in [`api.ts`](file:///Users/andresbejarano/dev/NutritionTracker/frontend/src/services/api.ts). Now all queries read strictly from PostgreSQL in real-time, and `handleLogout` performs an atomic state and token wipe.
+
+5. **Strict Authentication Gate & Chronological UI Ordering:**
+   - *Authentication Gate:* Implemented a non-dismissible Login Gate in [`App.tsx`](file:///Users/andresbejarano/dev/NutritionTracker/frontend/src/App.tsx) preventing any unauthenticated guest from viewing dashboard analytics.
+   - *Ergonomics:* Ordered entries descending (`timeB - timeA`) in [`LatestEntriesSidebar.tsx`](file:///Users/andresbejarano/dev/NutritionTracker/frontend/src/components/dashboard/LatestEntriesSidebar.tsx) so newly logged meals dynamically appear at the top with smooth Framer Motion layout transitions.
+
+---
+
 ## 📅 2026-08-18 - End-to-End React & Spring AI Integration, Dynamic Rationale & Resilient Onboarding State
 
 ### 💡 Key Concepts Learned & Architectural Decisions

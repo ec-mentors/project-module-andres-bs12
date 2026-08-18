@@ -19,8 +19,8 @@ import {
   deleteMealEntry, 
   fetchTodaySummary, 
   fetchGoal, 
-  updateGoal, 
-  DEMO_USER_ID 
+  updateGoal,
+  clearAuthToken,
 } from './services/api';
 import { CheckCircle2 } from 'lucide-react';
 
@@ -88,12 +88,13 @@ export function App() {
     }
   }, [isOnboardingOpen, isAuthOpen, isProfileOpen, isSetGoalsOpen]);
 
-  // Default demo user UUID matching Spring Boot PostgreSQL UUID schema
-  const userId: string = user?.id || DEMO_USER_ID;
+  // Active user ID from real authenticated session
+  const userId: string = user?.id || '';
 
   // Initial load for User Goal
   useEffect(() => {
     async function loadGoals() {
+      if (!userId) return;
       try {
         const fetchedGoal = await fetchGoal(userId);
         if (fetchedGoal) {
@@ -109,6 +110,18 @@ export function App() {
   // Load Entries and Daily Summary whenever selectedDate or userId changes
   useEffect(() => {
     async function loadDataForDate() {
+      if (!userId) {
+        setEntries([]);
+        setSummary({
+          consumedKcal: 0,
+          consumedProtein: 0,
+          consumedFat: 0,
+          consumedCarbs: 0,
+        });
+        setLoading(false);
+        return;
+      }
+
       setLoading(true);
       try {
         const dateStr = selectedDate.toISOString().split('T')[0];
@@ -118,8 +131,13 @@ export function App() {
           fetchTodaySummary(userId, dateStr),
         ]);
 
-        setEntries(fetchedEntries);
-        setSummary(fetchedSummary);
+        setEntries(fetchedEntries || []);
+        setSummary(fetchedSummary || {
+          consumedKcal: 0,
+          consumedProtein: 0,
+          consumedFat: 0,
+          consumedCarbs: 0,
+        });
       } catch (err) {
         console.error('Error fetching data for date:', err);
       } finally {
@@ -212,12 +230,27 @@ export function App() {
   };
 
   // Handle Google OAuth Login Success
-  const handleGoogleSuccess = (loggedUser: UserProfile) => {
+  const handleGoogleSuccess = async (loggedUser: UserProfile) => {
     setUser(loggedUser);
     setIsAuthOpen(false);
 
-    // Testing Mode: Always launch onboarding to decide how to create goal
-    setIsOnboardingOpen(true);
+    try {
+      // Check if user already has an established goal in PostgreSQL
+      const existingGoal = await fetchGoal(loggedUser.id);
+      if (existingGoal) {
+        setGoal(existingGoal);
+        setToastMessage({
+          title: `Welcome back, ${loggedUser.firstName}!`,
+          desc: 'Your goals and meal progress are loaded.',
+        });
+      } else {
+        // Brand new user without goals -> Launch initial Onboarding
+        setIsOnboardingOpen(true);
+      }
+    } catch (err) {
+      console.error('Error verifying user goals upon login:', err);
+      setIsOnboardingOpen(true);
+    }
   };
 
   // Handle Onboarding Completion (AI or Manual)
@@ -247,9 +280,17 @@ export function App() {
     });
   };
 
-  // Handle Sign Out -> Direct redirect back to Login Modal
+  // Handle Sign Out -> Direct redirect back to Login Modal & Wipe state
   const handleLogout = () => {
+    clearAuthToken();
     setUser(null);
+    setEntries([]);
+    setSummary({
+      consumedKcal: 0,
+      consumedProtein: 0,
+      consumedFat: 0,
+      consumedCarbs: 0,
+    });
     setIsAuthOpen(true);
     setToastMessage({
       title: 'Signed Out',
@@ -257,10 +298,22 @@ export function App() {
     });
   };
 
-  const isTodaySelected = selectedDate.toDateString() === new Date().toDateString();
-  const selectedDateFormatted = isTodaySelected
-    ? `Today, ${selectedDate.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}`
-    : selectedDate.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
+  // Strict Auth Guard: If not logged in, enforce the Login Screen (no dashboard access)
+  if (!user) {
+    return (
+      <div className={`min-h-screen flex items-center justify-center p-4 transition-all duration-500 font-sans ${
+        isLight ? 'bg-slate-50 text-slate-900' : 'bg-[#05030d] text-white'
+      }`}>
+        <GoogleLoginModal
+          isOpen={true}
+          onClose={() => {}}
+          onLoginSuccess={handleGoogleSuccess}
+          theme={theme}
+          isGate={true}
+        />
+      </div>
+    );
+  }
 
   // Full-Screen Exclusive View for Onboarding (Completely eliminates background DOM & double scrollbars)
   if (isOnboardingOpen) {
@@ -275,6 +328,11 @@ export function App() {
       />
     );
   }
+
+  const isTodaySelected = selectedDate.toDateString() === new Date().toDateString();
+  const selectedDateFormatted = isTodaySelected
+    ? `Today, ${selectedDate.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}`
+    : selectedDate.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
 
   return (
     <div className={`min-h-screen transition-all duration-500 ease-out font-sans flex flex-col selection:bg-[#6417ff] selection:text-white ${

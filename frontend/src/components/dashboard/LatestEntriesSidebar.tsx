@@ -298,7 +298,13 @@ export const LatestEntriesSidebar: React.FC<LatestEntriesSidebarProps> = ({
               </p>
             </motion.div>
           ) : (
-            entries.map((entry) => {
+            [...entries]
+              .sort((a, b) => {
+                const timeA = a.createdOn ? new Date(a.createdOn).getTime() : 0;
+                const timeB = b.createdOn ? new Date(b.createdOn).getTime() : 0;
+                return timeB - timeA;
+              })
+              .map((entry) => {
               const isEditing = editingId === entry.id;
               const isDeletingConfirm = deleteConfirmId === entry.id;
 
