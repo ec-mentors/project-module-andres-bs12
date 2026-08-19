@@ -3,6 +3,7 @@ package com.project.NutritionTracker.service;
 import com.project.NutritionTracker.dto.AiGoalRequestDTO;
 import com.project.NutritionTracker.dto.AiGoalResponseDTO;
 import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.ai.openai.OpenAiAudioTranscriptionModel;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -64,4 +65,13 @@ public class AiGoalService {
                 .entity(AiGoalResponseDTO.class);
     }
 
+    @Service
+    public static class AiAudioService {
+
+        private final OpenAiAudioTranscriptionModel transcriptionModel;
+
+        public AiAudioService(OpenAiAudioTranscriptionModel transcriptionModel) {
+            this.transcriptionModel = transcriptionModel;
+        }
+    }
 }
