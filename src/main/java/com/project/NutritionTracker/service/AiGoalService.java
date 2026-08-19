@@ -64,14 +64,4 @@ public class AiGoalService {
                 .call()
                 .entity(AiGoalResponseDTO.class);
     }
-
-    @Service
-    public static class AiAudioService {
-
-        private final OpenAiAudioTranscriptionModel transcriptionModel;
-
-        public AiAudioService(OpenAiAudioTranscriptionModel transcriptionModel) {
-            this.transcriptionModel = transcriptionModel;
-        }
-    }
 }
