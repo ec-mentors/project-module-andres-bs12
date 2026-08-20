@@ -45,7 +45,6 @@ public class AiMealServiceTest {
 
         AiMealResponseDTO expectedResponse = new AiMealResponseDTO(
                 "Chicken",
-                "telegram",
                 10,
                 54.0,
                 97.6,
@@ -94,7 +93,6 @@ public class AiMealServiceTest {
 
         AiMealResponseDTO expectedResponse = new AiMealResponseDTO(
                 "Chicken",
-                "telegram",
                 10,
                 54.0,
                 97.6,

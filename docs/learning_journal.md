@@ -4,6 +4,37 @@ This document serves as a development and learning journal to record key concept
 
 ---
 
+## 📅 2026-08-20 - (Sprint 4) - Multimodal AI Meal Parsing (Text, Vision, Whisper Audio), Approach B Heuristics & Spring AI Mocking
+
+### 💡 Key Concepts Learned & Architectural Decisions
+
+1. **Multimodal AI Architecture with Spring AI & `gpt-5.6-luna`:**
+   - *Text & Vision Integration:* Integrated Spring AI's `ChatClient` to handle both descriptive text (`parseMealFromText`) and raw image uploads (`parseMealFromImage`).
+   - *Multimodal Streaming DSL:* Utilized Spring AI's fluent DSL `.user(u -> u.text(...).media(mediaType, imageResource))` to stream multipart image bytes directly to OpenAI's vision model without intermediate cloud disk persistence.
+
+2. **Voice Note Nutrition Logging via Whisper (`whisper-1`):**
+   - *Audio Processing Pipeline:* Integrated `OpenAiAudioTranscriptionModel` in [`AiAudioService.java`](file:///Users/andresbejarano/dev/NutritionTracker/src/main/java/com/project/NutritionTracker/service/AiAudioService.java) to accept voice recordings (`.mp3`, `.m4a`, `.wav`, `.ogg`), transcribe spoken meals into clinical text, and seamlessly route the transcript to `AiMealService` for macro calculations.
+
+3. **Prompt Engineering: "Approach B - Clarify First, Calculate Second" & Visual Heuristics:**
+   - *The Problem of AI Over-Conservatism:* Hyper-strict prompts cause vision models to reject clearly visible foods (e.g. 2 eggs, 1/2 avocado, cottage cheese) by pedantically demanding exact gram weights.
+   - *Visual Volume & Portion Heuristics:* Calibrated the System Prompt with culinary defaults: count discrete units, estimate bulk food volume based on plate geometry (~100-150g scoops), and default to $\ge 80\%$ confidence for visible foods.
+   - *Approach B Pattern:* For genuinely obscured or hidden dishes (<80% confidence), the model returns zeroed macros (`kcal: 0`) alongside a short, punchy clarifying question in English (max 15 words). For high-confidence meals, it returns only the estimated percentage integer (e.g. `"95"`), drastically minimizing token waste.
+
+4. **Testing Spring AI Fluent DSLs with Mockito Deep Stubs:**
+   - *The Challenge:* Spring AI's fluent chain (`chatClient.prompt().system(...).user(...).call().entity(...)`) requires mocking 5 chained intermediate objects.
+   - *The Solution:* Configured `@Mock(answer = Answers.RETURNS_DEEP_STUBS) private ChatClient chatClient;`, enabling clean single-line mock stubs: `when(chatClient.prompt().system(anyString()).user(any(Consumer.class)).call().entity(AiMealResponseDTO.class)).thenReturn(...)`.
+   - *Multimodal Matcher:* Used `any(Consumer.class)` to match functional lambda specs in `.user(Consumer<UserSpec>)`.
+
+5. **Controller Slicing with `MockMvc` Multipart Testing:**
+   - Simulated file uploads using `MockMultipartFile` and MockMvc's `multipart("/api/ai/parse-meal-image").file(...)`.
+   - *Avoiding Tautological Controller Tests:* Realized that forcing a mock to throw an exception in a controller test tests Mockito rather than controller logic. Focused controller testing on HTTP status codes, routing, `@Valid` constraints, and missing `@RequestParam` boundaries.
+
+6. **Security & Principle of Least Privilege for OpenAI API Keys:**
+   - Zero hardcoded credentials in git repository; all secrets externalized via `${OPENAI_MEAL_PARSER_KEY}` in `application.properties`.
+   - Configured OpenAI Restricted API Keys strictly with `Model capabilities: Write` and `Audio: Write`, keeping storage (`Files`), administrative, and fine-tuning permissions completely disabled (`None`).
+
+---
+
 ## 📅 2026-08-18 - Stateless Bearer Token Pattern, Spring Security Method-Level `@PreAuthorize` & IDOR Defense
 
 ### 💡 Key Concepts Learned & Architectural Decisions

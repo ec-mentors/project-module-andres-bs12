@@ -8,8 +8,10 @@ Built with **Spring Boot 3 (Java 17)** on the backend and **Vite + React 19 + Ty
 
 ## 📖 Documentation Index
 
-- 🤖 **[Learning Journal & AI Reflections (LEARNING_JOURNAL.md)](frontend/LEARNING_JOURNAL.md):** Personal takeaways, technical learnings, and AI-assisted frontend development details.
+- 📓 **[Backend Learning Journal (docs/learning_journal.md)](docs/learning_journal.md):** Complete architectural decisions, security models, Spring AI deep stubs, and backend development notes.
+- 🤖 **[Frontend Learning Journal (frontend/LEARNING_JOURNAL.md)](frontend/LEARNING_JOURNAL.md):** UI takeaways, technical learnings, and AI-assisted frontend development details.
 - 🎨 **[Design & UX Documentation (docs/design_and_ux.md)](docs/design_and_ux.md):** Design philosophy, color system rules, Figma evolutions, and mobile touch UX decisions.
+- 🧠 **[AI Integration Guide (docs/ai_integration_guide.md)](docs/ai_integration_guide.md):** Multimodal nutrition analysis, Whisper voice integration, and prompt engineering specifications.
 
 ---
 
@@ -59,9 +61,10 @@ erDiagram
 
 ### **Backend (Spring Boot 3 / Java 17)**
 - **Framework:** Spring Boot 3.4 / Java 17
+- **AI Integration:** Spring AI 1.0 + OpenAI `gpt-5.6-luna` (Text & Multimodal Vision) + Whisper `whisper-1` (Voice Note Transcription)
 - **Database Persistence:** Spring Data JPA + PostgreSQL (H2 for local dev & automated testing)
 - **Security:** Spring Security with OAuth2 / Google Identity Services & `@PreAuthorize` IDOR protection
-- **Testing:** JUnit 5, Mockito, Spring Security Test (**74/74 Unit & Integration Tests Passing**)
+- **Testing:** JUnit 5, Mockito Deep Stubs, Spring Security Test, MockMvc (**94/94 Unit & Integration Tests Passing - 100% Green**)
 
 ### **Frontend (Vite + React + TypeScript + TailwindCSS)**
 - **UI Architecture:** Vite 8, React 19, TypeScript 5.8, TailwindCSS v4, Lucide React Icons
@@ -76,26 +79,33 @@ erDiagram
 - Java 17 or higher
 - Node.js 18+ and npm
 - Maven 3.8+
+- OpenAI API Key (Restricted with `Model capabilities: Write` and `Audio: Write`)
 
-### **1. Run Frontend Development Server (Root Command)**
+### **1. Configure Environment Variables**
+```bash
+export OPENAI_MEAL_PARSER_KEY="sk-proj-your-openai-api-key"
+```
+> **Note:** The API key works with any OpenAI model (`gpt-5.6-luna`, `gpt-4o`, `gpt-4o-mini`, etc.) and `whisper-1`. The active model can be customized anytime in `src/main/resources/application.properties`.
+
+### **2. Run Frontend Development Server (Root Command)**
 From the project root directory:
 ```bash
 npm run dev
 ```
 - Access locally on Mac: `http://localhost:5173`
-- Access on mobile phone (Wi-Fi): `http://<your-local-ip>:5173` (e.g. `http://10.0.0.207:5173`)
+- Access on mobile phone (Wi-Fi): `http://<your-local-ip>:5173`
 
-### **2. Run Backend Server (Spring Boot + PostgreSQL)**
+### **3. Run Backend Server (Spring Boot + PostgreSQL)**
 In a second terminal window from the project root directory:
 ```bash
-# Run unit & integration test suite (74 tests)
+# Run complete unit & integration test suite (94 tests)
 ./mvnw test
 
 # Start the Spring Boot backend server (runs on port 8080)
 ./mvnw spring-boot:run
 ```
 
-### **3. Production Bundle Build (Unified Single-Port Mode)**
+### **4. Production Bundle Build (Unified Single-Port Mode)**
 To compile the static React frontend into Spring Boot's static resources:
 ```bash
 npm run build

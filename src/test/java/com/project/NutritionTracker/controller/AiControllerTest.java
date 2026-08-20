@@ -109,7 +109,6 @@ public class AiControllerTest {
         AiMealTextRequestDTO aiMealTextRequestDTO = new AiMealTextRequestDTO("I ate some chicken");
         AiMealResponseDTO mockAiMealResponse = new AiMealResponseDTO(
                 "Chicken",
-                "Telegram",
                 2200,
                 190.0,
                 65.0,
@@ -124,7 +123,6 @@ public class AiControllerTest {
                         .content(objectMapper.writeValueAsString(aiMealTextRequestDTO)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.mealName").value("Chicken"))
-                .andExpect(jsonPath("$.source").value("Telegram"))
                 .andExpect(jsonPath("$.kcal").value(2200))
                 .andExpect(jsonPath("$.carbs").value(190.0))
                 .andExpect(jsonPath("$.protein").value(210.0))
@@ -166,7 +164,6 @@ public class AiControllerTest {
 
         AiMealResponseDTO mockAiMealResponse = new AiMealResponseDTO(
                 "Chicken",
-                "Telegram",
                 2200,
                 190.0,
                 65.0,
@@ -179,7 +176,6 @@ public class AiControllerTest {
         mockMvc.perform(multipart("/api/ai/parse-meal-audio").file(audioFile))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.mealName").value("Chicken"))
-                .andExpect(jsonPath("$.source").value("Telegram"))
                 .andExpect(jsonPath("$.kcal").value(2200))
                 .andExpect(jsonPath("$.carbs").value(190.0))
                 .andExpect(jsonPath("$.fat").value(65.0))
@@ -202,7 +198,6 @@ public class AiControllerTest {
         );
         AiMealResponseDTO mockAiMealResponse = new AiMealResponseDTO(
                 "Chicken",
-                "Telegram",
                 2200,
                 190.0,
                 65.0,
@@ -215,7 +210,6 @@ public class AiControllerTest {
         mockMvc.perform(multipart("/api/ai/parse-meal-image").file(imageFile))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.mealName").value("Chicken"))
-                .andExpect(jsonPath("$.source").value("Telegram"))
                 .andExpect(jsonPath("$.kcal").value(2200))
                 .andExpect(jsonPath("$.carbs").value(190.0))
                 .andExpect(jsonPath("$.protein").value(210.0))
