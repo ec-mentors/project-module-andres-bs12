@@ -3,6 +3,7 @@ package com.project.NutritionTracker.service;
 import com.project.NutritionTracker.dto.AiGoalRequestDTO;
 import com.project.NutritionTracker.dto.AiGoalResponseDTO;
 import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.ai.openai.OpenAiAudioTranscriptionModel;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -63,5 +64,4 @@ public class AiGoalService {
                 .call()
                 .entity(AiGoalResponseDTO.class);
     }
-
 }
