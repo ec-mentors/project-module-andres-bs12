@@ -4,47 +4,44 @@
   "tokens": {
     "color": {
       "brand": {
-        "primary": { "value": "#6417ff", "type": "color", "description": "Primary electric purple brand color and goal hit indicator" },
-        "hover": { "value": "#5400e9", "type": "color" },
-        "soft": { "value": "#eee6ff", "type": "color" },
-        "glow": { "value": "rgba(100, 23, 255, 0.4)", "type": "color" }
+        "primaryLight": { "value": "#000000", "type": "color", "description": "Primary monochrome black for light mode" },
+        "primaryDark": { "value": "#ffffff", "type": "color", "description": "Primary monochrome white for dark mode" },
+        "soft": { "value": "#f1f5f9", "type": "color" }
       },
       "dark": {
-        "canvas": { "value": "#05030d", "type": "color", "description": "Global dark background" },
-        "panel": { "value": "#161024", "type": "color", "description": "Main card surface with 95% opacity" },
-        "pill": { "value": "#231a38", "type": "color", "description": "Action buttons, list items and date navigator" },
-        "pillHover": { "value": "#2d2248", "type": "color" },
-        "border": { "value": "rgba(255, 255, 255, 0.10)", "type": "color" },
-        "borderHover": { "value": "rgba(100, 23, 255, 0.40)", "type": "color" },
+        "canvas": { "value": "#080808", "type": "color", "description": "Global dark background" },
+        "panel": { "value": "#121214", "type": "color", "description": "Main card surface" },
+        "pill": { "value": "#18181b", "type": "color", "description": "Action buttons, list items and date navigator" },
+        "pillHover": { "value": "#27272a", "type": "color" },
+        "border": { "value": "rgba(255, 255, 255, 0.08)", "type": "color" },
+        "borderHover": { "value": "rgba(255, 255, 255, 0.16)", "type": "color" },
         "textPrimary": { "value": "#ffffff", "type": "color" },
-        "textSecondary": { "value": "#94a3b8", "type": "color" },
-        "textMuted": { "value": "#64748b", "type": "color" },
-        "purpleAccent": { "value": "#c084fc", "type": "color" }
+        "textSecondary": { "value": "#a1a1aa", "type": "color" },
+        "textMuted": { "value": "#71717a", "type": "color" }
       },
       "light": {
         "canvas": { "value": "#f8fafc", "type": "color", "description": "Global light slate background" },
         "panel": { "value": "#ffffff", "type": "color", "description": "Card surface with 95% opacity" },
         "pill": { "value": "#f1f5f9", "type": "color", "description": "Action buttons, list items and date navigator" },
         "pillHover": { "value": "#e2e8f0", "type": "color" },
-        "border": { "value": "#e2e8f0", "type": "color" },
-        "borderHover": { "value": "rgba(100, 23, 255, 0.25)", "type": "color" },
+        "border": { "value": "rgba(226, 232, 240, 0.8)", "type": "color" },
+        "borderHover": { "value": "#cbd5e1", "type": "color" },
         "textPrimary": { "value": "#0f172a", "type": "color" },
         "textSecondary": { "value": "#475569", "type": "color" },
-        "textMuted": { "value": "#64748b", "type": "color" },
-        "purpleAccent": { "value": "#6417ff", "type": "color" }
+        "textMuted": { "value": "#64748b", "type": "color" }
       },
       "state": {
-        "met": { "value": "#6417ff", "type": "color", "description": "Goal Met / In Range (85% to 115%)" },
-        "exceeded": { "value": "#ef233c", "type": "color", "description": "Goal Exceeded (>115% - Unified Rose Red)" },
+        "met": { "value": "#10b981", "type": "color", "description": "Goal Met / In Range (85% to 115%)" },
+        "exceeded": { "value": "native_macro", "type": "color", "description": "Preserve native macro element colors when exceeded" },
         "inprogress": { "value": "#64748b", "type": "color", "description": "In Progress (<85%)" },
-        "success": { "value": "#16a34a", "type": "color" },
+        "success": { "value": "#10b981", "type": "color" },
         "warning": { "value": "#f59e0b", "type": "color" }
       },
       "macro": {
-        "calories": { "value": "#6417ff", "type": "color" },
-        "protein": { "value": "#ef233c", "type": "color" },
-        "carbs": { "value": "#f59e0b", "type": "color" },
-        "fat": { "value": "#7c3aff", "type": "color" }
+        "calories": { "value": "#f97316", "type": "color", "description": "Energy Coral / Orange" },
+        "protein": { "value": "#8b5cf6", "type": "color", "description": "Electric Violet" },
+        "carbs": { "value": "#f59e0b", "type": "color", "description": "Warm Amber Gold" },
+        "fat": { "value": "#06b6d4", "type": "color", "description": "Electric Cyan" }
       }
     },
     "radii": {

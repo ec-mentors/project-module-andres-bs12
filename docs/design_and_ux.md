@@ -8,19 +8,25 @@ This document contains all design decisions, UI aesthetics, color palettes, and 
 
 NutritionTracker implements a custom **Dual-Glassmorphism System** combining high-end visual aesthetics with responsive mobile usability:
 
-- **Dark Glass Mode (`#05030d` / `#090516` base):** Deep violet-charcoal glass containers (`bg-[#161024]` with `border-white/10`) featuring soft ambient glows (`shadow-[0_16px_40px_rgba(0,0,0,0.5)]`).
-- **Light Glass Mode (`#f8fafc` base):** Soft, desaturated white glass cards (`bg-white/95` with `backdrop-blur-sm` and `border-slate-200/80`) featuring subtle ambient shadows (`shadow-[0_4px_20px_rgba(0,0,0,0.03)]`) and gentle lavender hover borders (`hover:border-[#6417ff]/25`).
+- **Dark Glass Mode (`#080808` base):** Deep obsidian glass containers (`bg-[#121214]` with `border-white/[0.08]`) featuring soft ambient glows (`shadow-[0_8px_30px_rgba(0,0,0,0.6)]`).
+- **Light Glass Mode (`#f8fafc` base):** Soft, desaturated white glass cards (`bg-white/95` with `backdrop-blur-sm` and `border-slate-200/80`) featuring subtle ambient shadows (`shadow-[0_4px_20px_rgba(0,0,0,0.03)]`) and clean neutral hover borders (`hover:border-slate-300`).
 
 ---
 
 ## 🎨 Strict Color Palette Rules
 
-1. **Brand Purple (`#6417ff`):**
-   - Used for active navigation pills, primary action buttons, and target compliance states when goals are met (`85%` to `115%`).
-2. **Rose Red (`rose-500` / `#f43f5e`):**
-   - Unified alert color used across Donut SVG rings, headline badges, bar chart columns, and table progress indicators whenever a macro goal is **exceeded (`>115%`)**. Over-consuming calories is unhealthy and never marked as "Goal Hit".
+1. **Monochrome Inverted Primary:**
+   - Dark mode primary buttons & active pills: `bg-white text-black font-extrabold hover:bg-zinc-200`.
+   - Light mode primary buttons & active pills: `bg-black text-white font-extrabold hover:bg-zinc-800` (clean monochrome inverse of dark mode, no purple).
+2. **Dedicated Macro Tokens & Goal Exceeded Color Integrity:**
+   - Nutrient native element colors:
+     - **Protein:** Electric Violet (`#8b5cf6` / `text-violet-400` in dark, `text-violet-700` in light, `bg-violet-500`)
+     - **Carbs:** Warm Amber (`#f59e0b` / `text-amber-400` in dark, `text-amber-700` in light, `bg-amber-500`)
+     - **Fat:** Electric Cyan (`#06b6d4` / `text-cyan-400` in dark, `text-cyan-700` in light, `bg-cyan-400`)
+     - **Calories:** Energy Coral / Orange (`#f97316` / `text-orange-400` in dark, `text-orange-600` in light, `bg-orange-500`)
+   - When any nutrient exceeds 100% / 115%, its charts, donut progress rings, vertical bars, and progress indicators MUST retain the nutrient's native element color (no red `#f43f5e` / `bg-rose-500` override).
 3. **Constant Neutral Slate:**
-   - The "Left" column in the *Consumed vs Left* table remains a **constant neutral slate** (`text-slate-700` in Light mode, `text-slate-300` in Dark mode) to avoid cognitive overload. Only the *Progress* column reflects color status.
+   - The "Left" column in the *Consumed vs Left* table remains a **constant neutral slate** (`text-slate-700` in Light mode, `text-zinc-400` in Dark mode) to avoid cognitive overload. Only the *Progress* column reflects color status.
 
 ---
 

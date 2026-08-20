@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import type { DailySummary, NutritionGoal } from '../../types/nutrition';
+import { MACRO_COLORS, formatCompactNumber } from '../../utils/macroTokens';
 
 interface HeroKcalCardProps {
   summary: DailySummary;
@@ -19,15 +20,18 @@ export const HeroKcalCard: React.FC<HeroKcalCardProps> = ({
   selectedDate,
   onDateChange,
   theme = 'dark',
-  isLoading: _isLoading = false,
+  isLoading = false,
 }) => {
   const [animateDonuts, setAnimateDonuts] = useState(false);
   const isLight = theme === 'light';
 
   useEffect(() => {
-    setAnimateDonuts(false);
-    const timer = setTimeout(() => setAnimateDonuts(true), 60);
-    return () => clearTimeout(timer);
+    const timer1 = setTimeout(() => setAnimateDonuts(false), 0);
+    const timer2 = setTimeout(() => setAnimateDonuts(true), 60);
+    return () => {
+      clearTimeout(timer1);
+      clearTimeout(timer2);
+    };
   }, [summary, selectedDate]);
 
   // Clamped Math Calculations
@@ -80,13 +84,10 @@ export const HeroKcalCard: React.FC<HeroKcalCardProps> = ({
   const radius = 18;
   const circumference = 2 * Math.PI * radius;
 
-  // UNIFIED ROSE RED COLOR PALETTE (stroke-rose-500 everywhere for exceeded!):
-  // 1. Electric Purple (#6417ff) = Goal Met (85% to 115%)
-  // 2. Unified Rose Red (stroke-rose-500) = Exceeded (>115%)
-  // 3. Dim Charcoal/Slate = In Progress (<85%)
+  // Dynamic Macro Ring Renderer using centralized Macro Colors
   const renderDonutRing = (
     percent: number,
-    label: string,
+    type: 'kcal' | 'protein' | 'carbs' | 'fat',
     value: number,
     unit: string,
     goalVal: number
@@ -94,30 +95,43 @@ export const HeroKcalCard: React.FC<HeroKcalCardProps> = ({
     const cappedPercentForRing = Math.min(percent, 100);
     const strokeDashoffset = circumference - (cappedPercentForRing / 100) * circumference;
 
-    const ringColorClass =
-      percent >= 85 && percent <= 115
-        ? 'stroke-[#6417ff]'
-        : percent > 115
-        ? 'stroke-rose-500'
-        : isLight
-        ? 'stroke-slate-300'
-        : 'stroke-white/15';
+    let defaultHex: string;
+    let labelText: string;
+    let labelColorClass: string;
+
+    if (type === 'kcal') {
+      defaultHex = MACRO_COLORS.kcal.hex;
+      labelText = 'KCAL';
+      labelColorClass = isLight ? MACRO_COLORS.kcal.textLight : MACRO_COLORS.kcal.text;
+    } else if (type === 'protein') {
+      defaultHex = MACRO_COLORS.protein.hex;
+      labelText = MACRO_COLORS.protein.label.toUpperCase();
+      labelColorClass = isLight ? MACRO_COLORS.protein.textLight : MACRO_COLORS.protein.text;
+    } else if (type === 'carbs') {
+      defaultHex = MACRO_COLORS.carbs.hex;
+      labelText = MACRO_COLORS.carbs.label.toUpperCase();
+      labelColorClass = isLight ? MACRO_COLORS.carbs.textLight : MACRO_COLORS.carbs.text;
+    } else {
+      defaultHex = MACRO_COLORS.fat.hex;
+      labelText = MACRO_COLORS.fat.label.toUpperCase();
+      labelColorClass = isLight ? MACRO_COLORS.fat.textLight : MACRO_COLORS.fat.text;
+    }
+
+    const ringStroke = defaultHex;
 
     return (
       <div
         onClick={onOpenSetGoals}
         className={`flex flex-col items-center p-3 sm:p-4 rounded-2xl cursor-pointer transition-all duration-300 transform hover:scale-[1.02] active:scale-95 group min-w-0 border ${
           isLight
-            ? 'bg-slate-100/70 hover:bg-slate-200/60 border-slate-200/80 hover:border-[#6417ff]/25'
-            : 'bg-[#231a38] hover:bg-[#2d2248] border-white/10 hover:border-[#6417ff]/50'
+            ? 'bg-slate-100/70 hover:bg-slate-200/60 border-slate-200/80 hover:border-slate-300'
+            : 'bg-[#18181b] hover:bg-[#202024] border-white/[0.08] hover:border-white/[0.18]'
         }`}
-        title={`Set ${label} Goal (${value} / ${goalVal}${unit})`}
+        title={`Set ${labelText} Goal (${formatCompactNumber(value)} / ${formatCompactNumber(goalVal)}${unit})`}
       >
         {/* Macro Label ABOVE the Circle */}
-        <span className={`text-[10px] sm:text-xs font-bold uppercase tracking-wider mb-2 transition-colors truncate max-w-full ${
-          isLight ? 'text-purple-700 group-hover:text-purple-900' : 'text-purple-300 group-hover:text-white'
-        }`}>
-          {label}
+        <span className={`text-xs font-black uppercase tracking-wider mb-2 transition-colors truncate max-w-full ${labelColorClass}`}>
+          {labelText}
         </span>
 
         {/* Donut SVG Ring */}
@@ -135,7 +149,8 @@ export const HeroKcalCard: React.FC<HeroKcalCardProps> = ({
               cx="22"
               cy="22"
               r={radius}
-              className={`${ringColorClass} transition-all duration-[800ms] ease-out`}
+              stroke={percent === 0 ? (isLight ? '#cbd5e1' : 'rgba(255,255,255,0.2)') : ringStroke}
+              className="transition-all duration-[800ms] ease-out"
               strokeWidth="4"
               strokeDasharray={circumference}
               strokeDashoffset={animateDonuts ? strokeDashoffset : circumference}
@@ -146,46 +161,50 @@ export const HeroKcalCard: React.FC<HeroKcalCardProps> = ({
         </div>
 
         {/* Percentage Number Below Ring */}
-        <span className={`text-xs sm:text-sm font-black mt-1.5 truncate max-w-full transition-colors duration-300 ${
-          isLight ? 'text-slate-900' : 'text-white'
+        <span className={`text-sm sm:text-base font-black mt-1.5 truncate max-w-full transition-colors duration-300 ${
+          percent === 0
+            ? isLight ? 'text-slate-400' : 'text-zinc-500'
+            : isLight ? 'text-slate-900' : 'text-white'
         }`}>
           {percent}%
         </span>
 
         {/* Consumed Value */}
-        <span className={`text-[11px] sm:text-xs font-extrabold mt-0.5 truncate max-w-full transition-colors duration-300 ${
-          isLight ? 'text-slate-700' : 'text-slate-200'
+        <span className={`text-xs sm:text-sm font-extrabold mt-0.5 truncate max-w-full transition-colors duration-300 ${
+          percent === 0
+            ? isLight ? 'text-slate-500' : 'text-zinc-400'
+            : isLight ? 'text-slate-800' : 'text-zinc-200'
         }`}>
-          {value}{unit}
+          {formatCompactNumber(value)}{unit}
         </span>
       </div>
     );
   };
 
   return (
-    <div className={`border-2 rounded-[32px] p-6 sm:p-8 transition-all duration-300 relative overflow-hidden ${
+    <div className={`border rounded-[32px] p-6 sm:p-8 transition-all duration-300 relative overflow-hidden ${isLoading ? 'opacity-90' : ''} ${
       isLight
-        ? 'bg-white/95 backdrop-blur-sm border-slate-200/80 hover:border-[#6417ff]/25 text-slate-900 shadow-[0_4px_20px_rgba(0,0,0,0.03)] hover:shadow-[0_8px_24px_rgba(100,23,255,0.05)]'
-        : 'bg-[#161024] border-white/10 hover:border-[#6417ff]/40 text-white shadow-[0_16px_40px_rgba(0,0,0,0.5)]'
+        ? 'bg-white/95 backdrop-blur-xs border-slate-200/80 hover:border-slate-300 text-slate-900 shadow-[0_4px_20px_rgba(0,0,0,0.03)]'
+        : 'bg-[#121214] border-white/[0.08] hover:border-white/[0.16] text-white shadow-[0_8px_30px_rgba(0,0,0,0.6)]'
     }`}>
       
       {/* Top Row: Daily Progress Headline on Left, Fixed Width Date Navigator Pill on Right */}
       <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
-        <div className={`flex items-center text-xs font-bold uppercase tracking-wider ${
-          isLight ? 'text-purple-700' : 'text-purple-300'
+        <div className={`flex items-center text-xs sm:text-sm font-bold uppercase tracking-wider ${
+          isLight ? 'text-slate-700' : 'text-zinc-300'
         }`}>
           <span>Daily Progress Today</span>
         </div>
 
         {/* Right Side FIXED WIDTH Date Pill */}
-        <div className={`w-full sm:w-[170px] flex items-center justify-between rounded-2xl sm:rounded-full p-1 px-3 shadow-sm border transition-colors shrink-0 ${
+        <div className={`w-full sm:w-[180px] flex items-center justify-between rounded-2xl sm:rounded-full p-1.5 px-3 shadow-xs border transition-colors shrink-0 ${
           isLight
             ? 'bg-slate-100/90 border-slate-300/80 text-slate-800'
-            : 'bg-[#231a38] border-white/15 text-white'
+            : 'bg-[#18181b] border-white/[0.08] text-white'
         }`}>
           <button
             onClick={handlePrevDay}
-            className={`p-1 rounded-xl sm:rounded-full transition-all active:scale-95 shrink-0 ${
+            className={`p-1.5 rounded-xl sm:rounded-full transition-all active:scale-95 shrink-0 min-w-[32px] min-h-[32px] flex items-center justify-center ${
               isLight ? 'hover:bg-slate-200/90 text-slate-700' : 'hover:bg-white/10 text-white'
             }`}
             title="Previous day"
@@ -193,14 +212,14 @@ export const HeroKcalCard: React.FC<HeroKcalCardProps> = ({
             <ChevronLeft className="w-4 h-4 stroke-[2.5]" />
           </button>
 
-          <div className="flex items-center text-xs font-bold text-center px-1 truncate min-w-0 justify-center flex-1">
+          <div className="flex items-center text-xs sm:text-sm font-bold text-center px-1 truncate min-w-0 justify-center flex-1">
             <span className="truncate">{selectedDateFormatted}</span>
           </div>
 
           <button
             onClick={handleNextDay}
             disabled={isTodaySelected}
-            className={`p-1 rounded-xl sm:rounded-full transition-all active:scale-95 shrink-0 ${
+            className={`p-1.5 rounded-xl sm:rounded-full transition-all active:scale-95 shrink-0 min-w-[32px] min-h-[32px] flex items-center justify-center ${
               isTodaySelected
                 ? 'text-slate-400 cursor-not-allowed opacity-30'
                 : isLight
@@ -215,25 +234,31 @@ export const HeroKcalCard: React.FC<HeroKcalCardProps> = ({
       </div>
 
       {/* Main Headline Display: Daily Progress Percentage */}
-      <div className="relative z-10 space-y-1.5">
+      <div className="relative z-10 space-y-2">
         <div className="flex flex-wrap items-baseline gap-3">
-          <span className={`text-5xl sm:text-6xl font-black tracking-tight drop-shadow-sm transition-all duration-300 ${
-            isLight ? 'text-slate-900' : 'text-white'
+          <span className={`text-5xl sm:text-6xl font-black tracking-tight drop-shadow-xs transition-all duration-300 ${
+            kcalPercent === 0
+              ? isLight ? 'text-slate-400' : 'text-zinc-500'
+              : isLight ? 'text-slate-900' : 'text-white'
           }`}>
             {headlinePercentText}
           </span>
           <span
             className={`text-base sm:text-lg font-bold transition-colors duration-300 ${
-              isAnyMacroExceeded
-                ? 'text-rose-500'
+              safeConsumedKcal === 0
+                ? isLight ? 'text-slate-400' : 'text-zinc-500'
+                : isAnyMacroExceeded
+                ? isLight ? 'text-slate-800 font-extrabold' : 'text-zinc-200 font-extrabold'
                 : isAllMacrosHit
-                ? 'text-[#6417ff]'
+                ? isLight ? 'text-emerald-600 font-extrabold' : 'text-emerald-400 font-extrabold'
                 : isLight
-                ? 'text-purple-700'
-                : 'text-purple-300'
+                ? 'text-slate-700 font-bold'
+                : 'text-zinc-300 font-bold'
             }`}
           >
-            {isAnyMacroExceeded
+            {safeConsumedKcal === 0
+              ? 'Not Started'
+              : isAnyMacroExceeded
               ? 'Goal Exceeded'
               : isAllMacrosHit
               ? 'Goal Hit! 🎉'
@@ -241,19 +266,19 @@ export const HeroKcalCard: React.FC<HeroKcalCardProps> = ({
           </span>
         </div>
 
-        <p className={`text-xs font-medium transition-colors duration-300 ${isLight ? 'text-slate-600' : 'text-slate-300'}`}>
-          {remainingKcal.toLocaleString()} Kcal remaining ({safeConsumedKcal.toLocaleString()} / {goal.kcal.toLocaleString()} Kcal logged)
+        <p className={`text-xs sm:text-sm font-medium transition-colors duration-300 ${isLight ? 'text-slate-700' : 'text-zinc-300'}`}>
+          {formatCompactNumber(remainingKcal)} Kcal remaining ({formatCompactNumber(safeConsumedKcal)} / {formatCompactNumber(goal.kcal)} Kcal logged)
         </p>
       </div>
 
       {/* Donut Macro Cards */}
       <div className={`relative z-10 grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mt-5 pt-5 border-t ${
-        isLight ? 'border-slate-200/80' : 'border-white/10'
+        isLight ? 'border-slate-200/80' : 'border-white/[0.08]'
       }`}>
-        {renderDonutRing(kcalPercent, 'KCAL', safeConsumedKcal, '', goal.kcal)}
-        {renderDonutRing(proteinPercent, 'PROTEIN', safeConsumedProtein, 'g', goal.protein)}
-        {renderDonutRing(fatPercent, 'FAT', safeConsumedFat, 'g', goal.fat)}
-        {renderDonutRing(carbsPercent, 'CARBS', safeConsumedCarbs, 'g', goal.carbs)}
+        {renderDonutRing(kcalPercent, 'kcal', safeConsumedKcal, '', goal.kcal)}
+        {renderDonutRing(proteinPercent, 'protein', safeConsumedProtein, 'g', goal.protein)}
+        {renderDonutRing(carbsPercent, 'carbs', safeConsumedCarbs, 'g', goal.carbs)}
+        {renderDonutRing(fatPercent, 'fat', safeConsumedFat, 'g', goal.fat)}
       </div>
 
     </div>

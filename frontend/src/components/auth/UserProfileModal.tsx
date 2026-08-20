@@ -33,18 +33,16 @@ export const UserProfileModal: React.FC<React.PropsWithChildren<UserProfileModal
   if (!isOpen) return null;
 
   return (
-    /* Backdrop Overlay */
     <div
       onClick={onClose}
       className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md overscroll-none touch-none flex items-center justify-center p-4 animate-in fade-in duration-200"
     >
-      {/* Inner Modal Card */}
       <div
         onClick={(e) => e.stopPropagation()}
-        className={`border-2 rounded-[32px] p-6 sm:p-8 w-full max-w-sm relative animate-in zoom-in-95 duration-200 transition-all text-center ${
+        className={`border rounded-[32px] p-6 sm:p-8 w-full max-w-sm relative animate-in zoom-in-95 duration-200 transition-all text-center ${
           isLight
-            ? 'bg-white/95 border-purple-100 text-slate-900 shadow-[0_20px_60px_rgba(100,23,255,0.12)] [color-scheme:light]'
-            : 'bg-[#161024] border-white/15 text-white shadow-[0_20px_50px_rgba(0,0,0,0.8)] [color-scheme:dark]'
+            ? 'bg-white/95 border-slate-200 text-slate-900 shadow-[0_20px_60px_rgba(0,0,0,0.12)] [color-scheme:light]'
+            : 'bg-[#121214] border-white/[0.08] text-white shadow-[0_20px_50px_rgba(0,0,0,0.9)] [color-scheme:dark]'
         }`}
       >
         {/* Close Button */}
@@ -53,23 +51,27 @@ export const UserProfileModal: React.FC<React.PropsWithChildren<UserProfileModal
           className={`absolute top-6 right-6 p-2 rounded-full transition-colors ${
             isLight
               ? 'hover:bg-slate-100 text-slate-400 hover:text-slate-700'
-              : 'hover:bg-white/10 text-slate-300 hover:text-white'
+              : 'hover:bg-white/10 text-zinc-400 hover:text-white'
           }`}
           title="Close modal"
         >
           <X className="w-5 h-5" />
         </button>
 
-        {/* Profile Avatar (Without verified badge icon) */}
+        {/* Profile Avatar */}
         <div className="relative mx-auto w-20 h-20 mb-4 mt-2">
           {user.pictureUrl ? (
             <img
               src={user.pictureUrl}
               alt={user.firstName}
-              className="w-20 h-20 rounded-full object-cover border-2 border-[#6417ff] shadow-lg"
+              className={`w-20 h-20 rounded-full object-cover border-2 shadow-lg ${
+                isLight ? 'border-slate-400' : 'border-white/20'
+              }`}
             />
           ) : (
-            <div className="w-20 h-20 rounded-full bg-[#6417ff] flex items-center justify-center font-bold text-3xl text-white shadow-lg">
+            <div className={`w-20 h-20 rounded-full flex items-center justify-center font-bold text-3xl shadow-lg ${
+              isLight ? 'bg-black text-white' : 'bg-white text-black'
+            }`}>
               {user.firstName.charAt(0)}
             </div>
           )}
@@ -81,7 +83,7 @@ export const UserProfileModal: React.FC<React.PropsWithChildren<UserProfileModal
         </h3>
         
         <div className={`inline-flex items-center space-x-1.5 px-3 py-1 rounded-full text-xs font-semibold mb-6 ${
-          isLight ? 'bg-slate-100 text-slate-600' : 'bg-white/10 text-purple-200'
+          isLight ? 'bg-slate-100 text-slate-600' : 'bg-[#18181b] text-zinc-300'
         }`}>
           <Mail className="w-3.5 h-3.5" />
           <span>{user.email}</span>
@@ -93,7 +95,7 @@ export const UserProfileModal: React.FC<React.PropsWithChildren<UserProfileModal
             onLogout();
             onClose();
           }}
-          className="w-full py-3.5 rounded-2xl bg-red-500/10 hover:bg-red-500/20 text-red-500 font-extrabold text-sm border border-red-500/20 transition-all active:scale-95 flex items-center justify-center space-x-2 shadow-sm"
+          className="w-full py-3.5 rounded-2xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-500 font-extrabold text-sm border border-rose-500/20 transition-all active:scale-95 flex items-center justify-center space-x-2 shadow-xs cursor-pointer"
         >
           <LogOut className="w-4 h-4" />
           <span>Sign Out</span>

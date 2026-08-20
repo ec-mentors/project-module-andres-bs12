@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Rocket, Sparkles } from 'lucide-react';
 import type { NutritionGoal } from '../../types/nutrition';
+import { MACRO_COLORS, formatCompactNumber } from '../../utils/macroTokens';
 
 interface GoalReviewStepProps {
   calculatedGoal: NutritionGoal;
@@ -46,188 +47,195 @@ export const GoalReviewStep: React.FC<GoalReviewStepProps> = ({
   return (
     <div className="w-full max-w-xl mx-auto h-full flex flex-col justify-between text-left animate-in fade-in duration-300">
       
-      {/* Scrollable Middle Content with Breathable Bottom Padding */}
-      <div className="flex-1 overflow-y-auto px-1 sm:px-4 pt-1 pb-8 sm:pb-10 custom-scrollbar">
-        {/* Header with Restored Tag, Strong Hierarchy & Breathable Spacing */}
-        <div className="pt-3 sm:pt-5 mb-5 sm:mb-7 text-center">
-          {/* Restored Tag */}
-          <div className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full bg-[#6417ff]/15 text-[#6417ff] text-[11px] sm:text-xs font-bold uppercase tracking-wider mb-2.5 sm:mb-3 border border-[#6417ff]/25 shadow-sm">
-            <Sparkles className="w-3.5 h-3.5" />
-            <span>AI Target Formulation</span>
-          </div>
-
-          {/* Section Title */}
-          <h2 className={`text-2xl sm:text-3xl font-bold tracking-tight mb-2 sm:mb-2.5 ${isLight ? 'text-slate-900' : 'text-white'}`}>
+      {/* Scrollable Middle Content */}
+      <div className="flex-1 overflow-y-auto px-1 sm:px-4 pt-2 pb-6 custom-scrollbar">
+        
+        {/* Header - Clear Visual Hierarchy */}
+        <div className="pt-3 sm:pt-6 pb-4 sm:pb-6 text-center space-y-1.5">
+          <h2 className={`text-xl sm:text-2xl font-extrabold tracking-tight ${isLight ? 'text-slate-900' : 'text-white'}`}>
             Review Your Generated Goals
           </h2>
 
-          {/* Subtitle */}
-          <p className={`text-xs sm:text-sm font-normal max-w-sm sm:max-w-md mx-auto leading-relaxed ${isLight ? 'text-slate-600' : 'text-slate-300'}`}>
+          <p className={`text-xs sm:text-sm font-medium max-w-sm sm:max-w-md mx-auto leading-relaxed ${isLight ? 'text-slate-600' : 'text-zinc-400'}`}>
             Here are your calculated daily targets. Fine-tune any metric or launch directly into your dashboard.
           </p>
         </div>
 
-        {/* AI Rationale / Strategy Insight Card */}
+        {/* AI Strategy Insight Card */}
         {calculatedGoal.rationale && (
-          <div className={`mb-4 sm:mb-5 p-4 sm:p-5 rounded-2xl sm:rounded-3xl border transition-all ${
+          <div className={`mb-3.5 sm:mb-4 p-3.5 sm:p-4 rounded-2xl border transition-all ${
             isLight
-              ? 'bg-purple-50/80 border-purple-200/80 text-purple-950 shadow-sm'
-              : 'bg-gradient-to-br from-[#6417ff]/15 via-[#1a0f35] to-[#120a26] border-[#6417ff]/30 text-purple-100 shadow-md'
+              ? 'bg-slate-50 border-slate-200 text-slate-900 shadow-xs'
+              : 'bg-[#18181b] border-white/[0.08] text-zinc-200 shadow-md'
           }`}>
             <div className="flex items-center space-x-2 mb-1.5">
-              <div className="w-5 h-5 rounded-md bg-[#6417ff]/20 text-[#6417ff] flex items-center justify-center border border-[#6417ff]/30">
+              <div className={`w-5 h-5 rounded-md flex items-center justify-center border ${
+                isLight ? 'bg-slate-100 text-slate-900 border-slate-300' : 'bg-white/10 text-white border-white/20'
+              }`}>
                 <Sparkles className="w-3 h-3" />
               </div>
-              <span className="text-[11px] sm:text-xs font-bold uppercase tracking-wider text-[#6417ff]">
+              <span className={`text-xs font-black uppercase tracking-wider ${isLight ? 'text-slate-900' : 'text-white'}`}>
                 NutriAI Strategy
               </span>
             </div>
             <p className={`text-xs sm:text-sm font-normal leading-relaxed ${
-              isLight ? 'text-slate-700' : 'text-slate-200'
+              isLight ? 'text-slate-700' : 'text-zinc-300'
             }`}>
               {calculatedGoal.rationale}
             </p>
           </div>
         )}
 
-        {/* Unified Single Container for Energy Target & Macros */}
-        <div className={`p-4 sm:p-6 rounded-3xl border transition-all ${
+        {/* Target & Macros Container */}
+        <div className={`p-4 sm:p-5 rounded-3xl border transition-all ${
           isLight
-            ? 'bg-white border-slate-200 shadow-sm'
-            : 'bg-[#150e26]/80 border-white/10 shadow-md'
+            ? 'bg-white border-slate-200 shadow-xs'
+            : 'bg-[#121214] border-white/[0.08] shadow-md'
         }`}>
           
           {/* Calorie Target Section */}
-          <div className="mb-4 pb-4 border-b border-slate-200 dark:border-white/10">
+          <div className={`mb-4 pb-4 border-b ${isLight ? 'border-slate-200' : 'border-white/[0.08]'}`}>
             <div className="flex items-center justify-between mb-1.5">
-              <label className={`text-xs font-bold uppercase tracking-wider ${isLight ? 'text-slate-700' : 'text-slate-300'}`}>
+              <label className={`text-xs sm:text-sm font-bold uppercase tracking-wider ${isLight ? 'text-slate-700' : 'text-zinc-300'}`}>
                 Daily Target Calories (Kcal)
               </label>
-              <span className="text-xs font-bold text-[#6417ff]">
+              <span className={`text-xs font-extrabold uppercase tracking-wider ${isLight ? 'text-slate-900 font-extrabold' : 'text-zinc-400'}`}>
                 Recommended
               </span>
             </div>
             <input
               type="number"
+              inputMode="numeric"
+              pattern="[0-9]*"
               min={800}
               max={10000}
               value={kcal}
               onChange={(e) => setKcal(Number(e.target.value))}
-              className={`w-full border rounded-xl px-3.5 py-2 text-sm sm:text-base font-bold focus:outline-none focus:border-[#6417ff] ${
+              className={`w-full border rounded-xl px-3.5 py-3 text-base font-extrabold focus:outline-none min-h-[46px] ${
                 isLight
-                  ? 'bg-slate-50 border-slate-300 text-slate-900'
-                  : 'bg-[#0f0a1d] border-white/15 text-white'
+                  ? 'bg-slate-50 border-slate-300 text-slate-900 focus:border-orange-500'
+                  : 'bg-[#18181b] border-white/[0.12] text-white focus:border-orange-400'
               }`}
               required
+              autoComplete="off"
             />
           </div>
 
           {/* 3 Symmetrical Macronutrient Inputs */}
-          <div className="grid grid-cols-3 gap-2.5 mb-4">
+          <div className="grid grid-cols-3 gap-2.5 sm:gap-3 mb-4">
             {/* Protein */}
             <div className="text-center">
-              <label className="block text-[11px] font-bold uppercase tracking-wider text-blue-500 mb-1">
-                Protein (g)
+              <label className={`block text-xs font-black uppercase tracking-wider mb-1.5 truncate ${isLight ? MACRO_COLORS.protein.textLight : MACRO_COLORS.protein.text}`}>
+                {MACRO_COLORS.protein.label} (g)
               </label>
               <input
                 type="number"
+                inputMode="numeric"
+                pattern="[0-9]*"
                 min={0}
                 max={600}
                 value={protein}
                 onChange={(e) => setProtein(Number(e.target.value))}
-                className={`w-full text-center border rounded-xl px-2 py-2 text-base font-bold focus:outline-none focus:border-blue-500 ${
+                className={`w-full text-center border rounded-xl px-2 py-2.5 text-base font-extrabold focus:outline-none min-h-[46px] ${
                   isLight
-                    ? 'bg-slate-50 border-slate-300 text-slate-900'
-                    : 'bg-[#0f0a1d] border-white/15 text-white'
+                    ? 'bg-slate-50 border-slate-300 text-slate-900 focus:border-violet-500'
+                    : 'bg-[#18181b] border-white/[0.12] text-white focus:border-violet-400'
                 }`}
                 required
+                autoComplete="off"
               />
-              <span className="text-[10px] font-semibold text-slate-400 mt-1 block">
-                {protein * 4} kcal ({proteinPct}%)
+              <span className="text-xs font-bold text-zinc-400 mt-1.5 block">
+                {proteinPct}% • {formatCompactNumber(protein * 4)}kcal
               </span>
             </div>
 
             {/* Carbs */}
             <div className="text-center">
-              <label className="block text-[11px] font-bold uppercase tracking-wider text-amber-500 mb-1">
-                Carbs (g)
+              <label className={`block text-xs font-black uppercase tracking-wider mb-1.5 truncate ${isLight ? MACRO_COLORS.carbs.textLight : MACRO_COLORS.carbs.text}`}>
+                {MACRO_COLORS.carbs.label} (g)
               </label>
               <input
                 type="number"
+                inputMode="numeric"
+                pattern="[0-9]*"
                 min={0}
                 max={1000}
                 value={carbs}
                 onChange={(e) => setCarbs(Number(e.target.value))}
-                className={`w-full text-center border rounded-xl px-2 py-2 text-base font-bold focus:outline-none focus:border-amber-500 ${
+                className={`w-full text-center border rounded-xl px-2 py-2.5 text-base font-extrabold focus:outline-none min-h-[46px] ${
                   isLight
-                    ? 'bg-slate-50 border-slate-300 text-slate-900'
-                    : 'bg-[#0f0a1d] border-white/15 text-white'
+                    ? 'bg-slate-50 border-slate-300 text-slate-900 focus:border-amber-500'
+                    : 'bg-[#18181b] border-white/[0.12] text-white focus:border-amber-400'
                 }`}
                 required
+                autoComplete="off"
               />
-              <span className="text-[10px] font-semibold text-slate-400 mt-1 block">
-                {carbs * 4} kcal ({carbsPct}%)
+              <span className="text-xs font-bold text-zinc-400 mt-1.5 block">
+                {carbsPct}% • {formatCompactNumber(carbs * 4)}kcal
               </span>
             </div>
 
             {/* Fat */}
             <div className="text-center">
-              <label className="block text-[11px] font-bold uppercase tracking-wider text-rose-500 mb-1">
-                Fat (g)
+              <label className={`block text-xs font-black uppercase tracking-wider mb-1.5 truncate ${isLight ? MACRO_COLORS.fat.textLight : MACRO_COLORS.fat.text}`}>
+                {MACRO_COLORS.fat.label} (g)
               </label>
               <input
                 type="number"
+                inputMode="numeric"
+                pattern="[0-9]*"
                 min={0}
                 max={400}
                 value={fat}
                 onChange={(e) => setFat(Number(e.target.value))}
-                className={`w-full text-center border rounded-xl px-2 py-2 text-base font-bold focus:outline-none focus:border-rose-500 ${
+                className={`w-full text-center border rounded-xl px-2 py-2.5 text-base font-extrabold focus:outline-none min-h-[46px] ${
                   isLight
-                    ? 'bg-slate-50 border-slate-300 text-slate-900'
-                    : 'bg-[#0f0a1d] border-white/15 text-white'
+                    ? 'bg-slate-50 border-slate-300 text-slate-900 focus:border-cyan-500'
+                    : 'bg-[#18181b] border-white/[0.12] text-white focus:border-cyan-400'
                 }`}
                 required
+                autoComplete="off"
               />
-              <span className="text-[10px] font-semibold text-slate-400 mt-1 block">
-                {fat * 9} kcal ({fatPct}%)
+              <span className="text-xs font-bold text-zinc-400 mt-1.5 block">
+                {fatPct}% • {formatCompactNumber(fat * 9)}kcal
               </span>
             </div>
           </div>
 
           {/* Symmetrical Macro Ratio Breakdown Bar */}
           <div className="pt-1">
-            <div className="flex justify-between text-xs font-semibold text-slate-400 mb-1.5">
+            <div className="flex justify-between text-xs font-semibold text-zinc-400 mb-1.5">
               <span>Energy Distribution</span>
-              <span>Total: {calculatedTotalKcal} kcal</span>
+              <span className="font-extrabold">{formatCompactNumber(calculatedTotalKcal)} kcal</span>
             </div>
-            <div className={`w-full h-2 rounded-full overflow-hidden flex ${isLight ? 'bg-slate-100' : 'bg-slate-800'}`}>
+            <div className={`w-full h-2 rounded-full overflow-hidden flex ${isLight ? 'bg-slate-100' : 'bg-[#18181b]'}`}>
               <div 
                 style={{ width: `${proteinPct}%` }} 
-                className="h-full bg-blue-500 transition-all duration-300"
+                className={`h-full ${MACRO_COLORS.protein.bg} transition-all duration-300`}
                 title={`Protein: ${proteinPct}%`}
               />
               <div 
                 style={{ width: `${carbsPct}%` }} 
-                className="h-full bg-amber-500 transition-all duration-300"
+                className={`h-full ${MACRO_COLORS.carbs.bg} transition-all duration-300`}
                 title={`Carbs: ${carbsPct}%`}
               />
               <div 
                 style={{ width: `${fatPct}%` }} 
-                className="h-full bg-rose-500 transition-all duration-300"
+                className={`h-full ${MACRO_COLORS.fat.bg} transition-all duration-300`}
                 title={`Fat: ${fatPct}%`}
               />
             </div>
-            <div className="flex items-center justify-center space-x-4 text-[11px] font-semibold mt-2">
-              <span className="flex items-center space-x-1 text-blue-500">
-                <span className="w-1.5 h-1.5 rounded-full bg-blue-500 inline-block" />
+            <div className="flex items-center justify-center space-x-3 sm:space-x-4 text-xs font-bold mt-2.5">
+              <span className={`flex items-center space-x-1.5 ${isLight ? MACRO_COLORS.protein.textLight : MACRO_COLORS.protein.text}`}>
+                <span className={`w-2 h-2 rounded-full ${MACRO_COLORS.protein.bg} inline-block`} />
                 <span>Protein {proteinPct}%</span>
               </span>
-              <span className="flex items-center space-x-1 text-amber-500">
-                <span className="w-1.5 h-1.5 rounded-full bg-amber-500 inline-block" />
+              <span className={`flex items-center space-x-1.5 ${isLight ? MACRO_COLORS.carbs.textLight : MACRO_COLORS.carbs.text}`}>
+                <span className={`w-2 h-2 rounded-full ${MACRO_COLORS.carbs.bg} inline-block`} />
                 <span>Carbs {carbsPct}%</span>
               </span>
-              <span className="flex items-center space-x-1 text-rose-500">
-                <span className="w-1.5 h-1.5 rounded-full bg-rose-500 inline-block" />
+              <span className={`flex items-center space-x-1.5 ${isLight ? MACRO_COLORS.fat.textLight : MACRO_COLORS.fat.text}`}>
+                <span className={`w-2 h-2 rounded-full ${MACRO_COLORS.fat.bg} inline-block`} />
                 <span>Fat {fatPct}%</span>
               </span>
             </div>
@@ -236,24 +244,18 @@ export const GoalReviewStep: React.FC<GoalReviewStepProps> = ({
         </div>
       </div>
 
-      {/* FIXED REVOLUT-STYLE BOTTOM ACTION BAR (Exact same position across all devices) */}
-      <div className={`shrink-0 pt-4 pb-3 sm:pb-4 px-1 sm:px-2 flex items-center justify-between relative z-30 touch-manipulation ${
-        isLight ? 'bg-[#f8fafc]' : 'bg-[#090516]'
+      {/* Bottom Action Bar */}
+      <div className={`shrink-0 pt-4 pb-4 sm:pb-6 px-2 sm:px-3 flex items-center justify-between relative z-30 touch-manipulation border-t ${
+        isLight ? 'bg-[#f8fafc] border-slate-200' : 'bg-[#080808] border-white/[0.08]'
       }`}>
-        {/* Soft Feathered Top Divider */}
-        <div className={`absolute top-0 inset-x-0 h-[1px] pointer-events-none ${
-          isLight
-            ? 'bg-gradient-to-r from-transparent via-slate-300 to-transparent'
-            : 'bg-gradient-to-r from-transparent via-white/20 to-transparent'
-        }`} />
         <button
           type="button"
           onMouseDown={(e) => e.preventDefault()}
           onClick={onBack}
-          className={`px-5 py-3 rounded-2xl text-xs sm:text-sm font-bold transition-all active:scale-95 touch-manipulation select-none ${
+          className={`px-5 py-3 rounded-2xl text-xs sm:text-sm font-bold transition-all active:scale-95 touch-manipulation select-none min-h-[46px] ${
             isLight
               ? 'text-slate-600 bg-slate-100 hover:bg-slate-200'
-              : 'text-slate-300 bg-white/5 hover:bg-white/10'
+              : 'text-zinc-400 bg-white/5 hover:bg-white/10 hover:text-white'
           }`}
         >
           Back
@@ -263,7 +265,11 @@ export const GoalReviewStep: React.FC<GoalReviewStepProps> = ({
           type="button"
           onMouseDown={(e) => e.preventDefault()}
           onClick={handleSubmit}
-          className="px-6 py-3 rounded-2xl bg-[#6417ff] hover:bg-[#530ce8] text-white text-xs sm:text-sm font-bold flex items-center space-x-2 shadow-lg shadow-[#6417ff]/20 active:scale-95 transition-all touch-manipulation cursor-pointer select-none"
+          className={`px-6 py-3 rounded-2xl text-xs sm:text-sm font-extrabold flex items-center space-x-2 shadow-xs active:scale-95 transition-all touch-manipulation cursor-pointer select-none min-h-[46px] ${
+            isLight
+              ? 'bg-black hover:bg-zinc-800 text-white shadow-md'
+              : 'bg-white hover:bg-zinc-200 text-black font-black'
+          }`}
         >
           <Rocket className="w-4 h-4" />
           <span>Launch Dashboard</span>

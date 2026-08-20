@@ -88,7 +88,7 @@ export const api = {
           });
         }
       }
-    } catch (error) {
+    } catch {
       console.info('[REST API] Could not fetch entries from server.');
     }
     return [];
@@ -107,7 +107,7 @@ export const api = {
           return data;
         }
       }
-    } catch (error) {
+    } catch {
       console.info('[REST API] Could not fetch entries from server.');
     }
     return [];
@@ -142,7 +142,7 @@ export const api = {
         method: 'DELETE',
         headers: authHeaders(),
       });
-    } catch (error) {
+    } catch {
       console.info('[REST API] Failed to delete entry from server.');
     }
   },
@@ -163,7 +163,7 @@ export const api = {
         }
         return null;
       }
-    } catch (error) {
+    } catch {
       console.info('[REST API] Error fetching goals from server.');
     }
     return null;
@@ -233,9 +233,95 @@ export const api = {
       startDate: TODAY_STR,
     };
   },
+
+  // --- MULTIMODAL AI MEAL PARSER (Text, Audio, Photo) ---
+
+  /** POST /api/ai/parse-meal-text - Parse natural language text description into macros */
+  async parseMealText(description: string): Promise<AiMealResponseDTO> {
+    const response = await fetch(`${API_BASE}/ai/parse-meal-text`, {
+      method: 'POST',
+      headers: authHeaders('application/json'),
+      body: JSON.stringify({ description }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to parse meal text with status ${response.status}`);
+    }
+
+    return await response.json();
+  },
+
+  /** POST /api/ai/parse-meal-audio - Transcribe & parse audio recording into macros */
+  async parseMealAudio(audioBlob: Blob): Promise<AiMealResponseDTO> {
+    const formData = new FormData();
+    formData.append('audio', audioBlob, 'meal_audio.webm');
+
+    const headers: Record<string, string> = {};
+    const token = getAuthToken();
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
+    const response = await fetch(`${API_BASE}/ai/parse-meal-audio`, {
+      method: 'POST',
+      headers,
+      body: formData,
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to parse meal audio with status ${response.status}`);
+    }
+
+    return await response.json();
+  },
+
+  /** POST /api/ai/parse-meal-image - Scan & estimate nutritional breakdown from photo */
+  async parseMealImage(imageFile: File | Blob): Promise<AiMealResponseDTO> {
+    const formData = new FormData();
+    formData.append('image', imageFile, 'meal_photo.jpg');
+
+    const headers: Record<string, string> = {};
+    const token = getAuthToken();
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
+    const response = await fetch(`${API_BASE}/ai/parse-meal-image`, {
+      method: 'POST',
+      headers,
+      body: formData,
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to analyze meal photo with status ${response.status}`);
+    }
+
+    return await response.json();
+  },
 };
 
+export interface AiMealResponseDTO {
+  mealName: string;
+  kcal: number;
+  carbs: number;
+  fat: number;
+  protein: number;
+  confidenceNote?: string;
+}
+
 // Convenience named exports matching App.tsx imports
+export const parseMealText = async (description: string): Promise<AiMealResponseDTO> => {
+  return await api.parseMealText(description);
+};
+
+export const parseMealAudio = async (audioBlob: Blob): Promise<AiMealResponseDTO> => {
+  return await api.parseMealAudio(audioBlob);
+};
+
+export const parseMealImage = async (imageFile: File | Blob): Promise<AiMealResponseDTO> => {
+  return await api.parseMealImage(imageFile);
+};
+
 export const calculateAiGoalRoadmap = async (data: AiOnboardingState): Promise<NutritionGoal> => {
   return await api.calculateAiGoalRoadmap(data);
 };

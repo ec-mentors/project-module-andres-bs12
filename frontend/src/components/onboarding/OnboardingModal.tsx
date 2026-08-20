@@ -62,7 +62,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
   );
 
   React.useEffect(() => {
-    const bgColor = isLight ? '#f8fafc' : '#090516';
+    const bgColor = isLight ? '#f8fafc' : '#080808';
     document.documentElement.style.backgroundColor = bgColor;
     document.body.style.backgroundColor = bgColor;
     document.documentElement.classList.toggle('light', isLight);
@@ -88,8 +88,6 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
 
   if (!isOpen) return null;
 
-  // Calculate live progress percentage that accurately reflects exact step position forward and backward
-  // Calculate live progress percentage that accurately reflects exact step position forward and backward in 5-step flow
   const getOverallProgress = () => {
     switch (currentStep) {
       case 'choose-path':
@@ -98,104 +96,90 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
         if (aiWizardSubStep === 1) return 40;
         if (aiWizardSubStep === 2) return 60;
         if (aiWizardSubStep === 3) return 80;
-        return 92;
-      case 'manual-setup':
-        return 75;
+        return 90;
       case 'processing':
-        return 96;
+        return 95;
       case 'goal-review':
+        return 100;
+      case 'manual-setup':
         return 100;
       default:
         return 20;
     }
   };
 
-  // Step Text Indicator for top bar (5 Steps)
   const getStepLabel = () => {
     switch (currentStep) {
       case 'choose-path':
-        return 'Step 1 of 5 • Choose Setup Method';
+        return 'Step 1 of 5: Setup Mode';
       case 'ai-wizard':
-        if (aiWizardSubStep === 1) return 'Step 2 of 5 • Primary Objective';
-        if (aiWizardSubStep === 2) return 'Step 3 of 5 • Body & Metrics';
-        if (aiWizardSubStep === 3) return 'Step 4 of 5 • Activity Level';
-        return 'Step 5 of 5 • Dietary Preference';
-      case 'manual-setup':
-        return 'Step 2 of 5 • Custom Targets';
+        return `Step ${aiWizardSubStep + 1} of 5: Profile & Metrics`;
       case 'processing':
-        return 'Step 5 of 5 • Formulating AI Roadmap';
+        return 'Step 4 of 5: Calculating Targets';
       case 'goal-review':
-        return 'Step 5 of 5 • Review & Finalize';
+        return 'Step 5 of 5: Review & Confirm';
+      case 'manual-setup':
+        return 'Step 2 of 2: Configure Goals';
       default:
         return 'Step 1 of 5';
     }
   };
 
-  // Step 1: Choose Path
   const handleSelectPath = (path: OnboardingPath) => {
     setSelectedPath(path);
     if (path === 'ai') {
-      setAiWizardSubStep(1);
       setCurrentStep('ai-wizard');
     } else {
       setCurrentStep('manual-setup');
     }
   };
 
-  // Step 2A: AI Wizard Complete -> Trigger Processing Screen & Call Backend AI Service
-  const handleAiWizardComplete = async (data: AiOnboardingState) => {
-    setAiState(data);
-    setIsAiCalculationReady(false);
+  const handleAiWizardComplete = async (completedState: AiOnboardingState) => {
+    setAiState(completedState);
     setCurrentStep('processing');
+    setIsAiCalculationReady(false);
 
     try {
-      const calculated = await calculateAiGoalRoadmap(data);
-      setPendingGoal(calculated);
-    } catch (error) {
-      console.warn('[Onboarding] Error calculating AI goal from backend, using fallback.', error);
-      const fallback = calculateAiNutritionGoal(data);
-      setPendingGoal(fallback);
+      const apiRoadmap = await calculateAiGoalRoadmap(completedState);
+
+      if (apiRoadmap && apiRoadmap.kcal) {
+        setPendingGoal({
+          kcal: apiRoadmap.kcal,
+          protein: apiRoadmap.protein,
+          carbs: apiRoadmap.carbs,
+          fat: apiRoadmap.fat,
+          rationale: apiRoadmap.rationale,
+        });
+      } else {
+        const fallbackGoal = calculateAiNutritionGoal(completedState);
+        setPendingGoal(fallbackGoal);
+      }
+    } catch {
+      const fallbackGoal = calculateAiNutritionGoal(completedState);
+      setPendingGoal(fallbackGoal);
     } finally {
       setIsAiCalculationReady(true);
     }
   };
 
-  // Step 2B: Manual Setup Complete -> Trigger Processing Screen
-  const handleManualGoalComplete = (goal: NutritionGoal) => {
-    setPendingGoal(goal);
-    setCurrentStep('processing');
+  const handleProcessingFinished = () => {
+    setCurrentStep('goal-review');
   };
 
-  // Processing Finished -> Route to Review (AI) or Dashboard (Manual)
-  const handleProcessingFinish = () => {
-    if (selectedPath === 'ai') {
-      setCurrentStep('goal-review');
-    } else {
-      onCompleteOnboarding({
-        path: selectedPath,
-        goal: pendingGoal,
-      });
-    }
-  };
-
-  // When user clicks "Back" in Goal Review -> Return to AI Wizard Step 4!
-  const handleBackFromReview = () => {
-    setAiWizardSubStep(4);
-    setCurrentStep('ai-wizard');
-  };
-
-  // Final confirmation from GoalReviewStep -> Save and Go to Dashboard
-  const handleGoalReviewConfirm = (finalGoal: NutritionGoal) => {
-    setPendingGoal(finalGoal);
+  const handleFinalGoalConfirm = (finalGoal: NutritionGoal) => {
     onCompleteOnboarding({
-      path: 'ai',
       goal: finalGoal,
+      path: selectedPath,
     });
+    onClose();
   };
 
-  // Desktop Close Request Handler -> Shows Confirmation Pop-up
   const handleDesktopCloseRequest = () => {
-    setShowDiscardModal(true);
+    if (currentStep === 'choose-path') {
+      onClose();
+    } else {
+      setShowDiscardModal(true);
+    }
   };
 
   const handleConfirmDiscard = () => {
@@ -207,42 +191,36 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
     <div className={`fixed inset-0 h-[100dvh] max-h-[100dvh] w-full flex flex-col justify-between overflow-hidden transition-colors duration-300 pb-[max(0.5rem,env(safe-area-inset-bottom))] ${
       isLight 
         ? 'bg-[#f8fafc] text-slate-900' 
-        : 'bg-[#090516] text-white'
+        : 'bg-[#080808] text-white'
     }`}>
       
-      {/* Background Ambient Glow Accents (Full Page Takeover) */}
-      <div className={`fixed top-1/4 left-1/4 w-96 h-96 rounded-full blur-3xl pointer-events-none ${
-        isLight ? 'bg-[#6417ff]/5' : 'bg-[#6417ff]/18'
-      }`} />
-      <div className={`fixed bottom-1/4 right-1/4 w-96 h-96 rounded-full blur-3xl pointer-events-none ${
-        isLight ? 'bg-purple-200/20' : 'bg-purple-600/12'
-      }`} />
-
-      {/* FIXED TOP HEADER BAR (STEP INDICATOR TEXT + PROGRESS LINE + CONTROLS) */}
-      <header className="shrink-0 w-full max-w-xl mx-auto px-4 pt-3 sm:pt-5 pb-3 sm:pb-4 z-20">
+      {/* FIXED TOP HEADER BAR */}
+      <header className={`shrink-0 w-full max-w-xl mx-auto px-4 sm:px-6 pt-4 sm:pt-6 pb-3.5 sm:pb-4.5 z-20 border-b ${
+        isLight ? 'border-slate-200/80 bg-white/50 backdrop-blur-md' : 'border-white/[0.06] bg-[#080808]/80 backdrop-blur-md'
+      }`}>
         
-        <div className="flex items-center justify-between mb-2 sm:mb-2.5">
+        <div className="flex items-center justify-between mb-3">
           {/* Step Indicator Text */}
-          <div className="flex items-center space-x-1.5">
-            <span className="text-[11px] sm:text-xs font-bold uppercase tracking-wider text-[#6417ff]">
+          <div className="flex items-center space-x-2">
+            <span className={`text-xs sm:text-sm font-extrabold uppercase tracking-wider ${isLight ? 'text-slate-900' : 'text-zinc-300'}`}>
               {getStepLabel()}
             </span>
           </div>
 
-          {/* Right Controls: Theme Toggle + Desktop-only Close Button */}
+          {/* Right Controls */}
           <div className="flex items-center space-x-2">
             {onToggleTheme && (
               <button
                 type="button"
                 onClick={onToggleTheme}
-                className={`p-1.5 sm:p-2 rounded-xl transition-all active:scale-95 border ${
+                className={`p-2 rounded-xl transition-all active:scale-95 border ${
                   isLight
-                    ? 'bg-white hover:bg-slate-100 text-slate-700 border-slate-200 shadow-sm'
-                    : 'bg-white/10 hover:bg-white/15 text-purple-200 border-white/10'
+                    ? 'bg-white hover:bg-slate-100 text-slate-700 border-slate-200 shadow-xs'
+                    : 'bg-[#18181b] hover:bg-[#202024] text-zinc-300 border-white/[0.08]'
                 }`}
                 title={`Switch to ${isLight ? 'Dark' : 'Light'} Mode`}
               >
-                {isLight ? <Sun className="w-3.5 h-3.5" /> : <Moon className="w-3.5 h-3.5" />}
+                {isLight ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
               </button>
             )}
 
@@ -251,14 +229,14 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
                 type="button"
                 onClick={handleDesktopCloseRequest}
                 aria-label="Close setup"
-                className={`hidden sm:flex p-2 rounded-xl transition-all active:scale-95 border ${
+                className={`flex p-2 rounded-xl transition-all active:scale-95 border ${
                   isLight
-                    ? 'bg-white hover:bg-slate-100 text-slate-500 hover:text-slate-900 border-slate-200 shadow-sm'
-                    : 'bg-white/10 hover:bg-white/15 text-slate-400 hover:text-white border-white/10'
+                    ? 'bg-white hover:bg-slate-100 text-slate-500 hover:text-slate-900 border-slate-200 shadow-xs'
+                    : 'bg-[#18181b] hover:bg-[#202024] text-zinc-400 hover:text-white border-white/[0.08]'
                 }`}
                 title="Close and discard setup"
               >
-                <X className="w-3.5 h-3.5" />
+                <X className="w-4 h-4" />
               </button>
             )}
           </div>
@@ -266,18 +244,22 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
 
         {/* Clean Progress Bar Line */}
         <div className={`w-full h-1.5 sm:h-2 rounded-full overflow-hidden ${
-          isLight ? 'bg-slate-200' : 'bg-white/10'
+          isLight ? 'bg-slate-200' : 'bg-[#18181b]'
         }`}>
           <div 
-            className="h-full bg-gradient-to-r from-[#6417ff] via-[#8b46ff] to-emerald-400 transition-all duration-300 ease-out"
+            className={`h-full transition-all duration-300 ease-out ${
+              isLight
+                ? 'bg-black'
+                : 'bg-white'
+            }`}
             style={{ width: `${getOverallProgress()}%` }}
           />
         </div>
 
       </header>
 
-      {/* MIDDLE VIEWPORT CONTAINER (FIXED HEIGHT, INTERNALLY MANAGED, NO WINDOW SCROLL) */}
-      <main className="flex-1 w-full max-w-xl mx-auto overflow-hidden flex flex-col z-10 px-2 sm:px-4">
+      {/* MIDDLE VIEWPORT CONTAINER */}
+      <main className="flex-1 w-full max-w-xl mx-auto overflow-hidden flex flex-col z-10 px-3 sm:px-6">
         <AnimatePresence mode="wait">
           
           {/* STEP 1: CHOOSE ONBOARDING PATH */}
@@ -305,7 +287,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.98 }}
               transition={{ duration: 0.2 }}
-              className="w-full h-full"
+              className="w-full h-full flex flex-col justify-between"
             >
               <AiGoalWizardStep
                 initialData={aiState}
@@ -318,26 +300,26 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
             </motion.div>
           )}
 
-          {/* PROCESSING ANIMATION (DEAD CENTERED) */}
+          {/* STEP 3A: AI PROCESSING STEP */}
           {currentStep === 'processing' && (
             <motion.div
               key="processing"
-              initial={{ opacity: 0, scale: 0.95 }}
+              initial={{ opacity: 0, scale: 0.98 }}
               animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 1.05 }}
-              transition={{ duration: 0.3 }}
-              className="w-full h-full flex items-center justify-center my-auto"
+              exit={{ opacity: 0, scale: 0.98 }}
+              transition={{ duration: 0.2 }}
+              className="w-full flex-1 flex flex-col justify-center"
             >
               <ProcessingStep
                 path={selectedPath}
-                onFinished={handleProcessingFinish}
-                isReady={selectedPath === 'ai' ? isAiCalculationReady : true}
+                isReady={isAiCalculationReady}
+                onFinished={handleProcessingFinished}
                 theme={theme}
               />
             </motion.div>
           )}
 
-          {/* GOAL REVIEW & CONFIRMATION */}
+          {/* STEP 4A: AI GOAL REVIEW & ADJUST */}
           {currentStep === 'goal-review' && (
             <motion.div
               key="goal-review"
@@ -345,18 +327,21 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.98 }}
               transition={{ duration: 0.2 }}
-              className="w-full h-full"
+              className="w-full h-full flex flex-col justify-between"
             >
               <GoalReviewStep
                 calculatedGoal={pendingGoal}
-                onBack={handleBackFromReview}
-                onConfirm={handleGoalReviewConfirm}
+                onBack={() => {
+                  setAiWizardSubStep(4);
+                  setCurrentStep('ai-wizard');
+                }}
+                onConfirm={handleFinalGoalConfirm}
                 theme={theme}
               />
             </motion.div>
           )}
 
-          {/* MANUAL GOAL SETUP */}
+          {/* STEP 2B: MANUAL GOAL STEP */}
           {currentStep === 'manual-setup' && (
             <motion.div
               key="manual-setup"
@@ -364,12 +349,14 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.98 }}
               transition={{ duration: 0.2 }}
-              className="w-full h-full"
+              className="w-full h-full flex flex-col justify-between"
             >
               <ManualGoalStep
                 initialGoal={pendingGoal}
                 onBackToPath={() => setCurrentStep('choose-path')}
-                onComplete={handleManualGoalComplete}
+                onComplete={(goal) => {
+                  handleFinalGoalConfirm(goal);
+                }}
                 theme={theme}
               />
             </motion.div>
@@ -381,37 +368,38 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
       {/* DESKTOP DISCARD CONFIRMATION POP-UP MODAL */}
       <AnimatePresence>
         {showDiscardModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-md animate-in fade-in duration-200">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200">
             <motion.div
               initial={{ opacity: 0, scale: 0.95, y: 10 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 10 }}
               transition={{ duration: 0.15 }}
-              className={`w-full max-w-sm rounded-3xl p-6 sm:p-7 border-2 text-center shadow-2xl ${
+              className={`w-full max-w-sm rounded-[28px] p-6 sm:p-7 border text-center shadow-2xl ${
                 isLight
                   ? 'bg-white border-slate-200 text-slate-900 shadow-xl'
-                  : 'bg-[#150e26] border-white/15 text-white shadow-2xl'
+                  : 'bg-[#121214] border-white/[0.08] text-white shadow-2xl'
               }`}
             >
-              {/* Warning Emblem */}
-              <div className="w-14 h-14 rounded-2xl bg-amber-500/15 text-amber-500 flex items-center justify-center mx-auto mb-4 border border-amber-500/30">
+              <div className="w-14 h-14 rounded-2xl bg-amber-500/15 text-amber-400 flex items-center justify-center mx-auto mb-4 border border-amber-500/30">
                 <AlertTriangle className="w-7 h-7" />
               </div>
 
-              {/* Title & Description */}
-              <h3 className={`text-lg sm:text-xl font-bold tracking-tight mb-2 ${isLight ? 'text-slate-900' : 'text-white'}`}>
+              <h3 className={`text-lg sm:text-xl font-extrabold tracking-tight mb-2 ${isLight ? 'text-slate-900' : 'text-white'}`}>
                 Discard Goal Setup?
               </h3>
-              <p className={`text-xs sm:text-sm font-medium mb-6 ${isLight ? 'text-slate-600' : 'text-slate-300'}`}>
+              <p className={`text-xs sm:text-sm font-medium mb-6 ${isLight ? 'text-slate-600' : 'text-zinc-400'}`}>
                 Your personalized nutrition goals will not be saved. You can always configure your goals later in your profile.
               </p>
 
-              {/* Actions */}
               <div className="space-y-2.5">
                 <button
                   type="button"
                   onClick={() => setShowDiscardModal(false)}
-                  className="w-full py-3 rounded-xl bg-[#6417ff] hover:bg-[#530ce8] text-white font-bold text-xs sm:text-sm shadow-md active:scale-98 transition-all"
+                  className={`w-full py-3 rounded-2xl font-extrabold text-xs sm:text-sm active:scale-95 transition-all cursor-pointer ${
+                    isLight
+                      ? 'bg-black hover:bg-zinc-800 text-white shadow-md'
+                      : 'bg-white hover:bg-zinc-200 text-black font-black'
+                  }`}
                 >
                   Continue Setup
                 </button>
@@ -419,10 +407,10 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
                 <button
                   type="button"
                   onClick={handleConfirmDiscard}
-                  className={`w-full py-2.5 rounded-xl font-bold text-xs transition-all border ${
+                  className={`w-full py-2.5 rounded-2xl font-bold text-xs transition-all border ${
                     isLight
-                      ? 'bg-slate-100 hover:bg-red-50 text-red-600 border-slate-200 hover:border-red-200'
-                      : 'bg-white/5 hover:bg-red-500/15 text-red-400 border-white/10 hover:border-red-500/30'
+                      ? 'bg-slate-100 hover:bg-rose-50 text-rose-600 border-slate-200 hover:border-rose-200'
+                      : 'bg-white/5 hover:bg-rose-500/15 text-rose-400 border-white/[0.08] hover:border-rose-500/30'
                   }`}
                 >
                   Discard & Exit
