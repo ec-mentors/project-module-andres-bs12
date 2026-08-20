@@ -8,7 +8,6 @@ import com.project.NutritionTracker.service.AiAudioService;
 import com.project.NutritionTracker.service.AiGoalService;
 import com.project.NutritionTracker.service.AiMealService;
 import jakarta.validation.Valid;
-import org.springframework.ai.model.Media;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -19,7 +18,7 @@ import org.springframework.web.multipart.MultipartFile;
 public class AiController {
 
     // Goal config
-    private final AiGoalService service;
+    private final AiGoalService AiGoalservice;
     // Audio config
     private final AiMealService aiMealService;
     // Meal config
@@ -27,8 +26,8 @@ public class AiController {
 
     // Goal config
 
-    public AiController(AiGoalService service, AiMealService aiMealService, AiAudioService audioService) {
-        this.service = service;
+    public AiController(AiGoalService aiGoalservice, AiMealService aiMealService, AiAudioService audioService) {
+        this.AiGoalservice = aiGoalservice;
         this.aiMealService = aiMealService;
         this.audioService = audioService;
     }
@@ -37,11 +36,11 @@ public class AiController {
 
     @PostMapping("/calculate-goal")
     public ResponseEntity<AiGoalResponseDTO> calculateGoal(@RequestBody AiGoalRequestDTO aiGoalRequestDTO) {
-        AiGoalResponseDTO responseDTO = service.calculateGoal(aiGoalRequestDTO);
+        AiGoalResponseDTO responseDTO = AiGoalservice.calculateGoal(aiGoalRequestDTO);
         return ResponseEntity.ok(responseDTO);
     }
 
-    // Meal service
+    // Meal AiGoalservice
 
     @PostMapping("/parse-meal-text")
     public ResponseEntity<AiMealResponseDTO> parseMealFromText(@Valid @RequestBody AiMealTextRequestDTO dto) {

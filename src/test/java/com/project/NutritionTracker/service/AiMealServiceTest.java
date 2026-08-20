@@ -75,8 +75,6 @@ public class AiMealServiceTest {
 
     @Test
     void parseMealFromText_WithBlankDescription_ThrowsIAE() {
-
-
         assertThrows(IllegalArgumentException.class, () -> service.parseMealFromText(" "));
     }
 
