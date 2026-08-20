@@ -1,15 +1,16 @@
 import React from 'react';
-import { Edit3, LogIn, Sun, Moon } from 'lucide-react';
+import { Edit3, LogIn, Sun, Moon, Zap } from 'lucide-react';
 import type { UserProfile } from '../../types/user';
 
 interface HeaderProps {
-  activeTab: 'today' | 'overview';
-  setActiveTab: (tab: 'today' | 'overview') => void;
+  activeTab: 'nutria' | 'overview';
+  setActiveTab: (tab: 'nutria' | 'overview') => void;
   onOpenSetGoals: () => void;
   user: UserProfile | null;
   onOpenAuth: () => void;
   theme: 'dark' | 'light';
   onToggleTheme: () => void;
+  isVisible?: boolean;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -20,92 +21,108 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenAuth,
   theme,
   onToggleTheme,
+  isVisible = true,
 }) => {
   const isLight = theme === 'light';
-  const iconColorClass = isLight ? 'text-slate-700' : 'text-purple-200';
+  const iconColorClass = isLight ? 'text-slate-700' : 'text-zinc-300';
 
-  // UNIFIED ACTION BUTTON STYLING & HOVER BEHAVIOR (EXACT SAME AS SET GOALS)
   const actionBtnClass = isLight
-    ? 'bg-slate-100/90 text-slate-800 border border-slate-300/80 hover:bg-slate-200/90 hover:border-purple-300'
-    : 'bg-[#231a38] hover:bg-[#2d2248] text-white border border-white/15 hover:border-[#6417ff]/60';
+    ? 'bg-slate-100/90 text-slate-800 border border-slate-300/80 hover:bg-slate-200/90 hover:border-slate-400'
+    : 'bg-[#141416] hover:bg-[#1c1c20] text-zinc-200 hover:text-white border border-white/[0.08] hover:border-white/[0.18] shadow-xs';
 
   return (
-    <header className="pt-4 pb-5 flex justify-center items-center w-full z-30 px-3 sm:px-8">
-      {/* Outer Glass Gradient Glow */}
-      <div className={`p-[1px] rounded-full transition-all duration-300 max-w-full ${
-        isLight
-          ? 'bg-gradient-to-r from-white/80 via-[#6417ff]/20 to-white/80 shadow-[0_4px_20px_rgba(0,0,0,0.03)]'
-          : 'bg-gradient-to-r from-white/10 via-[#6417ff]/20 to-white/10 shadow-[0_4px_16px_rgba(0,0,0,0.5)]'
-      }`}>
-        
-        {/* Inner Content Box */}
-        <div className={`backdrop-blur-sm p-1.5 rounded-full flex items-center space-x-2.5 sm:space-x-3.5 px-3 sm:px-4 h-14 sm:h-16 transition-colors duration-300 ${
-          isLight ? 'bg-white/95 text-slate-900 border border-slate-200/80 shadow-sm' : 'bg-[#161024]/95 text-white border border-white/10'
-        }`}>
-          
-          {/* Navigation Track */}
-          <div className={`relative flex p-1 rounded-full w-44 sm:w-56 h-10 justify-between items-center transition-colors duration-300 shrink-0 ${
-            isLight
-              ? 'bg-slate-100/90 border border-slate-300/70 shadow-[inset_0_1px_3px_rgba(0,0,0,0.06)]'
-              : 'bg-[#0a0714] border border-white/15 shadow-[inset_0_2px_8px_rgba(0,0,0,0.7)]'
-          }`}>
-            
-            {/* Animated Sliding Indicator Pill (SOLID BRAND PURPLE #6417ff WITHOUT GRADIENTS IN LIGHT MODE) */}
-            <div
-              className={`absolute top-1 bottom-1 w-[calc(50%-4px)] rounded-full transition-all duration-300 ease-out ${
-                isLight
-                  ? 'bg-[#6417ff] shadow-sm'
-                  : 'bg-[#6417ff] shadow-[0_4px_16px_rgba(100,23,255,0.4)] border border-white/20'
-              } ${activeTab === 'today' ? 'left-1' : 'left-[calc(50%+2px)]'}`}
-            />
-
-            {/* Today Button */}
-            <button
-              onClick={() => setActiveTab('today')}
-              className={`relative z-10 flex-1 h-8 text-xs sm:text-sm font-extrabold tracking-wide transition-colors duration-200 text-center flex items-center justify-center ${
-                activeTab === 'today'
-                  ? 'text-white drop-shadow-sm'
-                  : isLight
-                  ? 'text-slate-600 hover:text-slate-900'
-                  : 'text-slate-200 hover:text-white'
-              }`}
-            >
-              Today
-            </button>
-
-            {/* Overview Button */}
-            <button
-              onClick={() => setActiveTab('overview')}
-              className={`relative z-10 flex-1 h-8 text-xs sm:text-sm font-extrabold tracking-wide transition-colors duration-200 text-center flex items-center justify-center ${
-                activeTab === 'overview'
-                  ? 'text-white drop-shadow-sm'
-                  : isLight
-                  ? 'text-slate-600 hover:text-slate-900'
-                  : 'text-slate-200 hover:text-white'
-              }`}
-            >
-              Overview
-            </button>
+    <header className={`w-full z-30 sticky top-0 transition-transform duration-300 border-b backdrop-blur-xl shrink-0 ${
+      isVisible ? 'translate-y-0 opacity-100' : '-translate-y-full opacity-0 pointer-events-none'
+    } ${
+      isLight ? 'bg-white/85 border-slate-200 text-slate-900 shadow-sm' : 'bg-[#080808]/85 border-white/[0.08] text-white'
+    }`}>
+      <div className="max-w-7xl mx-auto px-2 min-[360px]:px-2.5 sm:px-6 lg:px-8 py-2 sm:py-4 grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center sm:flex sm:justify-between gap-1 min-[360px]:gap-1.5 sm:gap-3 min-w-0">
+        {/* 1. LEFT: BRAND LOGO */}
+        <div className="flex items-center gap-1 min-[360px]:gap-1.5 sm:gap-3 min-w-0">
+          <div className="w-10 h-10 sm:w-9 sm:h-9 flex items-center justify-center shrink-0">
+            <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-lg sm:rounded-xl bg-gradient-to-tr from-white to-zinc-400 flex items-center justify-center shadow-sm text-black">
+              <Zap className="w-4 h-4 fill-current" />
+            </div>
+          </div>
+          <div className="hidden sm:block">
+            <span className={`font-extrabold text-sm sm:text-base tracking-tight block ${isLight ? 'text-slate-900' : 'text-white'}`}>
+              NutritionTracker
+            </span>
+            <span className="text-[9px] font-bold text-zinc-400 uppercase tracking-wider block">
+              AI Precision Nutrition
+            </span>
           </div>
 
-          {/* Symmetrical Vertical Divider */}
-          <div className={`h-6 w-px shrink-0 ${isLight ? 'bg-slate-300/80' : 'bg-white/20'}`} />
+          {/* Mobile-only theme control balances the utility actions on the right. */}
+          <button
+            onClick={onToggleTheme}
+            className={`sm:hidden w-10 h-10 rounded-full flex items-center justify-center transition-all active:scale-95 shadow-xs shrink-0 touch-manipulation select-none ${actionBtnClass}`}
+            title={`Switch to ${isLight ? 'Dark' : 'Light'} Mode`}
+            aria-label={`Switch to ${isLight ? 'Dark' : 'Light'} Mode`}
+          >
+            {isLight ? (
+              <Sun className={`w-4 h-4 ${iconColorClass}`} />
+            ) : (
+              <Moon className={`w-4 h-4 ${iconColorClass}`} />
+            )}
+          </button>
+        </div>
 
+        {/* 2. CENTER: CLEAN SEGMENTED PILL (Cursor Monochromatic Black/White) */}
+        <div className={`justify-self-center sm:justify-self-auto flex items-center p-0.5 sm:p-1 rounded-full border transition-colors shrink min-w-0 ${
+          isLight ? 'bg-slate-100/90 border-slate-300/80 shadow-[inset_0_1px_2px_rgba(0,0,0,0.05)]' : 'bg-[#141416] border-white/[0.08] shadow-[inset_0_2px_4px_rgba(0,0,0,0.6)]'
+        }`}>
+          {/* Nutria Tab — 40px on very small phones, 44px from ~360px */}
+          <button
+            onClick={() => setActiveTab('nutria')}
+            className={`min-h-10 sm:min-h-0 px-2 min-[360px]:px-3 sm:px-6 py-2 sm:py-1.5 rounded-full text-xs sm:text-sm font-extrabold tracking-wide transition-all touch-manipulation select-none ${
+              activeTab === 'nutria'
+                ? isLight
+                  ? 'bg-black text-white font-black shadow-sm'
+                  : 'bg-white text-black font-black shadow-sm'
+                : isLight
+                ? 'text-slate-600 hover:text-slate-900'
+                : 'text-zinc-400 hover:text-white'
+            }`}
+          >
+            Nutria
+          </button>
+
+          {/* Overview Tab */}
+          <button
+            onClick={() => setActiveTab('overview')}
+            className={`min-h-10 sm:min-h-0 px-2 min-[360px]:px-3 sm:px-6 py-2 sm:py-1.5 rounded-full text-xs sm:text-sm font-extrabold tracking-wide transition-all touch-manipulation select-none ${
+              activeTab === 'overview'
+                ? isLight
+                  ? 'bg-black text-white font-black shadow-sm'
+                  : 'bg-white text-black font-black shadow-sm'
+                : isLight
+                ? 'text-slate-600 hover:text-slate-900'
+                : 'text-zinc-400 hover:text-white'
+            }`}
+          >
+            Overview
+          </button>
+        </div>
+
+        {/* 3. RIGHT: UTILITY ACTION BUTTONS — 40→44px targets + wider gaps on mobile */}
+        <div className="justify-self-end sm:justify-self-auto flex items-center gap-1 min-[360px]:gap-1.5 sm:gap-2.5 shrink-0">
           {/* Set Goals Button */}
           <button
             onClick={onOpenSetGoals}
-            className={`flex items-center space-x-1.5 px-3.5 sm:px-4 h-10 rounded-full text-xs sm:text-sm font-extrabold transition-all whitespace-nowrap shadow-sm shrink-0 active:scale-95 ${actionBtnClass}`}
+            className={`w-10 h-10 sm:w-auto sm:h-9.5 sm:px-4 rounded-full flex items-center justify-center space-x-1.5 text-xs sm:text-sm font-extrabold transition-all whitespace-nowrap shadow-xs active:scale-95 shrink-0 touch-manipulation select-none ${actionBtnClass}`}
+            title="Set Goals"
           >
-            <Edit3 className={`w-3.5 h-3.5 ${iconColorClass} shrink-0`} />
+            <Edit3 className={`w-4 h-4 sm:w-3.5 sm:h-3.5 ${iconColorClass} shrink-0`} />
             <span className="hidden sm:inline">Set goals</span>
-            <span className="sm:hidden">Goals</span>
           </button>
 
           {/* Theme Toggle Button (Sun / Moon) */}
           <button
             onClick={onToggleTheme}
-            className={`w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center overflow-hidden transition-all active:scale-95 shadow-sm shrink-0 ${actionBtnClass}`}
-            title={`Switch to ${isLight ? 'Dark Glass' : 'Light Glass'} Mode`}
+            className={`hidden sm:flex sm:w-9.5 sm:h-9.5 rounded-full items-center justify-center transition-all active:scale-95 shadow-xs shrink-0 touch-manipulation select-none ${actionBtnClass}`}
+            title={`Switch to ${isLight ? 'Dark' : 'Light'} Mode`}
+            aria-label={`Switch to ${isLight ? 'Dark' : 'Light'} Mode`}
           >
             {isLight ? (
               <Sun className={`w-4 h-4 ${iconColorClass}`} />
@@ -114,11 +131,11 @@ export const Header: React.FC<HeaderProps> = ({
             )}
           </button>
 
-          {/* Login / User Profile Button */}
+          {/* User Profile / Login Avatar */}
           <button
             onClick={onOpenAuth}
-            className={`w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center overflow-hidden transition-all active:scale-95 shadow-sm shrink-0 ${actionBtnClass}`}
-            title={user ? `${user.firstName} (Click for Settings)` : 'Sign in with Google'}
+            className={`w-10 h-10 sm:w-9.5 sm:h-9.5 rounded-full flex items-center justify-center overflow-hidden transition-all active:scale-95 shadow-xs shrink-0 touch-manipulation select-none ${actionBtnClass}`}
+            title={user ? `${user.firstName} (Settings)` : 'Sign in with Google'}
           >
             {user && user.pictureUrl ? (
               <img
@@ -139,6 +156,7 @@ export const Header: React.FC<HeaderProps> = ({
           </button>
 
         </div>
+
       </div>
     </header>
   );

@@ -1,5 +1,6 @@
 import React from 'react';
 import type { DailySummary, NutritionGoal } from '../../types/nutrition';
+import { MACRO_COLORS, formatCompactNumber } from '../../utils/macroTokens';
 
 interface ConsumedVsLeftTableProps {
   summary: DailySummary;
@@ -14,7 +15,7 @@ export const ConsumedVsLeftTable: React.FC<ConsumedVsLeftTableProps> = ({
   goal,
   selectedDate,
   theme = 'dark',
-  isLoading: _isLoading = false,
+  isLoading = false,
 }) => {
   const isLight = theme === 'light';
 
@@ -28,9 +29,9 @@ export const ConsumedVsLeftTable: React.FC<ConsumedVsLeftTableProps> = ({
   const formatLeft = (consumed: number, target: number, unit: string) => {
     const diff = target - consumed;
     if (diff < 0) {
-      return `-${Math.abs(diff).toLocaleString()} ${unit}`;
+      return `-${formatCompactNumber(Math.abs(diff))} ${unit}`;
     }
-    return `${diff.toLocaleString()} ${unit}`;
+    return `${formatCompactNumber(diff)} ${unit}`;
   };
 
   const pctKcal = Math.round((summary.consumedKcal / safeKcalGoal) * 100);
@@ -46,80 +47,88 @@ export const ConsumedVsLeftTable: React.FC<ConsumedVsLeftTableProps> = ({
     ? `Today, ${activeDate.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}`
     : activeDate.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
 
-  // PROGRESS INFO HELPER:
-  // 1. Below Range (<85%): Gray (bg-slate-500)
-  // 2. Goal Met / Range Hit (85% to 115%): Morado (#6417ff)
-  // 3. Exceeded Range (>115%): Rojo del circulito (bg-rose-500 / text-rose-500)
-  const getProgressInfo = (pct: number) => {
-    const isHit = pct >= 85 && pct <= 115;
-    const isExceeded = pct > 115;
-
+  // PROGRESS INFO HELPER using centralized Macro Colors:
+  const getProgressInfo = (pct: number, defaultBgClass: string, defaultTextClass: string) => {
     return {
-      color: isHit ? 'bg-[#6417ff]' : isExceeded ? 'bg-rose-500' : isLight ? 'bg-slate-300' : 'bg-slate-500',
-      textColor: isHit
-        ? 'text-[#6417ff] font-extrabold'
-        : isExceeded
-        ? 'text-rose-500 font-extrabold'
-        : isLight
-        ? 'text-slate-500 font-bold'
-        : 'text-slate-400 font-bold',
+      color: defaultBgClass,
+      textColor: pct === 0 ? (isLight ? 'text-slate-400 font-bold' : 'text-zinc-500 font-bold') : defaultTextClass,
       displayText: `${pct}%`,
       barWidth: Math.min(pct, 100),
     };
   };
 
-  const infoKcal = getProgressInfo(pctKcal);
-  const infoProtein = getProgressInfo(pctProtein);
-  const infoFat = getProgressInfo(pctFat);
-  const infoCarbs = getProgressInfo(pctCarbs);
+  const infoKcal = getProgressInfo(
+    pctKcal,
+    MACRO_COLORS.kcal.bg,
+    isLight ? `${MACRO_COLORS.kcal.textLight} font-black` : `${MACRO_COLORS.kcal.text} font-black`
+  );
+  const infoProtein = getProgressInfo(
+    pctProtein,
+    MACRO_COLORS.protein.bg,
+    isLight ? `${MACRO_COLORS.protein.textLight} font-black` : `${MACRO_COLORS.protein.text} font-black`
+  );
+  const infoFat = getProgressInfo(
+    pctFat,
+    MACRO_COLORS.fat.bg,
+    isLight ? `${MACRO_COLORS.fat.textLight} font-black` : `${MACRO_COLORS.fat.text} font-black`
+  );
+  const infoCarbs = getProgressInfo(
+    pctCarbs,
+    MACRO_COLORS.carbs.bg,
+    isLight ? `${MACRO_COLORS.carbs.textLight} font-black` : `${MACRO_COLORS.carbs.text} font-black`
+  );
 
   const rows = [
     {
       label: 'Calories',
-      consumed: `${summary.consumedKcal.toLocaleString()} kcal`,
+      labelColor: isLight ? MACRO_COLORS.kcal.textLight : MACRO_COLORS.kcal.text,
+      consumed: `${formatCompactNumber(summary.consumedKcal)} kcal`,
       left: formatLeft(summary.consumedKcal, goal.kcal, 'kcal'),
       info: infoKcal,
     },
     {
       label: 'Protein',
-      consumed: `${summary.consumedProtein}g`,
+      labelColor: isLight ? MACRO_COLORS.protein.textLight : MACRO_COLORS.protein.text,
+      consumed: `${formatCompactNumber(summary.consumedProtein)}g`,
       left: formatLeft(summary.consumedProtein, goal.protein, 'g'),
       info: infoProtein,
     },
     {
       label: 'Fat',
-      consumed: `${summary.consumedFat}g`,
+      labelColor: isLight ? MACRO_COLORS.fat.textLight : MACRO_COLORS.fat.text,
+      consumed: `${formatCompactNumber(summary.consumedFat)}g`,
       left: formatLeft(summary.consumedFat, goal.fat, 'g'),
       info: infoFat,
     },
     {
       label: 'Carbs',
-      consumed: `${summary.consumedCarbs}g`,
+      labelColor: isLight ? MACRO_COLORS.carbs.textLight : MACRO_COLORS.carbs.text,
+      consumed: `${formatCompactNumber(summary.consumedCarbs)}g`,
       left: formatLeft(summary.consumedCarbs, goal.carbs, 'g'),
       info: infoCarbs,
     },
   ];
 
   return (
-    <div className={`border-2 rounded-[32px] p-6 sm:p-8 transition-all duration-300 ${
+    <div className={`border rounded-[32px] p-6 sm:p-8 transition-all duration-300 ${isLoading ? 'opacity-90' : ''} ${
       isLight
-        ? 'bg-white/95 backdrop-blur-sm border-slate-200/80 hover:border-[#6417ff]/25 text-slate-900 shadow-[0_4px_20px_rgba(0,0,0,0.03)] hover:shadow-[0_8px_24px_rgba(100,23,255,0.05)]'
-        : 'bg-[#161024] border-white/10 hover:border-[#6417ff]/40 text-white shadow-[0_16px_40px_rgba(0,0,0,0.5)]'
+        ? 'bg-white/95 backdrop-blur-xs border-slate-200/80 hover:border-slate-300 text-slate-900 shadow-[0_4px_20px_rgba(0,0,0,0.03)]'
+        : 'bg-[#121214] border-white/[0.08] hover:border-white/[0.16] text-white shadow-[0_8px_30px_rgba(0,0,0,0.6)]'
     }`}>
       
       {/* Clean Header with Dynamic Selected Date Subtitle */}
-      <div className={`mb-6 pb-4 border-b ${isLight ? 'border-slate-200/80' : 'border-white/10'}`}>
-        <h3 className={`text-xl sm:text-2xl font-bold ${isLight ? 'text-slate-900' : 'text-white'}`}>
+      <div className={`mb-6 pb-4 border-b ${isLight ? 'border-slate-200/80' : 'border-white/[0.08]'}`}>
+        <h3 className={`text-xl sm:text-2xl font-black ${isLight ? 'text-slate-900' : 'text-white'}`}>
           Consumed vs Left
         </h3>
-        <p className={`text-xs font-semibold mt-0.5 ${isLight ? 'text-purple-700' : 'text-purple-300'}`}>
+        <p className={`text-xs sm:text-sm font-semibold mt-0.5 ${isLight ? 'text-slate-700' : 'text-zinc-300'}`}>
           {dateFormatted}
         </p>
       </div>
 
       {/* Table Header Row */}
-      <div className={`grid grid-cols-12 gap-2 text-xs font-extrabold uppercase tracking-wider mb-3 px-2 ${
-        isLight ? 'text-slate-500' : 'text-slate-400'
+      <div className={`grid grid-cols-12 gap-2 text-xs font-black uppercase tracking-wider mb-3 px-2 ${
+        isLight ? 'text-slate-700' : 'text-zinc-300'
       }`}>
         <div className="col-span-4 sm:col-span-3">Nutrient</div>
         <div className="col-span-4 sm:col-span-3 text-center sm:text-left">Consumed</div>
@@ -133,32 +142,30 @@ export const ConsumedVsLeftTable: React.FC<ConsumedVsLeftTableProps> = ({
           return (
             <div
               key={r.label}
-              className={`p-3.5 sm:p-4 rounded-2xl transition-all duration-200 shadow-sm border ${
+              className={`p-3.5 sm:p-4 rounded-2xl transition-all duration-200 shadow-xs border ${
                 isLight
                   ? 'bg-slate-100/70 hover:bg-slate-200/60 border-slate-200/80'
-                  : 'bg-[#231a38] hover:bg-[#2d2248] border-white/10 hover:border-white/20'
+                  : 'bg-[#18181b] hover:bg-[#202024] border-white/[0.08] hover:border-white/[0.16]'
               }`}
             >
               <div className="grid grid-cols-12 gap-2 items-center text-xs sm:text-sm">
                 
                 {/* Nutrient Label */}
-                <div className={`col-span-4 sm:col-span-3 font-bold min-w-0 truncate ${
-                  isLight ? 'text-slate-900' : 'text-white'
-                }`}>
+                <div className={`col-span-4 sm:col-span-3 font-extrabold min-w-0 truncate ${r.labelColor}`}>
                   {r.label}
                 </div>
 
                 {/* Consumed */}
-                <div className={`col-span-4 sm:col-span-3 font-bold text-center sm:text-left truncate transition-colors duration-200 ${
+                <div className={`col-span-4 sm:col-span-3 font-black text-center sm:text-left truncate transition-colors duration-200 ${
                   isLight ? 'text-slate-900' : 'text-white'
                 }`}>
                   {r.consumed}
                 </div>
 
-                {/* Left (NEVER CHANGES COLOR! ALWAYS CONSTANT NEUTRAL SLATE) */}
+                {/* Left (CONSTANT NEUTRAL ZINC/SLATE) */}
                 <div
-                  className={`col-span-4 sm:col-span-3 font-semibold text-right sm:text-left truncate transition-colors duration-200 ${
-                    isLight ? 'text-slate-700 font-bold' : 'text-slate-300 font-bold'
+                  className={`col-span-4 sm:col-span-3 font-bold text-right sm:text-left truncate transition-colors duration-200 ${
+                    isLight ? 'text-slate-700' : 'text-zinc-300'
                   }`}
                 >
                   {r.left}
@@ -174,7 +181,7 @@ export const ConsumedVsLeftTable: React.FC<ConsumedVsLeftTableProps> = ({
                       style={{ width: `${r.info.barWidth}%` }}
                     />
                   </div>
-                  <span className={`text-xs w-10 text-right ${r.info.textColor} transition-colors duration-200`}>
+                  <span className={`text-xs sm:text-sm w-12 text-right ${r.info.textColor} transition-colors duration-200`}>
                     {r.info.displayText}
                   </span>
                 </div>

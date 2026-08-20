@@ -8,6 +8,7 @@ interface AuthModalProps {
   user: UserProfile | null;
   onGoogleSignIn: () => void;
   onLogout: () => void;
+  theme?: 'dark' | 'light';
 }
 
 export const AuthModal: React.FC<AuthModalProps> = ({
@@ -16,7 +17,9 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   user,
   onGoogleSignIn,
   onLogout,
+  theme = 'dark',
 }) => {
+  const isLight = theme === 'light';
   if (!isOpen) return null;
 
   return (
@@ -28,32 +31,44 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       {/* Inner Modal Card - Stops propagation so clicking inside doesn't close */}
       <div
         onClick={(e) => e.stopPropagation()}
-        className="bg-[#161024] border-2 border-white/15 rounded-[32px] p-6 sm:p-8 w-full max-w-md shadow-[0_20px_50px_rgba(0,0,0,0.8)] text-white relative animate-in zoom-in-95 duration-200"
+        className={`border rounded-[32px] p-6 sm:p-8 w-full max-w-md relative animate-in zoom-in-95 duration-200 ${
+          isLight
+            ? 'bg-white border-slate-200 text-slate-900 shadow-[0_20px_50px_rgba(0,0,0,0.15)] [color-scheme:light]'
+            : 'bg-[#121214] border-white/15 text-white shadow-[0_20px_50px_rgba(0,0,0,0.8)] [color-scheme:dark]'
+        }`}
       >
         {/* Close Button */}
         <button
           onClick={onClose}
-          className="absolute top-6 right-6 p-2 rounded-full hover:bg-white/10 text-slate-300 hover:text-white transition-colors"
+          className={`absolute top-6 right-6 p-2 rounded-full transition-colors ${
+            isLight
+              ? 'hover:bg-slate-100 text-slate-400 hover:text-slate-700'
+              : 'hover:bg-white/10 text-slate-300 hover:text-white'
+          }`}
           title="Close modal"
         >
           <X className="w-5 h-5" />
         </button>
 
         <div className="text-center mb-6">
-          <div className="w-16 h-16 rounded-full bg-[#6417ff]/20 border border-[#6417ff]/40 flex items-center justify-center mx-auto mb-4 text-[#6417ff] shadow-inner">
+          <div className={`w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4 ${
+            isLight ? 'bg-slate-100 text-slate-900' : 'bg-white/10 text-white'
+          }`}>
             <LogIn className="w-8 h-8" />
           </div>
-          <h3 className="text-2xl font-black text-white">
+          <h3 className={`text-2xl font-black ${isLight ? 'text-slate-900' : 'text-white'}`}>
             {user ? 'Account Settings' : 'Sign In'}
           </h3>
-          <p className="text-xs font-semibold text-purple-300 mt-1">
+          <p className={`text-xs font-semibold mt-1 ${isLight ? 'text-slate-600' : 'text-zinc-400'}`}>
             {user ? `Logged in as ${user.email}` : 'Sign in with Google to sync your nutrition goals'}
           </p>
         </div>
 
         {user ? (
           <div className="space-y-4">
-            <div className="bg-[#231a38] border border-white/10 p-4 rounded-2xl flex items-center space-x-3">
+            <div className={`border p-4 rounded-2xl flex items-center space-x-3 ${
+              isLight ? 'bg-slate-50 border-slate-200' : 'bg-[#18181b] border-white/10'
+            }`}>
               {user.pictureUrl ? (
                 <img
                   src={user.pictureUrl}
@@ -61,15 +76,17 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                   className="w-12 h-12 rounded-full object-cover border border-white/20"
                 />
               ) : (
-                <div className="w-12 h-12 rounded-full bg-[#6417ff] flex items-center justify-center font-bold text-lg text-white">
+                <div className={`w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg ${
+                  isLight ? 'bg-black text-white' : 'bg-white text-black'
+                }`}>
                   {user.firstName.charAt(0)}
                 </div>
               )}
               <div>
-                <h4 className="text-sm font-bold text-white">
+                <h4 className={`text-sm font-bold ${isLight ? 'text-slate-900' : 'text-white'}`}>
                   {user.firstName} {user.lastName}
                 </h4>
-                <p className="text-xs text-slate-400">{user.email}</p>
+                <p className={`text-xs ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>{user.email}</p>
               </div>
             </div>
 
@@ -78,7 +95,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 onLogout();
                 onClose();
               }}
-              className="w-full py-3 rounded-2xl bg-red-500/20 hover:bg-red-500/30 text-red-400 font-extrabold text-sm border border-red-500/30 transition-all active:scale-95 shadow-md"
+              className="w-full py-3.5 rounded-2xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-500 font-extrabold text-sm border border-rose-500/20 transition-all active:scale-95 shadow-xs cursor-pointer"
             >
               Sign Out
             </button>
@@ -90,7 +107,11 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 onGoogleSignIn();
                 onClose();
               }}
-              className="w-full py-3.5 px-4 rounded-2xl bg-white hover:bg-slate-100 text-slate-900 font-bold text-sm flex items-center justify-center space-x-3 transition-all transform hover:scale-[1.02] active:scale-95 shadow-lg"
+              className={`w-full py-3.5 px-4 rounded-2xl font-bold text-sm flex items-center justify-center space-x-3 transition-all transform hover:scale-[1.02] active:scale-95 shadow-md ${
+                isLight
+                  ? 'bg-black hover:bg-zinc-800 text-white'
+                  : 'bg-white hover:bg-zinc-200 text-slate-900'
+              }`}
             >
               <svg className="w-5 h-5" viewBox="0 0 24 24">
                 <path
