@@ -46,5 +46,7 @@ build/
 *.pem
 *.key
 *.crt
-.agents
+# Local agent workspace artifacts
+.agents/
+/ORIGINAL_REQUEST.md
 docker-compose.prod.yml
