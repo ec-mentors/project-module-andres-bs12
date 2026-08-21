@@ -44,8 +44,13 @@ The frontend of NutritionTracker was developed using **AI-Assisted Pair Programm
 - Eliminated full-page unmount loading spin states that caused harsh screen flashes when changing dates.
 - Preserved 100% stable container DOM mounting and integrated in-place Apple-style soft-rounded pulsing placeholders (`animate-pulse bg-slate-200` in Light mode / `bg-white/10` in Dark mode) across hero cards, tables, and meal entry lists.
 
+### 7. CSS Utility Debugging & Scope Preservation
+- **First-Principles CSS Inspection:** When UI elements disappear or collapse unexpectedly, check the raw definitions of global CSS utilities before assuming complex React lifecycle, flexbox, or state management issues. A malformed `.no-scrollbar` rule (`display: none` on the container instead of the scrollbar pseudo-element) can hide entire DOM subtrees.
+- **Strict Scope on Bugfixes:** Never introduce unrequested controls (such as extra header Cancel buttons) or redesign functioning layouts when resolving defects. Always verify the prior working state via Git history.
+
 ---
 
 ## 📄 Related Documentation
 - 🎨 **[Design & UX Documentation](../docs/design_and_ux.md):** Detailed breakdown of design philosophy, color system, and Figma evolutions.
 - 📘 **[Project README](../README.md):** Architecture overview, database schema, tech stack, and setup guide.
+

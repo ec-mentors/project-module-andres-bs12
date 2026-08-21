@@ -2,6 +2,26 @@
 
 This document serves as a development and learning journal to record key concepts, architectural decisions, and notes learned throughout the **NutritionTracker** project.
 
+## 📅 2026-08-21 - (Sprint 4) - CSS Root Cause Analysis (`.no-scrollbar`), UI Diagnostic Invariants & Scope Discipline
+
+### 💡 Key Concepts Learned & Architectural Decisions
+
+1. **Root Cause Analysis (RCA): The Malformed `.no-scrollbar` CSS Utility:**
+   - *The Symptom:* In the Nutria Chat view, the message container rendered as a blank/black void between the macro bar and omnibar input. In the Meal Intake sidebar, clicking `+ Add Meal` made the button disappear and rendered nothing behind it.
+   - *The Root Cause:* The CSS class `.no-scrollbar` (introduced in an earlier styling update) was written with `display: none` applied directly to the host container element instead of targeting only the scrollbar pseudo-element (`&::-webkit-scrollbar { display: none; }` with `scrollbar-width: none`). As a result, any container decorated with `no-scrollbar` had its entire DOM subtree completely hidden by the browser layout engine.
+   - *The Resolution:* Fixed `.no-scrollbar` to target exclusively pseudo-elements (`::-webkit-scrollbar { display: none; }`, `scrollbar-width: none;`, `-ms-overflow-style: none;`) without applying `display: none` to the host element.
+
+2. **UI Diagnostic Invariant: "Inspect Raw CSS Before Refactoring Code":**
+   - *The Antipattern:* When UI elements disappear or collapse, jumping immediately to high-level architectural hypotheses (e.g. React state lifecycle issues, Framer Motion `AnimatePresence` collisions, flexbox height math `100dvh` vs `min-h-0`, or token authentication bugs) leads to unnecessary code churn and layout overcomplication.
+   - *The Core Invariant:* **Always verify computed CSS properties (`display`, `visibility`, `opacity`, `height`, `overflow`) of the exact DOM node first.** If a container is in the DOM but invisible, check what styles its class names are actually declaring in `index.css` and the stylesheet bundle.
+
+3. **Strict UI Scope & Preserving Working History:**
+   - *The Principle:* When tasked with debugging a visual glitch or regression, never introduce unrequested new UI components (e.g. adding extra "Cancel" buttons in headers, alternate toggle controls, or unprompted layout restructuring).
+   - *Git As Source of Truth:* Before making modifications, always inspect the previous working state via `git log` and `git show <commit>:<file>` to ensure the fix preserves the intended user experience with surgical, minimal changes.
+
+4. **Console Noise vs. Actual Errors (Vite COOP Notices):**
+   - *Observation:* `Cross-Origin-Opener-Policy policy would block the window.postMessage call` logs in the browser console originate from Vite's internal development client and do not affect application state, Spring Boot REST endpoints, or PostgreSQL data flow.
+
 ---
 
 ## 📅 2026-08-20 - (Sprint 4) - Multimodal AI Meal Parsing (Text, Vision, Whisper Audio), Approach B Heuristics & Spring AI Mocking
