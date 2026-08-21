@@ -121,7 +121,3 @@ Task tracking and sprint planning are managed via **GitHub Issues & Projects** a
 * 🚀 **[View Live GitHub Issues & Backlog](https://github.com/ec-mentors/project-module-andres-bs12/issues)**
 * 📊 **[View Interactive GitHub Project Board](https://github.com/users/andres-bs12/projects/3)**
 
----
-
-## 📄 License
-This project is open-source and developed for the NutritionTracker module.
