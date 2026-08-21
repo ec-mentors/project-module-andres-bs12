@@ -1,4 +1,4 @@
-# 📘 Integration Plan: Favorite Meals & Meal Type Categorization
+`# 📘 Integration Plan: Favorite Meals & Meal Type Categorization
 
 ## 1. Executive Summary & Objectives
 
