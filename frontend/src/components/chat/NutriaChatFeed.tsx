@@ -64,10 +64,11 @@ export const NutriaChatFeed: React.FC<NutriaChatFeedProps> = ({
   };
 
   // Helper to test if a response is non-food, uncertain or clarification
-  const isClarificationOrError = (res: { kcal: number; mealName?: string; confidenceNote?: string }) => {
+  const isClarificationOrError = (res: { kcal?: number; mealName?: string; confidenceNote?: string | number }) => {
     if (!res.kcal || res.kcal === 0) return true;
     if (res.mealName && (res.mealName.includes('Invalid') || res.mealName.includes('Uncertain') || res.mealName.includes('Non-Food'))) return true;
-    if (res.confidenceNote && (res.confidenceNote.includes('?') || res.confidenceNote.toLowerCase().includes('what') || res.confidenceNote.toLowerCase().includes('please provide'))) return true;
+    const note = res.confidenceNote != null ? String(res.confidenceNote) : '';
+    if (note && (note.includes('?') || note.toLowerCase().includes('what') || note.toLowerCase().includes('please provide'))) return true;
     return false;
   };
 
@@ -91,15 +92,16 @@ export const NutriaChatFeed: React.FC<NutriaChatFeedProps> = ({
 
     try {
       const res = await parseMealText(queryToSend);
+      const confidenceNote = res.confidenceNote != null ? String(res.confidenceNote) : undefined;
       
       if (isClarificationOrError(res)) {
-        if (res.confidenceNote && (res.confidenceNote.includes('?') || res.confidenceNote.toLowerCase().includes('what'))) {
+        if (confidenceNote && (confidenceNote.includes('?') || confidenceNote.toLowerCase().includes('what'))) {
           setPendingClarificationContext(queryToSend);
         } else {
           setPendingClarificationContext(null);
         }
 
-        const noteText = res.confidenceNote || "I couldn't identify any clear food in your message. Please provide a description of what you ate.";
+        const noteText = confidenceNote || "I couldn't identify any clear food in your message. Please provide a description of what you ate.";
         const aiClarificationMsg: ChatMessage = {
           id: 'nutria-' + Date.now(),
           sender: 'nutria',
@@ -121,7 +123,7 @@ export const NutriaChatFeed: React.FC<NutriaChatFeedProps> = ({
             protein: res.protein || 0,
             carbs: res.carbs || 0,
             fat: res.fat || 0,
-            confidenceNote: res.confidenceNote || 'Estimated with AI',
+            confidenceNote: confidenceNote || 'Estimated with AI',
             isSaved: false,
             source: 'TEXT',
           },
@@ -163,9 +165,10 @@ export const NutriaChatFeed: React.FC<NutriaChatFeedProps> = ({
     try {
       const audioFile = new File([audioBlob], `voice-log-${Date.now()}.webm`, { type: audioBlob.type || 'audio/webm' });
       const res = await parseMealAudio(audioFile);
+      const confidenceNote = res.confidenceNote != null ? String(res.confidenceNote) : undefined;
 
       if (isClarificationOrError(res)) {
-        const noteText = res.confidenceNote || "The audio didn't have enough clear detail. Could you mention what you ate again?";
+        const noteText = confidenceNote || "The audio didn't have enough clear detail. Could you mention what you ate again?";
         const aiClarificationMsg: ChatMessage = {
           id: 'nutria-' + Date.now(),
           sender: 'nutria',
@@ -186,7 +189,7 @@ export const NutriaChatFeed: React.FC<NutriaChatFeedProps> = ({
             protein: res.protein || 0,
             carbs: res.carbs || 0,
             fat: res.fat || 0,
-            confidenceNote: res.confidenceNote || 'Estimated from voice memo',
+            confidenceNote: confidenceNote || 'Estimated from voice memo',
             isSaved: false,
             source: 'AUDIO',
           },
@@ -227,9 +230,10 @@ export const NutriaChatFeed: React.FC<NutriaChatFeedProps> = ({
 
     try {
       const res = await parseMealImage(file);
+      const confidenceNote = res.confidenceNote != null ? String(res.confidenceNote) : undefined;
 
       if (isClarificationOrError(res)) {
-        const noteText = res.confidenceNote || "I couldn't identify the meal clearly from this image. Could you tell me what it was?";
+        const noteText = confidenceNote || "I couldn't identify the meal clearly from this image. Could you tell me what it was?";
         const aiClarificationMsg: ChatMessage = {
           id: 'nutria-' + Date.now(),
           sender: 'nutria',
@@ -250,7 +254,7 @@ export const NutriaChatFeed: React.FC<NutriaChatFeedProps> = ({
             protein: res.protein || 0,
             carbs: res.carbs || 0,
             fat: res.fat || 0,
-            confidenceNote: res.confidenceNote || 'Estimated from photo scan',
+            confidenceNote: confidenceNote || 'Estimated from photo scan',
             isSaved: false,
             source: 'IMAGE',
           },
