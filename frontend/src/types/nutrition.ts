@@ -10,11 +10,10 @@ export interface MealEntry {
   fat: number;
 }
 
-// 2. Matches Spring Boot EntryRequestDTO
+// 2. Matches Spring Boot EntryRequestDTO (createdOn is server-only)
 export interface CreateMealEntryPayload {
   mealName: string;
   source?: string;
-  createdOn?: string;
   kcal: number;
   protein: number;
   carbs: number;
