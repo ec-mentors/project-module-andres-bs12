@@ -14,15 +14,16 @@ import type { UserProfile } from './types/user';
 import type { MealEntry, NutritionGoal, DailySummary, CreateMealEntryPayload } from './types/nutrition';
 import type { OnboardingCompletionResult } from './components/onboarding/types';
 import { 
-  fetchTodayEntries, 
+  fetchAllEntries,
+  fetchTodayEntries,
   createMealEntry, 
   updateMealEntry, 
   deleteMealEntry, 
-  fetchTodaySummary, 
   fetchGoal, 
   updateGoal,
   clearAuthToken,
 } from './services/api';
+import { toLocalYmd } from './utils/dateLocal';
 import { CheckCircle2 } from 'lucide-react';
 
 export function App() {
@@ -80,15 +81,16 @@ export function App() {
   // Selected Date State (Defaults to Today)
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
 
-  // Data state
+  // Data state — `entries` = all history (charts); `dayEntries` = selected day (Meal Intake)
   const [entries, setEntries] = useState<MealEntry[]>([]);
+  const [dayEntries, setDayEntries] = useState<MealEntry[]>([]);
   const [goal, setGoal] = useState<NutritionGoal>({
     kcal: 2000,
     protein: 150,
     carbs: 200,
     fat: 65,
   });
-  const [summary, setSummary] = useState<DailySummary>({
+  const [, setSummary] = useState<DailySummary>({
     consumedKcal: 0,
     consumedProtein: 0,
     consumedFat: 0,
@@ -158,11 +160,12 @@ export function App() {
     loadGoals();
   }, [userId]);
 
-  // Load Entries and Daily Summary whenever selectedDate or userId changes
+  // Load all entries + day entries + daily summary whenever selectedDate or userId changes
   useEffect(() => {
     async function loadDataForDate() {
       if (!userId) {
         setEntries([]);
+        setDayEntries([]);
         setSummary({
           consumedKcal: 0,
           consumedProtein: 0,
@@ -175,19 +178,21 @@ export function App() {
 
       setLoading(true);
       try {
-        const dateStr = selectedDate.toISOString().split('T')[0];
+        const dateStr = toLocalYmd(selectedDate);
         
-        const [fetchedEntries, fetchedSummary] = await Promise.all([
+        // Same dayEntries array feeds Meal Intake AND Daily Progress (no divergent filters)
+        const [fetchedAll, fetchedDay] = await Promise.all([
+          fetchAllEntries(userId),
           fetchTodayEntries(userId, dateStr),
-          fetchTodaySummary(userId, dateStr),
         ]);
 
-        setEntries(fetchedEntries || []);
-        setSummary(fetchedSummary || {
-          consumedKcal: 0,
-          consumedProtein: 0,
-          consumedFat: 0,
-          consumedCarbs: 0,
+        setEntries(fetchedAll || []);
+        setDayEntries(fetchedDay || []);
+        setSummary({
+          consumedKcal: (fetchedDay || []).reduce((s, e) => s + (Number(e.kcal) || 0), 0),
+          consumedProtein: (fetchedDay || []).reduce((s, e) => s + (Number(e.protein) || 0), 0),
+          consumedFat: (fetchedDay || []).reduce((s, e) => s + (Number(e.fat) || 0), 0),
+          consumedCarbs: (fetchedDay || []).reduce((s, e) => s + (Number(e.carbs) || 0), 0),
         });
       } catch (err) {
         console.error('Error fetching data for date:', err);
@@ -208,26 +213,27 @@ export function App() {
     return () => clearTimeout(timer);
   }, [toastMessage]);
 
-  // Filter entries specifically for the currently active selectedDate without timezone offset skew
-  const selectedDateISO = selectedDate.toISOString().split('T')[0];
-  const visibleEntries = entries.filter((e) => {
-    if (!e.createdOn) return true;
-    const entryDateISO = typeof e.createdOn === 'string' ? e.createdOn.split('T')[0] : '';
-    return entryDateISO === selectedDateISO;
-  });
+  const refreshEntriesForSelectedDate = async () => {
+    const dateStr = toLocalYmd(selectedDate);
+    const [updatedAll, updatedDay] = await Promise.all([
+      fetchAllEntries(userId),
+      fetchTodayEntries(userId, dateStr),
+    ]);
+    setEntries(updatedAll);
+    setDayEntries(updatedDay);
+    setSummary({
+      consumedKcal: updatedDay.reduce((s, e) => s + (Number(e.kcal) || 0), 0),
+      consumedProtein: updatedDay.reduce((s, e) => s + (Number(e.protein) || 0), 0),
+      consumedFat: updatedDay.reduce((s, e) => s + (Number(e.fat) || 0), 0),
+      consumedCarbs: updatedDay.reduce((s, e) => s + (Number(e.carbs) || 0), 0),
+    });
+  };
 
   // Handle Add Meal
   const handleAddMeal = async (payload: CreateMealEntryPayload) => {
     try {
-      const dateStr = selectedDate.toISOString().split('T')[0];
-      await createMealEntry(userId, { ...payload, createdOn: dateStr });
-      
-      const [updatedEntries, updatedSummary] = await Promise.all([
-        fetchTodayEntries(userId, dateStr),
-        fetchTodaySummary(userId, dateStr),
-      ]);
-      setEntries(updatedEntries);
-      setSummary(updatedSummary);
+      await createMealEntry(userId, payload);
+      await refreshEntriesForSelectedDate();
     } catch (err) {
       console.error('Failed to create meal entry:', err);
     }
@@ -236,15 +242,8 @@ export function App() {
   // Handle Update Meal
   const handleUpdateMeal = async (id: string, payload: CreateMealEntryPayload) => {
     try {
-      const dateStr = selectedDate.toISOString().split('T')[0];
       await updateMealEntry(id, payload);
-
-      const [updatedEntries, updatedSummary] = await Promise.all([
-        fetchTodayEntries(userId, dateStr),
-        fetchTodaySummary(userId, dateStr),
-      ]);
-      setEntries(updatedEntries);
-      setSummary(updatedSummary);
+      await refreshEntriesForSelectedDate();
     } catch (err) {
       console.error('Failed to update meal entry:', err);
     }
@@ -253,15 +252,8 @@ export function App() {
   // Handle Delete Meal
   const handleDeleteMeal = async (id: string) => {
     try {
-      const dateStr = selectedDate.toISOString().split('T')[0];
       await deleteMealEntry(id);
-
-      const [updatedEntries, updatedSummary] = await Promise.all([
-        fetchTodayEntries(userId, dateStr),
-        fetchTodaySummary(userId, dateStr),
-      ]);
-      setEntries(updatedEntries);
-      setSummary(updatedSummary);
+      await refreshEntriesForSelectedDate();
     } catch (err) {
       console.error('Failed to delete meal entry:', err);
     }
@@ -315,13 +307,7 @@ export function App() {
     }
     await handleSaveGoal(result.goal);
     // Simulate dashboard initialization loading animation
-    const dateStr = selectedDate.toISOString().split('T')[0];
-    const [updatedEntries, updatedSummary] = await Promise.all([
-      fetchTodayEntries(userId, dateStr),
-      fetchTodaySummary(userId, dateStr),
-    ]);
-    setEntries(updatedEntries);
-    setSummary(updatedSummary);
+    await refreshEntriesForSelectedDate();
     await new Promise((res) => setTimeout(res, 500));
     setLoading(false);
     setToastMessage({
@@ -337,6 +323,7 @@ export function App() {
     clearAuthToken();
     setUser(null);
     setEntries([]);
+    setDayEntries([]);
     setSummary({
       consumedKcal: 0,
       consumedProtein: 0,
@@ -385,6 +372,15 @@ export function App() {
   const selectedDateFormatted = isTodaySelected
     ? `Today, ${selectedDate.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}`
     : selectedDate.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
+
+  // One list feeds Meal Intake AND Daily Progress (same day fetch, local calendar filter).
+  const mealsToShow = dayEntries;
+  const displaySummary: DailySummary = {
+    consumedKcal: mealsToShow.reduce((s, e) => s + (Number(e.kcal) || 0), 0),
+    consumedProtein: mealsToShow.reduce((s, e) => s + (Number(e.protein) || 0), 0),
+    consumedFat: mealsToShow.reduce((s, e) => s + (Number(e.fat) || 0), 0),
+    consumedCarbs: mealsToShow.reduce((s, e) => s + (Number(e.carbs) || 0), 0),
+  };
 
   return (
     <div className={`transition-colors duration-300 font-sans flex flex-col selection:bg-white selection:text-black ${
@@ -439,18 +435,17 @@ export function App() {
           : 'pt-6 sm:pt-8 pb-16'
       }`}>
         <div className={`w-full ${activeTab === 'nutria' ? 'flex-1 h-full flex flex-col overflow-hidden min-h-0' : ''}`}>
-          {activeTab === 'nutria' ? (
-            /* AI Multimodal Chat Feed Tab View */
-            <NutriaChatFeed
-              messages={chatMessages}
-              setMessages={setChatMessages}
-              summary={summary}
-              goal={goal}
-              onAddMeal={handleAddMeal}
-              onOpenSetGoals={() => setIsSetGoalsOpen(true)}
-              theme={theme}
-            />
-          ) : (
+        {activeTab === 'nutria' ? (
+          <NutriaChatFeed
+            messages={chatMessages}
+            setMessages={setChatMessages}
+            summary={displaySummary}
+            goal={goal}
+            onAddMeal={handleAddMeal}
+            onOpenSetGoals={() => setIsSetGoalsOpen(true)}
+            theme={theme}
+          />
+        ) : (
             /* Overview Tab: Combined Daily Progress Dashboard & Analytics */
             <div className="space-y-10 animate-in fade-in duration-300">
               
@@ -463,7 +458,7 @@ export function App() {
                   {/* Hero Kcal Card */}
                   <div className="transition-all duration-500 ease-out">
                     <HeroKcalCard
-                      summary={summary}
+                      summary={displaySummary}
                       goal={goal}
                       onOpenSetGoals={() => setIsSetGoalsOpen(true)}
                       selectedDate={selectedDate}
@@ -476,7 +471,7 @@ export function App() {
                   {/* MOBILE INTERMEDIATE SIDEBAR */}
                   <div className="block lg:hidden order-2 transition-all duration-500 ease-out">
                     <LatestEntriesSidebar
-                      entries={visibleEntries}
+                      entries={mealsToShow}
                       onAddMeal={handleAddMeal}
                       onUpdateMeal={handleUpdateMeal}
                       onDeleteMeal={handleDeleteMeal}
@@ -489,7 +484,7 @@ export function App() {
                   {/* Consumed vs Left Table */}
                   <div className="transition-all duration-500 ease-out order-3 lg:order-2">
                     <ConsumedVsLeftTable
-                      summary={summary}
+                      summary={displaySummary}
                       goal={goal}
                       selectedDate={selectedDate}
                       theme={theme}
@@ -499,11 +494,11 @@ export function App() {
 
                 </div>
 
-                {/* DESKTOP RIGHT SIDEBAR (Exact height equal to bottom of Consumed vs Left Table) */}
+                {/* DESKTOP RIGHT SIDEBAR (height matches left column via items-stretch) */}
                 <div className="hidden lg:block lg:col-span-4 relative order-2 transition-all duration-500 ease-out">
                   <div className="absolute inset-0">
                     <LatestEntriesSidebar
-                      entries={visibleEntries}
+                      entries={mealsToShow}
                       onAddMeal={handleAddMeal}
                       onUpdateMeal={handleUpdateMeal}
                       onDeleteMeal={handleDeleteMeal}
@@ -525,7 +520,7 @@ export function App() {
               </div>
 
             </div>
-          )}
+        )}
         </div>
       </main>
 

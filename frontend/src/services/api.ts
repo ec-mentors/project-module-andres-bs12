@@ -2,13 +2,14 @@ import type { MealEntry, CreateMealEntryPayload, NutritionGoal, SetGoalPayload, 
 import type { UserProfile } from '../types/user';
 import type { AiOnboardingState } from '../components/onboarding/types';
 import { calculateAiNutritionGoal } from '../components/onboarding/utils';
+import { toLocalYmd, entryCreatedOnToLocalYmd } from '../utils/dateLocal';
 
 // Base API URL (Vite dev server proxies /api to http://localhost:8080)
 const API_BASE = '/api';
 
 
-// Today's date string YYYY-MM-DD
-const TODAY_STR = new Date().toISOString().split('T')[0];
+// Today's date string YYYY-MM-DD (local calendar, not UTC)
+const TODAY_STR = toLocalYmd(new Date());
 
 // Internal In-Memory State initialized clean (no mock data in production)
 const AUTH_TOKEN_KEY = 'google_id_token';
@@ -82,8 +83,8 @@ export const api = {
         const data: MealEntry[] = await response.json();
         if (Array.isArray(data)) {
           return data.filter((e) => {
-            if (!e.createdOn) return true;
-            const entryDate = typeof e.createdOn === 'string' ? e.createdOn.split('T')[0] : '';
+            const entryDate = entryCreatedOnToLocalYmd(e.createdOn);
+            if (!entryDate) return true;
             return entryDate === targetDateStr;
           });
         }
@@ -125,7 +126,6 @@ export const api = {
         carbs: Number(payload.carbs),
         fat: Number(payload.fat),
         protein: Number(payload.protein),
-        createdOn: payload.createdOn || TODAY_STR,
       }),
     });
 
@@ -328,6 +328,10 @@ export const calculateAiGoalRoadmap = async (data: AiOnboardingState): Promise<N
 
 export const fetchTodayEntries = async (userId?: string, dateStr?: string): Promise<MealEntry[]> => {
   return await api.getTodayEntries(userId, dateStr);
+};
+
+export const fetchAllEntries = async (userId?: string): Promise<MealEntry[]> => {
+  return await api.getAllEntries(userId);
 };
 
 export const fetchTodaySummary = async (userId?: string, dateStr?: string): Promise<DailySummary> => {

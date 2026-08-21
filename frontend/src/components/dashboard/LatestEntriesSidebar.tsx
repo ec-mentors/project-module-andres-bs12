@@ -136,6 +136,7 @@ export const LatestEntriesSidebar: React.FC<LatestEntriesSidebarProps> = ({
         {/* Add Meal Button */}
         {!isAddingInline && !editingId && (
           <button
+            type="button"
             onClick={handleStartAdd}
             className={`flex items-center space-x-1 px-3.5 py-2 rounded-2xl text-xs font-bold transition-all active:scale-95 cursor-pointer shadow-xs ${
               isLight
@@ -149,158 +150,156 @@ export const LatestEntriesSidebar: React.FC<LatestEntriesSidebarProps> = ({
         )}
       </div>
 
-      {/* Entries List Area (Contained & Scrolls Internally, hidden scrollbar) */}
+      {/* ADD FORM — outside scroll region so it cannot be clipped to height 0 */}
+      <AnimatePresence initial={false}>
+        {isAddingInline && (
+          <motion.form
+            key="inline-add-form"
+            initial={{ opacity: 0, y: -12 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.2 }}
+            onSubmit={handleSubmitAdd}
+            className={`mb-4 shrink-0 p-4 rounded-2xl border space-y-3 shadow-lg ${
+              isLight
+                ? 'bg-slate-50 border-slate-300 text-slate-900 shadow-slate-200/50'
+                : 'bg-[#18181b] border-white/[0.12] text-white shadow-black/60'
+            }`}
+          >
+            <div className="flex items-center justify-between">
+              <span className={`text-xs font-bold uppercase tracking-wider flex items-center space-x-1.5 ${
+                isLight ? 'text-slate-900' : 'text-zinc-200'
+              }`}>
+                <Utensils className="w-3.5 h-3.5" />
+                <span>Log New Meal</span>
+              </span>
+              <button
+                type="button"
+                onClick={resetForm}
+                className="text-zinc-400 hover:text-white p-1"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <input
+              type="text"
+              placeholder="Meal description (e.g. Salmon & Brown Rice)"
+              value={mealName}
+              onChange={(e) => setMealName(e.target.value)}
+              className={`w-full border rounded-xl px-3 py-2 text-xs sm:text-sm font-semibold focus:outline-none ${
+                isLight ? 'bg-white border-slate-300 text-slate-900 focus:border-slate-500' : 'bg-[#121214] border-white/[0.12] text-white focus:border-white/30'
+              }`}
+              required
+              autoFocus
+            />
+
+            <div className="grid grid-cols-4 gap-2">
+              <div>
+                <label className={`text-[10px] sm:text-xs font-black uppercase block mb-1 ${isLight ? MACRO_COLORS.kcal.textLight : MACRO_COLORS.kcal.text}`}>Kcal</label>
+                <input
+                  type="number"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  placeholder="350"
+                  value={kcal}
+                  onChange={(e) => setKcal(e.target.value)}
+                  className={`w-full border rounded-xl px-2 py-2 text-xs sm:text-sm font-bold focus:outline-none ${
+                    isLight ? 'bg-white border-slate-300 text-slate-900 focus:border-slate-500' : 'bg-[#121214] border-white/[0.12] text-white focus:border-white/30'
+                  }`}
+                  required
+                  autoComplete="off"
+                />
+              </div>
+              <div>
+                <label className={`text-[10px] sm:text-xs font-black uppercase block mb-1 ${isLight ? MACRO_COLORS.protein.textLight : MACRO_COLORS.protein.text}`}>
+                  {MACRO_COLORS.protein.shortLabel}
+                </label>
+                <input
+                  type="number"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  placeholder="30"
+                  value={protein}
+                  onChange={(e) => setProtein(e.target.value)}
+                  className={`w-full border rounded-xl px-2 py-2 text-xs sm:text-sm font-bold focus:outline-none ${
+                    isLight ? 'bg-white border-slate-300 text-slate-900 focus:border-slate-500' : 'bg-[#121214] border-white/[0.12] text-white focus:border-white/30'
+                  }`}
+                  autoComplete="off"
+                />
+              </div>
+              <div>
+                <label className={`text-[10px] sm:text-xs font-black uppercase block mb-1 ${isLight ? MACRO_COLORS.carbs.textLight : MACRO_COLORS.carbs.text}`}>
+                  {MACRO_COLORS.carbs.shortLabel}
+                </label>
+                <input
+                  type="number"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  placeholder="40"
+                  value={carbs}
+                  onChange={(e) => setCarbs(e.target.value)}
+                  className={`w-full border rounded-xl px-2 py-2 text-xs sm:text-sm font-bold focus:outline-none ${
+                    isLight ? 'bg-white border-slate-300 text-slate-900 focus:border-slate-500' : 'bg-[#121214] border-white/[0.12] text-white focus:border-white/30'
+                  }`}
+                  autoComplete="off"
+                />
+              </div>
+              <div>
+                <label className={`text-[10px] sm:text-xs font-black uppercase block mb-1 ${isLight ? MACRO_COLORS.fat.textLight : MACRO_COLORS.fat.text}`}>
+                  {MACRO_COLORS.fat.shortLabel}
+                </label>
+                <input
+                  type="number"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  placeholder="10"
+                  value={fat}
+                  onChange={(e) => setFat(e.target.value)}
+                  className={`w-full border rounded-xl px-2 py-2 text-xs sm:text-sm font-bold focus:outline-none ${
+                    isLight ? 'bg-white border-slate-300 text-slate-900 focus:border-slate-500' : 'bg-[#121214] border-white/[0.12] text-white focus:border-white/30'
+                  }`}
+                  autoComplete="off"
+                />
+              </div>
+            </div>
+
+            <div className="flex justify-end space-x-2 pt-1">
+              <button
+                type="button"
+                onClick={resetForm}
+                className={`px-3.5 py-2 rounded-2xl text-xs font-bold transition-all active:scale-95 ${
+                  isLight ? 'text-slate-600 hover:bg-slate-200' : 'text-zinc-400 hover:text-white bg-white/5'
+                }`}
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className={`flex items-center space-x-1.5 px-4 py-2 rounded-2xl text-xs font-extrabold active:scale-95 shadow-xs cursor-pointer ${
+                  isLight
+                    ? 'text-white bg-black hover:bg-zinc-800'
+                    : 'text-black bg-white hover:bg-zinc-200'
+                }`}
+              >
+                <Check className="w-4 h-4" />
+                <span>Save</span>
+              </button>
+            </div>
+          </motion.form>
+        )}
+      </AnimatePresence>
+
+      {/* Meal cards — internal scroll, hidden scrollbar (class must not hide the element) */}
       <div
         className="space-y-3 flex-1 overflow-y-auto pr-0 sm:pr-1 no-scrollbar min-h-0 w-full box-border"
         style={{
           scrollbarWidth: 'none',
           msOverflowStyle: 'none',
-          WebkitOverflowScrolling: 'touch',
         }}
       >
-        <AnimatePresence mode="popLayout" initial={false}>
+        <AnimatePresence initial={false}>
           
-          {/* INLINE ADD FORM */}
-          {isAddingInline && (
-            <motion.form
-              key="inline-add-form"
-              initial={{ opacity: 0, y: -20, scale: 0.95 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95, y: -10 }}
-              transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
-              onSubmit={handleSubmitAdd}
-              className={`p-4 rounded-2xl border space-y-3 shadow-lg ${
-                isLight
-                  ? 'bg-slate-50 border-slate-300 text-slate-900 shadow-slate-200/50'
-                  : 'bg-[#18181b] border-white/[0.12] text-white shadow-black/60'
-              }`}
-            >
-              <div className="flex items-center justify-between">
-                <span className={`text-xs font-bold uppercase tracking-wider flex items-center space-x-1.5 ${
-                  isLight ? 'text-slate-900' : 'text-zinc-200'
-                }`}>
-                  <Utensils className="w-3.5 h-3.5" />
-                  <span>Log New Meal</span>
-                </span>
-                <button
-                  type="button"
-                  onClick={resetForm}
-                  className="text-zinc-400 hover:text-white p-1"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
-
-              {/* Meal Name Input */}
-              <input
-                type="text"
-                placeholder="Meal description (e.g. Salmon & Brown Rice)"
-                value={mealName}
-                onChange={(e) => setMealName(e.target.value)}
-                className={`w-full border rounded-xl px-3 py-2 text-xs sm:text-sm font-semibold focus:outline-none ${
-                  isLight ? 'bg-white border-slate-300 text-slate-900 focus:border-slate-500' : 'bg-[#121214] border-white/[0.12] text-white focus:border-white/30'
-                }`}
-                required
-                autoFocus
-              />
-
-              {/* 4 Macros Grid */}
-              <div className="grid grid-cols-4 gap-2">
-                <div>
-                  <label className={`text-[10px] sm:text-xs font-black uppercase block mb-1 ${isLight ? MACRO_COLORS.kcal.textLight : MACRO_COLORS.kcal.text}`}>Kcal</label>
-                  <input
-                    type="number"
-                    inputMode="numeric"
-                    pattern="[0-9]*"
-                    placeholder="350"
-                    value={kcal}
-                    onChange={(e) => setKcal(e.target.value)}
-                    className={`w-full border rounded-xl px-2 py-2 text-xs sm:text-sm font-bold focus:outline-none ${
-                      isLight ? 'bg-white border-slate-300 text-slate-900 focus:border-slate-500' : 'bg-[#121214] border-white/[0.12] text-white focus:border-white/30'
-                    }`}
-                    required
-                    autoComplete="off"
-                  />
-                </div>
-                <div>
-                  <label className={`text-[10px] sm:text-xs font-black uppercase block mb-1 ${isLight ? MACRO_COLORS.protein.textLight : MACRO_COLORS.protein.text}`}>
-                    {MACRO_COLORS.protein.shortLabel}
-                  </label>
-                  <input
-                    type="number"
-                    inputMode="numeric"
-                    pattern="[0-9]*"
-                    placeholder="30"
-                    value={protein}
-                    onChange={(e) => setProtein(e.target.value)}
-                    className={`w-full border rounded-xl px-2 py-2 text-xs sm:text-sm font-bold focus:outline-none ${
-                      isLight ? 'bg-white border-slate-300 text-slate-900 focus:border-slate-500' : 'bg-[#121214] border-white/[0.12] text-white focus:border-white/30'
-                    }`}
-                    autoComplete="off"
-                  />
-                </div>
-                <div>
-                  <label className={`text-[10px] sm:text-xs font-black uppercase block mb-1 ${isLight ? MACRO_COLORS.carbs.textLight : MACRO_COLORS.carbs.text}`}>
-                    {MACRO_COLORS.carbs.shortLabel}
-                  </label>
-                  <input
-                    type="number"
-                    inputMode="numeric"
-                    pattern="[0-9]*"
-                    placeholder="40"
-                    value={carbs}
-                    onChange={(e) => setCarbs(e.target.value)}
-                    className={`w-full border rounded-xl px-2 py-2 text-xs sm:text-sm font-bold focus:outline-none ${
-                      isLight ? 'bg-white border-slate-300 text-slate-900 focus:border-slate-500' : 'bg-[#121214] border-white/[0.12] text-white focus:border-white/30'
-                    }`}
-                    autoComplete="off"
-                  />
-                </div>
-                <div>
-                  <label className={`text-[10px] sm:text-xs font-black uppercase block mb-1 ${isLight ? MACRO_COLORS.fat.textLight : MACRO_COLORS.fat.text}`}>
-                    {MACRO_COLORS.fat.shortLabel}
-                  </label>
-                  <input
-                    type="number"
-                    inputMode="numeric"
-                    pattern="[0-9]*"
-                    placeholder="10"
-                    value={fat}
-                    onChange={(e) => setFat(e.target.value)}
-                    className={`w-full border rounded-xl px-2 py-2 text-xs sm:text-sm font-bold focus:outline-none ${
-                      isLight ? 'bg-white border-slate-300 text-slate-900 focus:border-slate-500' : 'bg-[#121214] border-white/[0.12] text-white focus:border-white/30'
-                    }`}
-                    autoComplete="off"
-                  />
-                </div>
-              </div>
-
-              {/* Action Buttons */}
-              <div className="flex justify-end space-x-2 pt-1">
-                <button
-                  type="button"
-                  onClick={resetForm}
-                  className={`px-3.5 py-2 rounded-2xl text-xs font-bold transition-all active:scale-95 ${
-                    isLight ? 'text-slate-600 hover:bg-slate-200' : 'text-zinc-400 hover:text-white bg-white/5'
-                  }`}
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className={`flex items-center space-x-1.5 px-4 py-2 rounded-2xl text-xs font-extrabold active:scale-95 shadow-xs cursor-pointer ${
-                    isLight
-                      ? 'text-white bg-black hover:bg-zinc-800'
-                      : 'text-black bg-white hover:bg-zinc-200'
-                  }`}
-                >
-                  <Check className="w-4 h-4" />
-                  <span>Save</span>
-                </button>
-              </div>
-            </motion.form>
-          )}
-
           {/* EMPTY STATE OR MEAL ENTRIES */}
           {entries.length === 0 && !isAddingInline ? (
             <motion.div
@@ -354,16 +353,10 @@ export const LatestEntriesSidebar: React.FC<LatestEntriesSidebarProps> = ({
               return (
                 <motion.div
                   key={entry.id || entry.mealName}
-                  layout
-                  initial={{ opacity: 0, y: -20, scale: 0.97 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.95, y: -10 }}
-                  transition={{
-                    layout: { duration: 0.28, ease: [0.16, 1, 0.3, 1] },
-                    opacity: { duration: 0.22 },
-                    scale: { duration: 0.22 },
-                    y: { duration: 0.28, ease: [0.16, 1, 0.3, 1] },
-                  }}
+                  initial={{ opacity: 0, y: -8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.18 }}
                   className="w-full box-border"
                 >
                   {isDeletingConfirm ? (
