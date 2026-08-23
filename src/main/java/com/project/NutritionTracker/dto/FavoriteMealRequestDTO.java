@@ -5,7 +5,7 @@ import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
-public record EntryRequestDTO(
+public record FavoriteMealRequestDTO(
         @NotBlank(message = "Meal name cannot be blank")
         String mealName,
 

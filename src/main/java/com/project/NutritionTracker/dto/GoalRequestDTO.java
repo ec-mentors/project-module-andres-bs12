@@ -1,13 +1,23 @@
 package com.project.NutritionTracker.dto;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotNull;
 
-
-public record GoalRequestDTO (
+public record GoalRequestDTO(
+        @NotNull(message = "Calories are required")
+        @Min(value = 0, message = "Calories cannot be negative")
         Integer kcal,
-    Double carbs,
-    Double fat,
-    Double protein
-) {}
+
+        @NotNull(message = "Carbs are required")
+        @Min(value = 0, message = "Carbs cannot be negative")
+        Double carbs,
+
+        @NotNull(message = "Fat is required")
+        @Min(value = 0, message = "Fat cannot be negative")
+        Double fat,
+
+        @NotNull(message = "Protein is required")
+        @Min(value = 0, message = "Protein cannot be negative")
+        Double protein
+) {
+}

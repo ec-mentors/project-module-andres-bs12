@@ -7,30 +7,27 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.util.UUID;
 
-@Entity
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class Entry {
+public class FavoriteMeal {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private UUID id;
 
-    @JoinColumn(name = "user_id", nullable=false) // Use User in the table user_id to connect it
     @ManyToOne
+    @JoinColumn(name = "user_id", nullable = false)
     private User user;
-
     private String mealName;
-    private String source;
-    private LocalDateTime createdOn;
     private Integer kcal;
     private Double carbs;
     private Double fat;
     private Double protein;
     private MealType mealType;
+    private LocalDate createdAt;
 }
