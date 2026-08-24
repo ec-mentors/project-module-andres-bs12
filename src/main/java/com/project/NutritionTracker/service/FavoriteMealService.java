@@ -1,5 +1,6 @@
 package com.project.NutritionTracker.service;
 
+import com.project.NutritionTracker.dto.EntryRequestDTO;
 import com.project.NutritionTracker.dto.FavoriteMealRequestDTO;
 import com.project.NutritionTracker.dto.FavoriteMealResponseDTO;
 import com.project.NutritionTracker.exception.NotFoundException;
@@ -9,10 +10,12 @@ import com.project.NutritionTracker.model.FavoriteMeal;
 import com.project.NutritionTracker.model.User;
 import com.project.NutritionTracker.repository.FavoriteMealRepository;
 import com.project.NutritionTracker.repository.UserRepository;
+import com.project.NutritionTracker.security.UserPrincipal;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -33,11 +36,9 @@ public class FavoriteMealService {
         if (userId == null) {
             throw new IllegalArgumentException("new user can't be null");
         }
-
         User user = userRepository.findById(userId).orElseThrow(
                 () -> new NotFoundException("User not found")
         );
-
         FavoriteMeal favoriteMeal = new FavoriteMeal();
         favoriteMeal.setProtein(entry.getProtein());
         favoriteMeal.setMealName(entry.getMealName());
@@ -47,7 +48,6 @@ public class FavoriteMealService {
         favoriteMeal.setUser(user);
         favoriteMeal.setCreatedAt(LocalDate.now());
         favoriteMeal.setMealType(entry.getMealType());
-
         if (favoriteMeal.getMealType() == null) {
             //todo
         }
@@ -59,7 +59,7 @@ public class FavoriteMealService {
     @PreAuthorize("isAuthenticated() && #userId == principal.id")
     public FavoriteMealResponseDTO createFavorite(FavoriteMealRequestDTO dto, UUID userId) {
         if (userId == null) {
-            throw new IllegalArgumentException("new user can't be null");
+            throw new IllegalArgumentException("User can't be null");
         }
         User user = userRepository.findById(userId).orElseThrow(
                 () -> new NotFoundException("User not found")
@@ -78,11 +78,42 @@ public class FavoriteMealService {
         return mapper.toResponseDTO(savedMeal);
     }
 
-    @PreAuthorize("isAuthenticated() && #userId == principal.id")
-    public void removeFavoriteMeal(UUID fMealId, UUID userid) {
-        if (favoriteMealRepository.existsById(fMealId)) {
-            favoriteMealRepository.deleteById(userid);
+    @PreAuthorize("isAuthenticated() && @favoriteMealSecurity.isOwner(#fMealId, principal)")
+    public void removeFavoriteMeal(UUID fMealId) {
+        if (!favoriteMealRepository.existsById(fMealId)) {
+            throw new NotFoundException("Favorite meal not found with id: " + fMealId);
         }
-
+        favoriteMealRepository.deleteById(fMealId);
     }
+
+    @PreAuthorize("isAuthenticated() && #userId == principal.id")
+    public List<FavoriteMealResponseDTO> getAllFavorites(UUID userId) {
+        User user = userRepository.findById(userId).orElseThrow(
+                () -> new NotFoundException("User not found")
+        );
+
+        return favoriteMealRepository.findAllByUser(user)
+                .stream()
+                .map(mapper::toResponseDTO)
+                .toList();
+    }
+
+
+    @PreAuthorize("isAuthenticated() && @favoriteMealSecurity.isOwner(#fMealId, principal)")
+    public FavoriteMealResponseDTO updateFavorite(FavoriteMealRequestDTO dto, UUID fMealId) {
+        FavoriteMeal actualFavoriteMeal = favoriteMealRepository.findById(fMealId).
+                orElseThrow(() -> new NotFoundException("Entry not found"));
+
+        actualFavoriteMeal.setProtein(dto.protein());
+        actualFavoriteMeal.setMealName(dto.mealName());
+        actualFavoriteMeal.setCarbs(dto.carbs());
+        actualFavoriteMeal.setFat(dto.fat());
+        actualFavoriteMeal.setKcal(dto.kcal());
+        actualFavoriteMeal.setMealType(dto.mealType());
+
+        FavoriteMeal saved = favoriteMealRepository.save(actualFavoriteMeal);
+        return mapper.toResponseDTO(saved);
+    }
+
 }
+

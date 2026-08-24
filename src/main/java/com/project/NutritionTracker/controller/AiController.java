@@ -35,7 +35,7 @@ public class AiController {
     // Goal
 
     @PostMapping("/calculate-goal")
-    public ResponseEntity<AiGoalResponseDTO> calculateGoal(@RequestBody AiGoalRequestDTO aiGoalRequestDTO) {
+    public ResponseEntity<AiGoalResponseDTO> calculateGoal(@Valid @RequestBody AiGoalRequestDTO aiGoalRequestDTO) {
         AiGoalResponseDTO responseDTO = AiGoalservice.calculateGoal(aiGoalRequestDTO);
         return ResponseEntity.ok(responseDTO);
     }
@@ -51,13 +51,13 @@ public class AiController {
 
     @PostMapping(value = "/parse-meal-audio", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     // Multipart -> To upload heavy files by parts like a vidio (audio, img, info, etc), this just accepts files
-    public ResponseEntity<AiMealResponseDTO> parseMealFromAudio(@RequestParam("audio")MultipartFile audio) {
+    public ResponseEntity<AiMealResponseDTO> parseMealFromAudio(@Valid @RequestParam("audio")MultipartFile audio) {
         return ResponseEntity.ok(aiMealService.parseMealFromText(audioService.transcribe(audio)));
     }
 
     @PostMapping(value = "/parse-meal-image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     // Multipart -> To upload heavy files by parts like a vidio (audio, img, info, etc), this just accepts files
-    public ResponseEntity<AiMealResponseDTO> parseMealFromImagen(@RequestParam("image")MultipartFile image) {
+    public ResponseEntity<AiMealResponseDTO> parseMealFromImagen(@Valid @RequestParam("image")MultipartFile image) {
         return ResponseEntity.ok(aiMealService.parseMealFromImage(image));
     }
 }

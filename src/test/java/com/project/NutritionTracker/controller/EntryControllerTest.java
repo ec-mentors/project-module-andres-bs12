@@ -2,6 +2,7 @@ package com.project.NutritionTracker.controller;
 
 import com.project.NutritionTracker.dto.EntryRequestDTO;
 import com.project.NutritionTracker.dto.EntryResponseDTO;
+import com.project.NutritionTracker.enums.MealType;
 import com.project.NutritionTracker.exception.NotFoundException;
 import com.project.NutritionTracker.repository.UserRepository;
 import com.project.NutritionTracker.service.EntryService;
@@ -66,12 +67,12 @@ public class EntryControllerTest {
         sampleEntryId2 = UUID.randomUUID();
 
         // Entry 1
-        sampleEntryRequestDTO = new EntryRequestDTO("Pasta Carbonara", 500, 50.0, 15.0, 30.0);
-        sampleEntryResponseDTO = new EntryResponseDTO(sampleEntryId, "Pasta Carbonara", "MANUAL", LocalDateTime.of(2026, 8, 1, 12, 0), 500, 50.0, 15.0, 30.0);
+        sampleEntryRequestDTO = new EntryRequestDTO("Pasta Carbonara", 500, 50.0, 15.0, 30.0, MealType.BREAKFAST);
+        sampleEntryResponseDTO = new EntryResponseDTO(sampleEntryId, "Pasta Carbonara", "MANUAL", LocalDateTime.of(2026, 8, 1, 12, 0), 500, 50.0, 15.0, 30.0, MealType.BREAKFAST);
 
         // Entry 2
-        sampleEntryRequestDTO2 = new EntryRequestDTO("Chicken Salad", 300, 10.0, 8.0, 35.0);
-        sampleEntryResponseDTO2 = new EntryResponseDTO(sampleEntryId2, "Chicken Salad", "MANUAL", LocalDateTime.of(2026, 8, 1, 13, 0), 300, 10.0, 8.0, 35.0);
+        sampleEntryRequestDTO2 = new EntryRequestDTO("Chicken Salad", 300, 10.0, 8.0, 35.0, MealType.BREAKFAST);
+        sampleEntryResponseDTO2 = new EntryResponseDTO(sampleEntryId2, "Chicken Salad", "MANUAL", LocalDateTime.of(2026, 8, 1, 13, 0), 300, 10.0, 8.0, 35.0, MealType.BREAKFAST);
     }
 
 

@@ -10,6 +10,8 @@ import lombok.Setter;
 import java.time.LocalDate;
 import java.util.UUID;
 
+@Entity
+@Table(name = "favorite_meal")
 @Getter
 @Setter
 @NoArgsConstructor

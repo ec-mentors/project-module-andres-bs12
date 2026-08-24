@@ -6,6 +6,7 @@ import com.project.NutritionTracker.exception.NotFoundException;
 import com.project.NutritionTracker.model.User;
 import com.project.NutritionTracker.repository.UserRepository;
 import com.project.NutritionTracker.service.UserService;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -31,7 +32,7 @@ public class UserController {
 
     // Request body, it's expecting a json object to be sent as key value
     @PostMapping("/auth/google")
-    public ResponseEntity<UserResponseDTO> authWithGoogle(@RequestBody String googleId) {
+    public ResponseEntity<UserResponseDTO> authWithGoogle(@Valid  @RequestBody String googleId) {
         UserResponseDTO response = service.verifyAndProcessGoogleToken(googleId); // not auth yet
 
         return ResponseEntity.ok(response); // code 200, converts java object to json
@@ -42,7 +43,7 @@ public class UserController {
     // @RequesTParam is needed because we need to receive an email. it comes from the URL after the ?
     // http://localhost:8080/api/user/search?email=andres.postman@example.com
     @GetMapping("/search")
-    public ResponseEntity<UserResponseDTO> findByEmail(@RequestParam String email) {
+    public ResponseEntity<UserResponseDTO> findByEmail(@Valid @RequestParam String email) {
         UserResponseDTO user = service.findByEmail(email);
         return ResponseEntity.ok(user); // Code 200. Automatically generated with .ok java object converted to json
     }
@@ -58,7 +59,7 @@ public class UserController {
     @PutMapping("/{id}")
     public ResponseEntity<UserResponseDTO> updateUser(
             @PathVariable UUID id, // Since this is on the path
-            @RequestBody UserRequestDTO dto) { // Since this one is a json object
+            @Valid @RequestBody UserRequestDTO dto) { // Since this one is a json object
         UserResponseDTO user = service.updateUser(id, dto);
 
         return ResponseEntity.ok(user); // code 200 // object to json
