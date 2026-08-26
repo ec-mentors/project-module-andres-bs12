@@ -25,7 +25,7 @@ public record EntryRequestDTO(
         @Min(value = 0, message = "Protein cannot be negative")
         Double protein,
 
-        // Optional: Can be null if manually added, will be set at service layer based on time
+        @NotNull(message = "MealType is required")
         MealType mealType
 ) {
 }

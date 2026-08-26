@@ -3,6 +3,7 @@ package com.project.NutritionTracker.service;
 import com.project.NutritionTracker.dto.EntryRequestDTO;
 import com.project.NutritionTracker.dto.FavoriteMealRequestDTO;
 import com.project.NutritionTracker.dto.FavoriteMealResponseDTO;
+import com.project.NutritionTracker.enums.MealType;
 import com.project.NutritionTracker.exception.NotFoundException;
 import com.project.NutritionTracker.mapper.FavoriteMealMapper;
 import com.project.NutritionTracker.model.Entry;
@@ -15,6 +16,8 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -36,9 +39,7 @@ public class FavoriteMealService {
         if (userId == null) {
             throw new IllegalArgumentException("new user can't be null");
         }
-        User user = userRepository.findById(userId).orElseThrow(
-                () -> new NotFoundException("User not found")
-        );
+        User user = userRepository.findById(userId).orElseThrow(() -> new NotFoundException("User not found"));
         FavoriteMeal favoriteMeal = new FavoriteMeal();
         favoriteMeal.setProtein(entry.getProtein());
         favoriteMeal.setMealName(entry.getMealName());
@@ -49,7 +50,20 @@ public class FavoriteMealService {
         favoriteMeal.setCreatedAt(LocalDate.now());
         favoriteMeal.setMealType(entry.getMealType());
         if (favoriteMeal.getMealType() == null) {
-            //todo
+            if (entry.getCreatedOn() == null) {
+                favoriteMeal.setMealType(MealType.LUNCH);
+            } else {
+                LocalTime timeCreated = entry.getCreatedOn().toLocalTime();
+                if (timeCreated.isBefore(LocalTime.NOON)) {
+                    favoriteMeal.setMealType(MealType.BREAKFAST);
+                } else if (timeCreated.isBefore(LocalTime.of(16, 0))) {
+                    favoriteMeal.setMealType(MealType.LUNCH);
+                } else if (timeCreated.isBefore(LocalTime.of(19, 0))) {
+                    favoriteMeal.setMealType(MealType.SNACK);
+                } else {
+                    favoriteMeal.setMealType(MealType.DINNER);
+                }
+            }
         }
         // To get the id and send it back
         FavoriteMeal savedMeal = favoriteMealRepository.save(favoriteMeal);
@@ -61,9 +75,7 @@ public class FavoriteMealService {
         if (userId == null) {
             throw new IllegalArgumentException("User can't be null");
         }
-        User user = userRepository.findById(userId).orElseThrow(
-                () -> new NotFoundException("User not found")
-        );
+        User user = userRepository.findById(userId).orElseThrow(() -> new NotFoundException("User not found"));
 
         FavoriteMeal favoriteMeal = new FavoriteMeal();
         favoriteMeal.setMealName(dto.mealName());
@@ -73,6 +85,7 @@ public class FavoriteMealService {
         favoriteMeal.setCarbs(dto.carbs());
         favoriteMeal.setCreatedAt(LocalDate.now());
         favoriteMeal.setUser(user);
+        favoriteMeal.setMealType(dto.mealType());
 
         FavoriteMeal savedMeal = favoriteMealRepository.save(favoriteMeal);
         return mapper.toResponseDTO(savedMeal);
@@ -88,21 +101,15 @@ public class FavoriteMealService {
 
     @PreAuthorize("isAuthenticated() && #userId == principal.id")
     public List<FavoriteMealResponseDTO> getAllFavorites(UUID userId) {
-        User user = userRepository.findById(userId).orElseThrow(
-                () -> new NotFoundException("User not found")
-        );
-
-        return favoriteMealRepository.findAllByUser(user)
-                .stream()
-                .map(mapper::toResponseDTO)
-                .toList();
+        if (userRepository.existsById(userId)) {
+            return favoriteMealRepository.findAllByUserId(userId).stream().map(mapper::toResponseDTO).toList();
+        } else throw new NotFoundException("User not found");
     }
 
 
     @PreAuthorize("isAuthenticated() && @favoriteMealSecurity.isOwner(#fMealId, principal)")
     public FavoriteMealResponseDTO updateFavorite(FavoriteMealRequestDTO dto, UUID fMealId) {
-        FavoriteMeal actualFavoriteMeal = favoriteMealRepository.findById(fMealId).
-                orElseThrow(() -> new NotFoundException("Entry not found"));
+        FavoriteMeal actualFavoriteMeal = favoriteMealRepository.findById(fMealId).orElseThrow(() -> new NotFoundException("Entry not found"));
 
         actualFavoriteMeal.setProtein(dto.protein());
         actualFavoriteMeal.setMealName(dto.mealName());

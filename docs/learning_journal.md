@@ -1,7 +1,19 @@
 # 📓 NutritionTracker - Learning Journal
 
 This document serves as a development and learning journal to record key concepts, architectural decisions, and notes learned throughout the **NutritionTracker** project.
+## 📅 2026-08-21 - (Sprint 4) - How to compare times to set MealType
 
+### 💡 Key Concepts Learned & Architectural Decisions
+
+1. ** I had in mind to use something like `if (favoriteMeal.getMealType() == null) {
+            LocalTime time = LocalTime.now();
+            if (time.isBefore(LocalTime.NOON)) {
+                favoriteMeal.setMealType(MealType.BREAKFAST);
+            }` When the Meal type is not specified in th conversion between entry and favourite, but this won't be a right implementation, since the time the user marks the meal as favourite, is not necessarily the same time the user logged the meal, Foe example, the user goes trhough the meals today, and find out that the entry `chicken` is very frequently used, the user decides to added to favourite. I need to find a new way"
+2. I don't want to obligate the user to put the meal type in every single entry, this is not very intuitive, I could also set an enum as default like `others`, and then the user can change it while adding it to favourite, but this will add up another interface,
+3. While designing a smalll muck up to implemente this feature, I realized that entry already has an attribute created on, I will use this to compare and set
+4. Implemented with the data saved in entry, and if there is no mealtype i calculate with this
+5. Testing make me use mealcaptor, i undestand it as an spy that gets the data that was used into the repository while running it, so i can inspect it. I don't need a response attribute, instead i compare it with the information from this ArgumentCaptor
 ## 📅 2026-08-21 - (Sprint 4) - CSS Root Cause Analysis (`.no-scrollbar`), UI Diagnostic Invariants & Scope Discipline
 
 ### 💡 Key Concepts Learned & Architectural Decisions

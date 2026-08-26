@@ -15,6 +15,7 @@ import java.util.UUID;
 @RequestMapping("/api/favorite-meal")
 public class FavoriteMealController {
 
+
     private final FavoriteMealService service;
 
     public FavoriteMealController(FavoriteMealService service) {
