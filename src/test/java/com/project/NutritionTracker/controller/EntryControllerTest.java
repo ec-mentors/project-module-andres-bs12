@@ -78,9 +78,8 @@ public class EntryControllerTest {
 
     // ---------- find Entry by User ----------
 
-
     @Test
-    @DisplayName("GET /api/entry/ - Success")
+    @DisplayName("GET /api/entry/{userId} - Success (200)")
     void findEntriesByUser_ShouldReturn200_AndEntryDTO() throws Exception {
         List<EntryResponseDTO> entries = List.of(sampleEntryResponseDTO, sampleEntryResponseDTO2);
         when(entryService.findByUser(sampleUserId)).thenReturn(entries);
@@ -98,14 +97,11 @@ public class EntryControllerTest {
         verify(entryService).findByUser(sampleUserId);
     }
 
-
     // ---------- create Entry ----------
 
-
     @Test
-    @DisplayName("post /api/entry/{userId} - Success")
-    void createEntry_ShouldReturn200_AndEntryDTO() throws Exception {
-
+    @DisplayName("POST /api/entry/{userId} - Success (201)")
+    void createEntry_ShouldReturn201_AndEntryDTO() throws Exception {
         when(entryService.createEntry(sampleEntryRequestDTO, sampleUserId)).thenReturn(sampleEntryResponseDTO);
 
         mockMvc.perform(post("/api/entry/{userId}", sampleUserId)
@@ -114,45 +110,36 @@ public class EntryControllerTest {
                 .andExpect(status().isCreated())
                 .andExpect(header().string("Location", "/api/entry/" + sampleEntryId));
 
-
         verify(entryService).createEntry(sampleEntryRequestDTO, sampleUserId);
     }
 
-
     // ---------- remove Entry ----------
 
-
     @Test
-    @DisplayName("post /api/entry/{entryId} - Success")
+    @DisplayName("DELETE /api/entry/{entryId} - Success (204)")
     void removeEntry_ShouldReturn204() throws Exception {
-
         mockMvc.perform(delete("/api/entry/{entryId}", sampleEntryId))
                 .andExpect(status().isNoContent());
-
         verify(entryService).removeEntry(sampleEntryId);
     }
 
     @Test
-    @DisplayName("post /api/entry/{entryId} - Not Found (404)")
+    @DisplayName("DELETE /api/entry/{entryId} - Entry Not Found (404)")
     void removeEntry_WhenEntryIdDoesNotExist_ShouldReturn404() throws Exception {
-        UUID fakeEntryId = UUID.randomUUID();
-
         doThrow(new NotFoundException("Entry not found"))
-                .when(entryService).removeEntry(fakeEntryId);
+                .when(entryService).removeEntry(sampleEntryId);
 
-        mockMvc.perform(delete("/api/entry/{entryId}", fakeEntryId))
+        mockMvc.perform(delete("/api/entry/{entryId}", sampleEntryId))
                 .andExpect(status().isNotFound());
 
-        verify(entryService).removeEntry(fakeEntryId);
+        verify(entryService).removeEntry(sampleEntryId);
     }
 
     // ---------- get Today entries ----------
 
-
     @Test
-    @DisplayName("get /api/entry/{userId}/today - Success")
+    @DisplayName("GET /api/entry/{userId}/today - Success (200)")
     void todayEntries_ShouldReturn200_AndEntries() throws Exception {
-
         List<EntryResponseDTO> userEntries = List.of(sampleEntryResponseDTO, sampleEntryResponseDTO2);
 
         when(entryService.findTodayEntriesByUser(sampleUserId)).thenReturn(userEntries);
@@ -170,14 +157,11 @@ public class EntryControllerTest {
         verify(entryService).findTodayEntriesByUser(eq(sampleUserId));
     }
 
-
     // ---------- update Entry ----------
 
-
     @Test
-    @DisplayName("put /api/entry/{entryId}/update - success")
-    void updateEntry_return200_AndEntry() throws Exception {
-
+    @DisplayName("PUT /api/entry/{entryId}/update - Success (200)")
+    void updateEntry_ShouldReturn200_AndEntry() throws Exception {
         when(entryService.updateEntry(sampleEntryId, sampleEntryRequestDTO2)).thenReturn(sampleEntryResponseDTO2);
 
         mockMvc.perform(put("/api/entry/{entryId}/update", sampleEntryId)
@@ -194,7 +178,7 @@ public class EntryControllerTest {
     }
 
     @Test
-    @DisplayName("PUT /api/entry/{entryId}/update - Not Found (404)")
+    @DisplayName("PUT /api/entry/{entryId}/update - Entry Not Found (404)")
     void updateEntry_WhenEntryDoesNotExist_ShouldReturn404() throws Exception {
         UUID fakeEntryId = UUID.randomUUID();
 

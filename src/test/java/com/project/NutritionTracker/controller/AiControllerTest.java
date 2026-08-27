@@ -236,11 +236,10 @@ public class AiControllerTest {
     }
 
     @Test
-    @DisplayName("POST /parse-meal-image - Bad Request (415)")
-    void parseMealFromImage_WithWrongFormat_ShouldReturn400() throws Exception {
+    @DisplayName("POST /api/ai/parse-meal-image - Unsupported Media Type (415)")
+    void parseMealFromImage_WithWrongContentType_ShouldReturn415() throws Exception {
         mockMvc.perform(multipart("/api/ai/parse-meal-image")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isUnsupportedMediaType());
     }
-
 }

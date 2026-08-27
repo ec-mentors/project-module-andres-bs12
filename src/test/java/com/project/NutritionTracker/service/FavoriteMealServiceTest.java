@@ -1,7 +1,5 @@
 package com.project.NutritionTracker.service;
 
-import com.project.NutritionTracker.dto.EntryRequestDTO;
-import com.project.NutritionTracker.dto.EntryResponseDTO;
 import com.project.NutritionTracker.dto.FavoriteMealRequestDTO;
 import com.project.NutritionTracker.dto.FavoriteMealResponseDTO;
 import com.project.NutritionTracker.enums.MealType;
@@ -13,6 +11,7 @@ import com.project.NutritionTracker.model.User;
 import com.project.NutritionTracker.repository.FavoriteMealRepository;
 import com.project.NutritionTracker.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -20,264 +19,304 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
-
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
 @ExtendWith(MockitoExtension.class)
 public class FavoriteMealServiceTest {
 
     @Mock
-    FavoriteMealRepository repository;
+    private FavoriteMealRepository favoriteMealRepository;
 
     @Mock
-    UserRepository userRepository;
+    private UserRepository userRepository;
 
     @Mock
-    FavoriteMealMapper mapper;
+    private FavoriteMealMapper mapper;
 
     @InjectMocks
-    private FavoriteMealService fService;
+    private FavoriteMealService favoriteMealService;
 
-    private FavoriteMeal sampleFavoriteMeal;
+    private UUID sampleUserId;
+    private UUID sampleFavoriteMealId;
+    private UUID sampleEntryId;
+
     private User sampleUser;
     private Entry sampleEntry;
-
-    private FavoriteMealRequestDTO fMealRequestDTO;
-    private FavoriteMealResponseDTO fMealResponseDTO;
-
-    private UUID mockFavouriteId;
-    private UUID mockUserId;
-    private UUID mockEntryId;
-
+    private FavoriteMeal sampleFavoriteMeal;
+    private FavoriteMealRequestDTO sampleRequestDTO;
+    private FavoriteMealResponseDTO sampleResponseDTO;
 
     @BeforeEach
     void setUp() {
-        mockFavouriteId = UUID.randomUUID();
-        mockUserId = UUID.randomUUID();
+        sampleUserId = UUID.randomUUID();
+        sampleFavoriteMealId = UUID.randomUUID();
+        sampleEntryId = UUID.randomUUID();
 
         sampleUser = new User();
-        sampleUser.setId(mockUserId);
+        sampleUser.setId(sampleUserId);
 
-        sampleFavoriteMeal = new FavoriteMeal(mockFavouriteId, sampleUser, "Chicken", 100, 20.0, 30.0, 40.1, MealType.DINNER, LocalDate.now());
-        fMealResponseDTO = new FavoriteMealResponseDTO(mockFavouriteId, "Chicken", 100, 20.0, 30.0, 40.1, MealType.DINNER, LocalDate.now());
-        fMealRequestDTO = new FavoriteMealRequestDTO("Chicken", 100, 20.0, 30.0, 40.1, MealType.DINNER);
-        sampleEntry = new Entry(mockEntryId, sampleUser, "Pasta carbonara", "MANUAL", LocalDateTime.now(), 500, 50.0, 15.0, 30.0, MealType.DINNER);
-
+        sampleEntry = new Entry(sampleEntryId, sampleUser, "Pasta carbonara", "MANUAL", LocalDateTime.now(), 500, 50.0, 15.0, 30.0, MealType.DINNER);
+        sampleFavoriteMeal = new FavoriteMeal(sampleFavoriteMealId, sampleUser, "Chicken", 100, 20.0, 30.0, 40.1, MealType.DINNER, LocalDate.now());
+        sampleRequestDTO = new FavoriteMealRequestDTO("Chicken", 100, 20.0, 30.0, 40.1, MealType.DINNER);
+        sampleResponseDTO = new FavoriteMealResponseDTO(sampleFavoriteMealId, "Chicken", 100, 20.0, 30.0, 40.1, MealType.DINNER, LocalDate.now());
     }
 
-    // convert entry to favourite
-
+    // ---------- convertEntryToFavorite ----------
 
     @Test
-    void convertEntryToFavourite() {
-        when(userRepository.findById(any())).thenReturn(Optional.of(sampleUser));
-        when(mapper.toResponseDTO(any())).thenReturn(fMealResponseDTO);
+    @DisplayName("convertEntryToFavorite - Success with explicit MealType")
+    void convertEntryToFavorite_ShouldReturnFavoriteMealResponseDTO() {
+        when(userRepository.findById(sampleUserId)).thenReturn(Optional.of(sampleUser));
+        when(favoriteMealRepository.save(any(FavoriteMeal.class))).thenReturn(sampleFavoriteMeal);
+        when(mapper.toResponseDTO(any(FavoriteMeal.class))).thenReturn(sampleResponseDTO);
 
-        var response = fService.convertEntryToFavorite(sampleEntry, mockUserId);
+        FavoriteMealResponseDTO response = favoriteMealService.convertEntryToFavorite(sampleEntry, sampleUserId);
 
-        assertEquals(fMealResponseDTO, response);
+        assertNotNull(response);
+        assertEquals(sampleResponseDTO, response);
         assertEquals(MealType.DINNER, response.mealType());
     }
 
-
     @Test
-    void convertEntryToFavourite_whenMealTypeIsNullAndCreatedAt2PM_shouldSetLunch() {
-        // to capture mealType
+    @DisplayName("convertEntryToFavorite - Auto-infer LUNCH when MealType is null at 2:00 PM")
+    void convertEntryToFavorite_WhenMealTypeIsNullAndCreatedOn2PM_ShouldSetLunch() {
         ArgumentCaptor<FavoriteMeal> mealCaptor = ArgumentCaptor.forClass(FavoriteMeal.class);
-        when(userRepository.findById(mockUserId)).thenReturn(Optional.of(sampleUser));
+        when(userRepository.findById(sampleUserId)).thenReturn(Optional.of(sampleUser));
+        when(favoriteMealRepository.save(any(FavoriteMeal.class))).thenReturn(sampleFavoriteMeal);
+        when(mapper.toResponseDTO(any(FavoriteMeal.class))).thenReturn(sampleResponseDTO);
 
         sampleEntry.setMealType(null);
         sampleEntry.setCreatedOn(LocalDate.now().atTime(14, 0));
 
-        fService.convertEntryToFavorite(sampleEntry, mockUserId);
+        favoriteMealService.convertEntryToFavorite(sampleEntry, sampleUserId);
 
-        verify(repository).save(mealCaptor.capture());
-
+        verify(favoriteMealRepository).save(mealCaptor.capture());
         FavoriteMeal saved = mealCaptor.getValue();
-
         assertEquals(MealType.LUNCH, saved.getMealType());
     }
 
     @Test
-    void convertEntryToFavourite_whenMealTypeIsNullAndCreatedAt7PM_shouldSetDinner() {
-        // to capture mealType
+    @DisplayName("convertEntryToFavorite - Auto-infer DINNER when MealType is null at 7:00 PM")
+    void convertEntryToFavorite_WhenMealTypeIsNullAndCreatedOn7PM_ShouldSetDinner() {
         ArgumentCaptor<FavoriteMeal> mealCaptor = ArgumentCaptor.forClass(FavoriteMeal.class);
-        when(userRepository.findById(mockUserId)).thenReturn(Optional.of(sampleUser));
+        when(userRepository.findById(sampleUserId)).thenReturn(Optional.of(sampleUser));
+        when(favoriteMealRepository.save(any(FavoriteMeal.class))).thenReturn(sampleFavoriteMeal);
+        when(mapper.toResponseDTO(any(FavoriteMeal.class))).thenReturn(sampleResponseDTO);
 
         sampleEntry.setMealType(null);
         sampleEntry.setCreatedOn(LocalDate.now().atTime(19, 0));
 
-        fService.convertEntryToFavorite(sampleEntry, mockUserId);
+        favoriteMealService.convertEntryToFavorite(sampleEntry, sampleUserId);
 
-        verify(repository).save(mealCaptor.capture());
-
+        verify(favoriteMealRepository).save(mealCaptor.capture());
         FavoriteMeal saved = mealCaptor.getValue();
-
         assertEquals(MealType.DINNER, saved.getMealType());
     }
 
     @Test
-    void convertEntryToFavourite_whenMealTypeIsNullAndCreatedAt8AM_shouldSetBreakfast() {
-        // to capture mealType
+    @DisplayName("convertEntryToFavorite - Auto-infer BREAKFAST when MealType is null at 8:00 AM")
+    void convertEntryToFavorite_WhenMealTypeIsNullAndCreatedOn8AM_ShouldSetBreakfast() {
         ArgumentCaptor<FavoriteMeal> mealCaptor = ArgumentCaptor.forClass(FavoriteMeal.class);
-        when(userRepository.findById(mockUserId)).thenReturn(Optional.of(sampleUser));
+        when(userRepository.findById(sampleUserId)).thenReturn(Optional.of(sampleUser));
+        when(favoriteMealRepository.save(any(FavoriteMeal.class))).thenReturn(sampleFavoriteMeal);
+        when(mapper.toResponseDTO(any(FavoriteMeal.class))).thenReturn(sampleResponseDTO);
 
         sampleEntry.setMealType(null);
         sampleEntry.setCreatedOn(LocalDate.now().atTime(8, 0));
 
-        fService.convertEntryToFavorite(sampleEntry, mockUserId);
+        favoriteMealService.convertEntryToFavorite(sampleEntry, sampleUserId);
 
-        verify(repository).save(mealCaptor.capture());
-
+        verify(favoriteMealRepository).save(mealCaptor.capture());
         FavoriteMeal saved = mealCaptor.getValue();
-
         assertEquals(MealType.BREAKFAST, saved.getMealType());
     }
 
     @Test
-    void convertEntryToFavourite_whenMealTypeIsNullAndCreatedAt5PM_shouldSetSnack() {
-        // to capture mealType
+    @DisplayName("convertEntryToFavorite - Auto-infer SNACK when MealType is null at 5:00 PM")
+    void convertEntryToFavorite_WhenMealTypeIsNullAndCreatedOn5PM_ShouldSetSnack() {
         ArgumentCaptor<FavoriteMeal> mealCaptor = ArgumentCaptor.forClass(FavoriteMeal.class);
-        when(userRepository.findById(mockUserId)).thenReturn(Optional.of(sampleUser));
+        when(userRepository.findById(sampleUserId)).thenReturn(Optional.of(sampleUser));
+        when(favoriteMealRepository.save(any(FavoriteMeal.class))).thenReturn(sampleFavoriteMeal);
+        when(mapper.toResponseDTO(any(FavoriteMeal.class))).thenReturn(sampleResponseDTO);
 
         sampleEntry.setMealType(null);
         sampleEntry.setCreatedOn(LocalDate.now().atTime(17, 0));
 
-        fService.convertEntryToFavorite(sampleEntry, mockUserId);
+        favoriteMealService.convertEntryToFavorite(sampleEntry, sampleUserId);
 
-        verify(repository).save(mealCaptor.capture());
-
+        verify(favoriteMealRepository).save(mealCaptor.capture());
         FavoriteMeal saved = mealCaptor.getValue();
-
         assertEquals(MealType.SNACK, saved.getMealType());
     }
 
     @Test
-    void convertEntryToFavourite_whenCreatedOnIsNull_shouldSetToDinner() {
-        // to capture mealType
+    @DisplayName("convertEntryToFavorite - Default to LUNCH when createdOn is null")
+    void convertEntryToFavorite_WhenCreatedOnIsNull_ShouldSetLunch() {
         ArgumentCaptor<FavoriteMeal> mealCaptor = ArgumentCaptor.forClass(FavoriteMeal.class);
-        when(userRepository.findById(mockUserId)).thenReturn(Optional.of(sampleUser));
+        when(userRepository.findById(sampleUserId)).thenReturn(Optional.of(sampleUser));
+        when(favoriteMealRepository.save(any(FavoriteMeal.class))).thenReturn(sampleFavoriteMeal);
+        when(mapper.toResponseDTO(any(FavoriteMeal.class))).thenReturn(sampleResponseDTO);
 
         sampleEntry.setMealType(null);
         sampleEntry.setCreatedOn(null);
 
-        fService.convertEntryToFavorite(sampleEntry, mockUserId);
+        favoriteMealService.convertEntryToFavorite(sampleEntry, sampleUserId);
 
-        verify(repository).save(mealCaptor.capture());
-
+        verify(favoriteMealRepository).save(mealCaptor.capture());
         FavoriteMeal saved = mealCaptor.getValue();
-
         assertEquals(MealType.LUNCH, saved.getMealType());
     }
 
     @Test
-    void convertEntryToFavourite_ifUserIdIsNull_throwIAE() {
-        assertThrows(IllegalArgumentException.class, () -> fService.convertEntryToFavorite(sampleEntry, null));
+    @DisplayName("convertEntryToFavorite - Throws IllegalArgumentException when userId is null")
+    void convertEntryToFavorite_WhenUserIdIsNull_ShouldThrowIllegalArgumentException() {
+        IllegalArgumentException exception = assertThrows(
+                IllegalArgumentException.class,
+                () -> favoriteMealService.convertEntryToFavorite(sampleEntry, null)
+        );
+        assertEquals("User can't be null", exception.getMessage());
     }
 
     @Test
-    void convertEntryToFavourite_ifUserIdIsNotFound_throwNFE() {
-        UUID fakeid = UUID.randomUUID();
-        when(userRepository.findById(fakeid)).thenThrow(NotFoundException.class);
-        assertThrows(NotFoundException.class, () -> fService.convertEntryToFavorite(sampleEntry, fakeid));
+    @DisplayName("convertEntryToFavorite - Throws NotFoundException when user not found")
+    void convertEntryToFavorite_WhenUserNotFound_ShouldThrowNotFoundException() {
+        UUID nonExistentUserId = UUID.randomUUID();
+        when(userRepository.findById(nonExistentUserId)).thenReturn(Optional.empty());
+
+        NotFoundException exception = assertThrows(
+                NotFoundException.class,
+                () -> favoriteMealService.convertEntryToFavorite(sampleEntry, nonExistentUserId)
+        );
+        assertEquals("User not found", exception.getMessage());
     }
 
-
-    // Create favourite
-
+    // ---------- createFavorite ----------
 
     @Test
-    void createFavourite() {
-        when(userRepository.findById(any())).thenReturn(Optional.of(sampleUser));
-        when(mapper.toResponseDTO(any())).thenReturn(fMealResponseDTO);
+    @DisplayName("createFavorite - Success")
+    void createFavorite_ShouldReturnFavoriteMealResponseDTO() {
+        when(userRepository.findById(sampleUserId)).thenReturn(Optional.of(sampleUser));
+        when(favoriteMealRepository.save(any(FavoriteMeal.class))).thenReturn(sampleFavoriteMeal);
+        when(mapper.toResponseDTO(any(FavoriteMeal.class))).thenReturn(sampleResponseDTO);
 
-        var response = fService.createFavorite(fMealRequestDTO, mockUserId);
+        FavoriteMealResponseDTO response = favoriteMealService.createFavorite(sampleRequestDTO, sampleUserId);
 
-        assertEquals(fMealResponseDTO, response);
+        assertNotNull(response);
+        assertEquals(sampleResponseDTO, response);
         assertEquals(MealType.DINNER, response.mealType());
     }
 
-
     @Test
-    void createFavourite_ifUserIdIsNull_throwIAE() {
-        assertThrows(IllegalArgumentException.class, () -> fService.createFavorite(fMealRequestDTO, null));
+    @DisplayName("createFavorite - Throws IllegalArgumentException when userId is null")
+    void createFavorite_WhenUserIdIsNull_ShouldThrowIllegalArgumentException() {
+        IllegalArgumentException exception = assertThrows(
+                IllegalArgumentException.class,
+                () -> favoriteMealService.createFavorite(sampleRequestDTO, null)
+        );
+        assertEquals("User can't be null", exception.getMessage());
     }
 
     @Test
-    void createFavourite_ifUserIdIsNotFound_throwNFE() {
-        UUID fakeid = UUID.randomUUID();
-        when(userRepository.findById(fakeid)).thenThrow(NotFoundException.class);
-        assertThrows(NotFoundException.class, () -> fService.createFavorite(fMealRequestDTO, fakeid));
+    @DisplayName("createFavorite - Throws NotFoundException when user not found")
+    void createFavorite_WhenUserNotFound_ShouldThrowNotFoundException() {
+        UUID nonExistentUserId = UUID.randomUUID();
+        when(userRepository.findById(nonExistentUserId)).thenReturn(Optional.empty());
+
+        NotFoundException exception = assertThrows(
+                NotFoundException.class,
+                () -> favoriteMealService.createFavorite(sampleRequestDTO, nonExistentUserId)
+        );
+        assertEquals("User not found", exception.getMessage());
     }
 
-
-    // removeFavoriteMeal
-
+    // ---------- removeFavoriteMeal ----------
 
     @Test
-    void removeFavoriteMeal() {
-        when(repository.existsById(mockFavouriteId)).thenReturn(true);
-        fService.removeFavoriteMeal(mockFavouriteId);
-        verify(repository, times(1)).deleteById(mockFavouriteId);
-    }
+    @DisplayName("removeFavoriteMeal - Success")
+    void removeFavoriteMeal_ShouldDeleteFavoriteMeal() {
+        when(favoriteMealRepository.existsById(sampleFavoriteMealId)).thenReturn(true);
 
-    @Test
-    void removeFavoriteMeal_ifMealNotFound_ThrowsNFE() {
-        when(repository.existsById(mockFavouriteId)).thenReturn(false);
-        assertThrows(NotFoundException.class, () -> fService.removeFavoriteMeal(mockFavouriteId));
-        verify(repository, times(0)).deleteById(mockFavouriteId);
-    }
+        favoriteMealService.removeFavoriteMeal(sampleFavoriteMealId);
 
-
-    // get all favorites
-
-    @Test
-    void getAllFavorites() {
-        List<FavoriteMealResponseDTO> expected = List.of(fMealResponseDTO);
-        when(userRepository.existsById(mockUserId)).thenReturn(true);
-        when(repository.findAllByUserId(mockUserId)).thenReturn(List.of(sampleFavoriteMeal));
-        when(mapper.toResponseDTO(sampleFavoriteMeal)).thenReturn(fMealResponseDTO);
-
-        var result = fService.getAllFavorites(mockUserId);
-        assertEquals(expected, result);
+        verify(favoriteMealRepository, times(1)).deleteById(sampleFavoriteMealId);
     }
 
     @Test
-    void getAllFavorites_ifUserNotFound_ThrowsNFE() {
-        when(userRepository.existsById(mockUserId)).thenReturn(false);
-        assertThrows(NotFoundException.class, () -> fService.getAllFavorites(mockUserId));
+    @DisplayName("removeFavoriteMeal - Throws NotFoundException when meal not found")
+    void removeFavoriteMeal_WhenMealNotFound_ShouldThrowNotFoundException() {
+        when(favoriteMealRepository.existsById(sampleFavoriteMealId)).thenReturn(false);
+
+        NotFoundException exception = assertThrows(
+                NotFoundException.class,
+                () -> favoriteMealService.removeFavoriteMeal(sampleFavoriteMealId)
+        );
+        assertTrue(exception.getMessage().contains("Favorite meal not found with id"));
+        verify(favoriteMealRepository, never()).deleteById(any());
     }
 
-
-    // update favorite
+    // ---------- getAllFavorites ----------
 
     @Test
-    void updateFavorite() {
-        FavoriteMealRequestDTO newDTO = new FavoriteMealRequestDTO("Kebab", 1403, 53.0, 23.0, 40.1, MealType.LUNCH);
-        FavoriteMealResponseDTO expected = new FavoriteMealResponseDTO(mockEntryId, "Kebab", 1403, 53.0, 23.0, 40.1, MealType.LUNCH, LocalDate.now());
+    @DisplayName("getAllFavorites - Success")
+    void getAllFavorites_ShouldReturnFavoriteMealList() {
+        List<FavoriteMealResponseDTO> expectedList = List.of(sampleResponseDTO);
+        when(userRepository.existsById(sampleUserId)).thenReturn(true);
+        when(favoriteMealRepository.findAllByUserId(sampleUserId)).thenReturn(List.of(sampleFavoriteMeal));
+        when(mapper.toResponseDTO(sampleFavoriteMeal)).thenReturn(sampleResponseDTO);
 
-        when(repository.findById(mockEntryId)).thenReturn(Optional.of(sampleFavoriteMeal));
-        when(repository.save(sampleFavoriteMeal)).thenReturn(sampleFavoriteMeal);
-        when(mapper.toResponseDTO(sampleFavoriteMeal)).thenReturn(expected);
+        List<FavoriteMealResponseDTO> result = favoriteMealService.getAllFavorites(sampleUserId);
 
-        var response = fService.updateFavorite(newDTO, mockEntryId);
+        assertEquals(expectedList, result);
+        verify(favoriteMealRepository).findAllByUserId(sampleUserId);
+    }
+
+    @Test
+    @DisplayName("getAllFavorites - Throws NotFoundException when user not found")
+    void getAllFavorites_WhenUserNotFound_ShouldThrowNotFoundException() {
+        when(userRepository.existsById(sampleUserId)).thenReturn(false);
+
+        NotFoundException exception = assertThrows(
+                NotFoundException.class,
+                () -> favoriteMealService.getAllFavorites(sampleUserId)
+        );
+        assertEquals("User not found", exception.getMessage());
+    }
+
+    // ---------- updateFavorite ----------
+
+    @Test
+    @DisplayName("updateFavorite - Success")
+    void updateFavorite_ShouldReturnUpdatedFavoriteMealResponseDTO() {
+        FavoriteMealRequestDTO updateRequest = new FavoriteMealRequestDTO("Kebab", 1403, 53.0, 23.0, 40.1, MealType.LUNCH);
+        FavoriteMealResponseDTO updatedResponse = new FavoriteMealResponseDTO(sampleFavoriteMealId, "Kebab", 1403, 53.0, 23.0, 40.1, MealType.LUNCH, LocalDate.now());
+
+        when(favoriteMealRepository.findById(sampleFavoriteMealId)).thenReturn(Optional.of(sampleFavoriteMeal));
+        when(favoriteMealRepository.save(sampleFavoriteMeal)).thenReturn(sampleFavoriteMeal);
+        when(mapper.toResponseDTO(sampleFavoriteMeal)).thenReturn(updatedResponse);
+
+        FavoriteMealResponseDTO response = favoriteMealService.updateFavorite(updateRequest, sampleFavoriteMealId);
+
         assertNotNull(response);
-        assertEquals(expected, response);
+        assertEquals(updatedResponse, response);
 
-        verify(repository, times(1)).findById(mockEntryId);
-        verify(repository, times(1)).save(sampleFavoriteMeal);
+        verify(favoriteMealRepository, times(1)).findById(sampleFavoriteMealId);
+        verify(favoriteMealRepository, times(1)).save(sampleFavoriteMeal);
         verify(mapper, times(1)).toResponseDTO(sampleFavoriteMeal);
     }
 
     @Test
-    void updateEntry_ThrowsIAE_WhenDTOIsNull() {
-        UUID fakeid = UUID.randomUUID();
-        assertThrows(NotFoundException.class, () -> fService.updateFavorite(fMealRequestDTO, fakeid));
+    @DisplayName("updateFavorite - Throws NotFoundException when meal not found")
+    void updateFavorite_WhenMealNotFound_ShouldThrowNotFoundException() {
+        when(favoriteMealRepository.findById(sampleFavoriteMealId)).thenReturn(Optional.empty());
+
+        assertThrows(NotFoundException.class, () -> favoriteMealService.updateFavorite(sampleRequestDTO, sampleFavoriteMealId));
+        verify(favoriteMealRepository, never()).save(any());
     }
 }

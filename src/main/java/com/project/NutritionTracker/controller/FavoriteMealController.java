@@ -4,6 +4,7 @@ import com.project.NutritionTracker.dto.FavoriteMealRequestDTO;
 import com.project.NutritionTracker.dto.FavoriteMealResponseDTO;
 import com.project.NutritionTracker.model.Entry;
 import com.project.NutritionTracker.service.FavoriteMealService;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -35,7 +36,8 @@ public class FavoriteMealController {
             @Valid @RequestBody FavoriteMealRequestDTO dto,
             @PathVariable UUID id
     ) {
-        return ResponseEntity.ok(service.createFavorite(dto, id));
+        FavoriteMealResponseDTO response = service.createFavorite(dto, id);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     @DeleteMapping("/remove/{fMealId}")
@@ -54,11 +56,10 @@ public class FavoriteMealController {
     }
 
     @GetMapping("get-all-by-user/{id}")
-    public ResponseEntity<FavoriteMealResponseDTO> findAllByUser(
-            @Valid @RequestBody FavoriteMealRequestDTO dto,
+    public ResponseEntity<List<FavoriteMealResponseDTO>> findAllByUser(
             @PathVariable UUID id
     ) {
-        return ResponseEntity.ok(service.updateFavorite(dto, id));
+        return ResponseEntity.ok(service.getAllFavorites(id));
     }
 
 

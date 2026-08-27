@@ -37,7 +37,7 @@ public class FavoriteMealService {
     @PreAuthorize("isAuthenticated() && #userId == principal.id")
     public FavoriteMealResponseDTO convertEntryToFavorite(Entry entry, UUID userId) {
         if (userId == null) {
-            throw new IllegalArgumentException("new user can't be null");
+            throw new IllegalArgumentException("User can't be null");
         }
         User user = userRepository.findById(userId).orElseThrow(() -> new NotFoundException("User not found"));
         FavoriteMeal favoriteMeal = new FavoriteMeal();

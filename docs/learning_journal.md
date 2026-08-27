@@ -1,19 +1,58 @@
 # 📓 NutritionTracker - Learning Journal
 
 This document serves as a development and learning journal to record key concepts, architectural decisions, and notes learned throughout the **NutritionTracker** project.
-## 📅 2026-08-21 - (Sprint 4) - How to compare times to set MealType
+## 📅 2026-08-27 - (Sprint 4) - Context-Aware MealType Inference, Mockito Argument Matchers & Controller Test Invariants
 
 ### 💡 Key Concepts Learned & Architectural Decisions
 
-1. ** I had in mind to use something like `if (favoriteMeal.getMealType() == null) {
-            LocalTime time = LocalTime.now();
-            if (time.isBefore(LocalTime.NOON)) {
-                favoriteMeal.setMealType(MealType.BREAKFAST);
-            }` When the Meal type is not specified in th conversion between entry and favourite, but this won't be a right implementation, since the time the user marks the meal as favourite, is not necessarily the same time the user logged the meal, Foe example, the user goes trhough the meals today, and find out that the entry `chicken` is very frequently used, the user decides to added to favourite. I need to find a new way"
-2. I don't want to obligate the user to put the meal type in every single entry, this is not very intuitive, I could also set an enum as default like `others`, and then the user can change it while adding it to favourite, but this will add up another interface,
-3. While designing a smalll muck up to implemente this feature, I realized that entry already has an attribute created on, I will use this to compare and set
-4. Implemented with the data saved in entry, and if there is no mealtype i calculate with this
-5. Testing make me use mealcaptor, i undestand it as an spy that gets the data that was used into the repository while running it, so i can inspect it. I don't need a response attribute, instead i compare it with the information from this ArgumentCaptor
+1. **Context-Aware `MealType` Auto-Inference (`createdOn` vs `LocalTime.now()`):**
+   - *The Problem:* When converting an existing `Entry` to a `FavoriteMeal`, the `mealType` is often unspecified (optional). An initial naive thought was using `LocalTime.now()`:
+     ```java
+     if (favoriteMeal.getMealType() == null) {
+         LocalTime time = LocalTime.now();
+         if (time.isBefore(LocalTime.NOON)) {
+             favoriteMeal.setMealType(MealType.BREAKFAST);
+         }
+     }
+     ```
+   - *Why `LocalTime.now()` Fails:* A user frequently reviews their meal logs at the end of the day (e.g. 10:00 PM) and decides to mark a chicken salad eaten at 1:00 PM as favorite. Using `LocalTime.now()` would incorrectly tag that salad as `DINNER`.
+   - *The Architecture Decision:* Avoid forcing the user to specify `mealType` on every log or introducing an unnecessary "Other" enum selection interface. Instead, leverage `entry.getCreatedOn()` to reconstruct the actual time of consumption:
+     - **Before 12:00 PM** $\rightarrow$ `MealType.BREAKFAST`
+     - **Before 4:00 PM** $\rightarrow$ `MealType.LUNCH`
+     - **Before 7:00 PM** $\rightarrow$ `MealType.SNACK`
+     - **After 7:00 PM** $\rightarrow$ `MealType.DINNER`
+     - **Fallback (null timestamp)** $\rightarrow$ Defaults gracefully to `MealType.LUNCH`.
+
+2. **`ArgumentCaptor` as a Test Spy for Internal State Verification:**
+   - *The Concept:* When a service method mutates an entity before persisting (`repository.save(favoriteMeal)`) and returns a mapped DTO (`FavoriteMealResponseDTO`), unit tests need a way to inspect the exact internal entity state saved into the database without exposing unnecessary internal getters on the DTO.
+   - *The Solution:* Configured `ArgumentCaptor<FavoriteMeal> mealCaptor = ArgumentCaptor.forClass(FavoriteMeal.class);`. By calling `verify(repository).save(mealCaptor.capture());`, the test acts as an inspection spy: `FavoriteMeal saved = mealCaptor.getValue(); assertEquals(MealType.LUNCH, saved.getMealType());`.
+
+3. **Controller Unit Test Boundaries vs. Service Validation (`@PathVariable` Invariant):**
+   - *The Concept:* In `@WebMvcTest`, attempting to test `userId = null` by calling `mockMvc.perform(post("/api/.../{id}", (Object) null))` creates the string URL `"/api/.../null"`. Spring MVC's parameter binder attempts `UUID.fromString("null")` and throws `MethodArgumentTypeMismatchException` (`400 Bad Request`) before the controller or service is ever reached.
+   - *Scope Separation:*
+     - **Service Layer (`FavoriteMealServiceTest`):** Tests the business rule `if (userId == null) throw new IllegalArgumentException(...)` via direct Java method calls (`assertThrows`).
+     - **Controller Layer (`FavoriteMealControllerTest`):** Mocks the service and verifies that when the service throws domain exceptions (`NotFoundException`, `IllegalArgumentException`), [`GlobalExceptionHandler`](file:///Users/andresbejarano/dev/NutritionTracker/src/main/java/com/project/NutritionTracker/exception/GlobalExceptionHandler.java) translates them into clean HTTP status codes (`404 Not Found`, `400 Bad Request`).
+
+4. **Jackson JSON Deserialization vs. Java Memory Reference Equality in Mockito:**
+   - *The Bug:* In `@WebMvcTest`, writing `when(service.convertEntryToFavorite(sampleEntry, sampleUserId)).thenReturn(...)` causes the mock to return `null`.
+   - *The Root Cause:* MockMvc serializes `sampleEntry` into a JSON string payload. Spring MVC receives the JSON and invokes Jackson's `ObjectMapper`, creating a **brand new `Entry` instance in memory**. Because JPA entities compare by memory reference unless `equals()` is overridden, Mockito sees `newEntry != sampleEntry` and fails to activate the mock.
+   - *The Fix:* Use Mockito Argument Matchers: `when(service.convertEntryToFavorite(any(Entry.class), eq(sampleUserId))).thenReturn(...)`.
+
+5. **Mockito "All-or-Nothing" Argument Matcher Rule:**
+   - If a matcher like `any(Entry.class)` is used for one parameter, **every other parameter in that method invocation must also use a matcher** (e.g. `eq(sampleUserId)` or `any(UUID.class)`). Mixing raw values with matchers throws `InvalidUseOfMatchersException`.
+
+6. **The Role of `verify(...)` in `void` / `DELETE` Operations (Preventing False Positives):**
+   - In `DELETE` endpoints returning `204 No Content` with an empty body, checking `.andExpect(status().isNoContent())` alone is insufficient. If a bug accidentally removes `service.removeFavoriteMeal(id)` from the controller, the HTTP status assertion would still pass.
+   - `verify(service, times(1)).removeFavoriteMeal(id)` guarantees that the controller genuinely invoked the underlying service with the exact expected identifier.
+
+7. **REST Status Code Semantics (`200` vs `201` vs `204` vs `400` vs `404`):**
+   - **`200 OK`:** General successful execution (`GET`, `PUT`, conversions).
+   - **`201 Created`:** Resource creation (`POST /create/{id}`).
+   - **`204 No Content`:** Successful deletion without body payload (`DELETE`).
+   - **`400 Bad Request`:** Client input error (validation failure, invalid UUID format in path, or malformed JSON).
+   - **`404 Not Found`:** Resource or entity does not exist in the database.
+
+---
 ## 📅 2026-08-21 - (Sprint 4) - CSS Root Cause Analysis (`.no-scrollbar`), UI Diagnostic Invariants & Scope Discipline
 
 ### 💡 Key Concepts Learned & Architectural Decisions

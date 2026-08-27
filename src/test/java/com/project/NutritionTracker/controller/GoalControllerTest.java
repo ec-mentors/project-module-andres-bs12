@@ -78,7 +78,7 @@ public class GoalControllerTest {
     // ---------- createGoal ----------
 
     @Test
-    @DisplayName("POST /api/goal/{userId} - Success")
+    @DisplayName("POST /api/goal/{userId} - Success (201)")
     void createGoal_ShouldReturn201_AndGoalResponseDTO() throws Exception {
         when(goalService.createGoal(sampleGoalRequestDTO, sampleUserId)).thenReturn(sampleGoalResponseDTO);
 
@@ -99,7 +99,7 @@ public class GoalControllerTest {
     // ---------- updateGoal ----------
 
     @Test
-    @DisplayName("PUT /api/goal/{goalId} - Success")
+    @DisplayName("PUT /api/goal/{goalId} - Success (200)")
     void updateGoal_ShouldReturn200_AndGoalResponseDTO() throws Exception {
         when(goalService.updateGoal(sampleGoalId, sampleGoalRequestDTO2)).thenReturn(sampleGoalResponseDTO2);
 
@@ -117,7 +117,7 @@ public class GoalControllerTest {
     }
 
     @Test
-    @DisplayName("PUT /api/goal/{goalId} - Not Found (404)")
+    @DisplayName("PUT /api/goal/{goalId} - Goal Not Found (404)")
     void updateGoal_WhenGoalDoesNotExist_ShouldReturn404() throws Exception {
         UUID fakeGoalId = UUID.randomUUID();
         when(goalService.updateGoal(eq(fakeGoalId), any(GoalRequestDTO.class)))
@@ -134,7 +134,7 @@ public class GoalControllerTest {
     // ---------- getGoalByUserAndDate ----------
 
     @Test
-    @DisplayName("GET /api/goal/user/{userId}/date - Success")
+    @DisplayName("GET /api/goal/user/{userId}/date - Success (200)")
     void getGoalByUserAndDate_ShouldReturn200_AndGoalResponseDTO() throws Exception {
         LocalDate date = LocalDate.of(2026, 8, 1);
         when(goalService.getGoalByUserAndDate(sampleUserId, date)).thenReturn(sampleGoalResponseDTO);
@@ -152,7 +152,7 @@ public class GoalControllerTest {
     // ---------- getAllGoalsByUser ----------
 
     @Test
-    @DisplayName("GET /api/goal/user/{userId}/all - Success")
+    @DisplayName("GET /api/goal/user/{userId}/all - Success (200)")
     void getAllGoalsByUser_ShouldReturn200_AndListOfGoalResponseDTO() throws Exception {
         List<GoalResponseDTO> goalList = List.of(sampleGoalResponseDTO, sampleGoalResponseDTO2);
         when(goalService.findAllGoalsByUser(sampleUserId)).thenReturn(goalList);
