@@ -15,45 +15,19 @@ Built with **Spring Boot 3 (Java 17)** on the backend and **Vite + React 19 + Ty
 
 ---
 
-## 🗄️ Database Schema & Data Model
+## 🏗️ System Architecture & Data Flow
 
-```mermaid
-erDiagram
-    USER ||--o{ GOAL : "defines (1:N)"
-    USER ||--o{ ENTRY : "logs (1:N)"
+<p align="center">
+  <img src="docs/assets/architecture.svg" alt="NutritionTracker System Architecture" width="100%" />
+</p>
 
-    USER {
-        uuid id PK
-        string google_id UK
-        string email UK
-        string first_name
-        string last_name
-        string role
-        bigint telegram_chat_id
-        timestamp created_at
-    }
+---
 
-    GOAL {
-        uuid id PK
-        uuid user_id FK
-        date start_date
-        int kcal
-        int protein
-        int carbs
-        int fat
-    }
+## 🗄️ Database Schema & Relational Model
 
-    ENTRY {
-        uuid id PK
-        uuid user_id FK
-        string meal_name
-        timestamp logged_at
-        int kcal
-        int protein
-        int carbs
-        int fat
-    }
-```
+<p align="center">
+  <img src="docs/assets/db-schema.svg" alt="NutritionTracker Database Schema" width="100%" />
+</p>
 
 ---
 

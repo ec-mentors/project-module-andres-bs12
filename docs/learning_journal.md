@@ -148,7 +148,7 @@ This document serves as a development and learning journal to record key concept
 2. **Voice Note Nutrition Logging via Whisper (`whisper-1`):**
    - *Audio Processing Pipeline:* Integrated `OpenAiAudioTranscriptionModel` in [`AiAudioService.java`](file:///Users/andresbejarano/dev/NutritionTracker/src/main/java/com/project/NutritionTracker/service/AiAudioService.java) to accept voice recordings (`.mp3`, `.m4a`, `.wav`, `.ogg`), transcribe spoken meals into clinical text, and seamlessly route the transcript to `AiMealService` for macro calculations.
 
-3. **Prompt Engineering: "Approach B - Clarify First, Calculate Second" & Visual Heuristics:**
+3. **Prompt Engineering: "Clarify First, Calculate Second" & Visual Heuristics:**
    - *The Problem of AI Over-Conservatism:* Hyper-strict prompts cause vision models to reject clearly visible foods (e.g. 2 eggs, 1/2 avocado, cottage cheese) by pedantically demanding exact gram weights.
    - *Visual Volume & Portion Heuristics:* Calibrated the System Prompt with culinary defaults: count discrete units, estimate bulk food volume based on plate geometry (~100-150g scoops), and default to $\ge 80\%$ confidence for visible foods.
    - *Approach B Pattern:* For genuinely obscured or hidden dishes (<80% confidence), the model returns zeroed macros (`kcal: 0`) alongside a short, punchy clarifying question in English (max 15 words). For high-confidence meals, it returns only the estimated percentage integer (e.g. `"95"`), drastically minimizing token waste.
