@@ -15,6 +15,7 @@ import java.util.UUID;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@Table(name = "daily_ai_usage")
 public class DailyAiUsage {
 
 
@@ -26,8 +27,8 @@ public class DailyAiUsage {
     @ManyToOne
     private User user;
 
-    private LocalDate usage_date;
+    private LocalDate usageDate;
     private Integer goalsUsed;
     private Integer favoritesUsed;
-    private int entries_used;
+    private int entriesUsed;
 }

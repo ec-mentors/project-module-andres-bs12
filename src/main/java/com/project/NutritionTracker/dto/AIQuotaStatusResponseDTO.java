@@ -7,6 +7,6 @@ public record AIQuotaStatusResponseDTO(
         LocalDate usage_date,
         Integer goalsUsed,
         Integer favoritesUsed,
-        int entries_used
+        int entriesUsed
 ) {
 }

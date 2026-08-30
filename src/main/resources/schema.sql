@@ -50,7 +50,7 @@ CREATE TABLE daily_ai_usage
 --   Security, makes sure there is just une register per user per day
     CONSTRAINT uk_user_daily_usage UNIQUE (user_id, usage_date)
 );
-CREATE INDEX idx_daily_ai_usage_lookup ON daily_ai_usage(users_id, usage_date);
+CREATE INDEX idx_daily_ai_usage_lookup ON daily_ai_usage(user_id, usage_date);
 
 CREATE TABLE favorite_meal (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
