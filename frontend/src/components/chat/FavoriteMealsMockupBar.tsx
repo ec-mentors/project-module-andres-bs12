@@ -12,6 +12,7 @@ import {
 } from './favorites';
 
 interface FavoriteMealsMockupBarProps {
+  userId: string;
   onSelectFavorite: (meal: FavoriteMeal) => void;
   favorites?: FavoriteMeal[];
   onAddFavorite?: (payload: CreateFavoriteMealPayload) => void;
@@ -21,6 +22,7 @@ interface FavoriteMealsMockupBarProps {
 }
 
 export const FavoriteMealsMockupBar: React.FC<FavoriteMealsMockupBarProps> = ({
+  userId,
   onSelectFavorite,
   favorites: externalFavorites = [],
   onAddFavorite: externalAddFavorite,
@@ -171,6 +173,7 @@ export const FavoriteMealsMockupBar: React.FC<FavoriteMealsMockupBarProps> = ({
       <ManageFavoritesModal
         isOpen={isManageModalOpen}
         onClose={() => setIsManageModalOpen(false)}
+        userId={userId}
         favorites={favorites}
         onAddFavorite={handleAddFavorite}
         onUpdateFavorite={handleUpdateFavorite}

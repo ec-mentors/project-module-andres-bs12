@@ -4,6 +4,66 @@ This document serves as a development and learning journal to record key concept
 
 ---
 
+## 📅 2026-08-30 - (Sprint 4) - AI Token Rate Limiting Architecture, Calendar-Based Resets, Enum Strategy & HTTP 429 Security Boundary
+
+### 💡 Key Concepts Learned & Architectural Decisions
+
+1. **Financial & Cost Protection: Why Local Rate Limiting is Mandatory Before Production:**
+   - *The Economics of LLMs:* Multimodal models (`gpt-5.6-luna`, `whisper-1`) have variable operational costs that scale per token, image resolution, and audio duration. Exposing unrestricted AI endpoints allows malicious actors or enthusiastic users to deplete my OpenAI budget in minutes.
+   - *Tiered Quota Architecture:* Rather than blocking access entirely, I established sensible daily quotas per user:
+     - **Goals with AI:** Maximum **2 per day** (`GOAL_AI`).
+     - **Favorites with AI:** Maximum **3 per day** (`FAVORITE_AI`).
+     - **Meal Entries with AI:** Maximum **5 per day** (`ENTRY_AI` across text, audio notes, and photo scans).
+   - *Free Manual Core:* Manual nutrition logging (`POST /api/entry/{userId}`) remains 100% free and unlimited ($0.00). Rate limiting only protects expensive AI inference.
+
+2. **Database Design: Calendar-Based Compound Unique Key `(user_id, usage_date)` vs. Cron Daemon Inefficiencies:**
+   - *The Problem with Cron Reset Daemons:* A common antipattern is creating a background scheduled task (`@Scheduled(cron = "0 0 0 * * *")`) to reset counters in the database at midnight. This introduces stateful complexity, synchronization locks across server restarts, and fails if the backend is temporarily offline during the midnight trigger.
+   - *The Architecture Solution (Lazy Calendar Reset):* I structured the PostgreSQL table `daily_ai_usage` with a compound unique constraint and index:
+     ```sql
+     CONSTRAINT uk_user_daily_usage UNIQUE (user_id, usage_date);
+     CREATE INDEX idx_daily_ai_usage_lookup ON daily_ai_usage(user_id, usage_date);
+     ```
+   - *How it works:* When `AiQuotaService` looks up `repository.findByUserIdAndUsageDate(userId, LocalDate.now())`:
+     - If it's a new day, the query naturally returns `Optional.empty()`.
+     - The service lazily instantiates a fresh row with counters initialized to `0` and persists it upon the user's first AI request of that calendar day.
+     - **Zero cron jobs, zero background maintenance, 100% reliable resets across days and timezones.**
+
+3. **Architectural Tradeoff: JPA Entity Lifecycle (Approach 1) vs. Direct DML `@Modifying` Queries (Approach 2):**
+   - *Why I Chose Approach 1 (`repository.save()`):* 
+     - While direct SQL updates (`UPDATE daily_ai_usage SET entries_used = entries_used + 1 ...`) minimize roundtrips, Approach 1 encapsulates domain rules cleanly in Java (`DailyAiUsage` entity state).
+     - It integrates transparently with Hibernate's 1st-level cache, allows clean Mockito stubbing in unit tests without complex native query mocks, and keeps validation logic testable in memory.
+   - *Understanding Java Mutability Pitfall:* I encountered an error when attempting `dailyAiUsage.getGoalsUsed()++`. In Java, primitive getters return a copy of the primitive value by value (not an lvalue reference). The correct object-oriented mutation requires reading the value and passing the incremented counter to the setter: `dailyAiUsage.setGoalsUsed(dailyAiUsage.getGoalsUsed() + 1);`.
+
+4. **Enum-Driven Feature Routing (`AiFeatureType`) & Switch Expressions:**
+   - Instead of duplicating quota methods (`saveGoalQuota`, `saveMealQuota`, `saveFavoriteQuota`), I created a unified `AiFeatureType` enum (`GOAL_AI`, `FAVORITE_AI`, `ENTRY_AI`).
+   - Using modern Java switch expressions in `AiQuotaService.saveQuota(userId, featureType)` provides:
+     - Compile-time exhaustiveness checking (the compiler warns if a new AI feature is added without quota handling).
+     - A single, centralized source of truth for quota limits (`maxGoals = 2`, `maxEntries = 5`, `maxFavorites = 3`).
+
+5. **Security Boundaries & IDOR Prevention via `@PreAuthorize`:**
+   - *The Vulnerability:* If `POST /api/ai/parse-meal-text/{userId}` were unprotected, User A could submit requests passing User B's UUID, maliciously depleting User B's daily 5 meals quota.
+   - *The Security Invariant:* Secured the service layer with Spring Security:
+     ```java
+     @PreAuthorize("isAuthenticated() && #userId == principal.id")
+     public void saveQuota(UUID userId, AiFeatureType aifeatureType)
+     ```
+   - Spring Security cross-references the `#userId` against the authenticated Google JWT token (`principal.id`), preventing unauthorized quota impersonation (IDOR).
+
+6. **Error Translation & HTTP 429 Semantics (`GlobalExceptionHandler`):**
+   - When a limit is reached, `AiQuotaService` throws a custom `AiQuotaExceededException`.
+   - Connected `@ExceptionHandler(AiQuotaExceededException.class)` in [`GlobalExceptionHandler.java`](file:///Users/andresbejarano/dev/NutritionTracker/src/main/java/com/project/NutritionTracker/exception/GlobalExceptionHandler.java) to return **`HTTP 429 Too Many Requests`**.
+   - On the frontend ([`services/apiErrors.ts`](file:///Users/andresbejarano/dev/NutritionTracker/frontend/src/services/apiErrors.ts)), 429 responses are caught to present polite, informative feedback (*"You've reached your daily AI limit. You can still log meals manually."*) without crashing the UI.
+
+7. **Full-Stack Regression Testing & Test Automation:**
+   - Built a comprehensive test suite (`AiQuotaServiceTest`, `AiControllerTest`, `AiGoalServiceTest`, `AiMealServiceTest`, `AiAudioServiceTest`) covering:
+     - First-time daily initialization.
+     - Sub-limit counter increments.
+     - 429 boundary triggers for Goal (2), Entry (5), and Favorite (3) limits.
+     - User lookup failure (`404 Not Found`).
+   - Achieved 100% test pass rate (128/128 unit tests) and a clean TypeScript frontend build.
+
+---
+
 ## 📅 2026-08-28 - (Sprint 4) - Full-Stack Favorites Architecture, Template vs. Instance Decoupling & Jackson `@JsonCreator` Resiliency
 
 ### 💡 Key Concepts Learned & Architectural Decisions

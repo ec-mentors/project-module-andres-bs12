@@ -36,6 +36,8 @@ public class AiGoalServiceTest {
         service = new AiGoalService(chatClientBuilder);
     }
 
+    private final java.util.UUID sampleUserId = java.util.UUID.randomUUID();
+
     @Test
     void calculateGoal_WithValidRequest_ReturnsAiGoalResponseDTO() {
 
@@ -64,7 +66,7 @@ public class AiGoalServiceTest {
                 .call()
                 .entity(AiGoalResponseDTO.class)).thenReturn(expectedResponse);
 
-        AiGoalResponseDTO result = service.calculateGoal(requestDTO);
+        AiGoalResponseDTO result = service.calculateGoal(sampleUserId, requestDTO);
 
         assertNotNull(result);
         assertEquals(2100, result.kcal());
@@ -93,7 +95,7 @@ public class AiGoalServiceTest {
                 .call()
                 .entity(AiGoalResponseDTO.class)).thenThrow(new RuntimeException("Open Api ERROR"));
 
-        assertThrows(RuntimeException.class, () -> service.calculateGoal(requestDTO));
+        assertThrows(RuntimeException.class, () -> service.calculateGoal(sampleUserId, requestDTO));
 
     }
 

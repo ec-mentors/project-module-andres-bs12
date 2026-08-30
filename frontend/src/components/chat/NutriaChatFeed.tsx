@@ -20,6 +20,7 @@ export interface ChatMessage {
 }
 
 interface NutriaChatFeedProps {
+  userId: string;
   messages: ChatMessage[];
   setMessages: React.Dispatch<React.SetStateAction<ChatMessage[]>>;
   summary: DailySummary;
@@ -43,6 +44,7 @@ const sanitizeConfidenceNote = (note: string | undefined, defaultNote: string): 
 };
 
 export const NutriaChatFeed: React.FC<NutriaChatFeedProps> = ({
+  userId,
   messages,
   setMessages,
   summary,
@@ -110,7 +112,7 @@ export const NutriaChatFeed: React.FC<NutriaChatFeedProps> = ({
       : text;
 
     try {
-      const res = await parseMealText(queryToSend);
+      const res = await parseMealText(userId, queryToSend);
       const confidenceNote = res.confidenceNote != null ? String(res.confidenceNote) : undefined;
       
       if (isClarificationOrError(res)) {
@@ -186,7 +188,7 @@ export const NutriaChatFeed: React.FC<NutriaChatFeedProps> = ({
 
     try {
       const audioFile = new File([audioBlob], `voice-log-${Date.now()}.webm`, { type: audioBlob.type || 'audio/webm' });
-      const res = await parseMealAudio(audioFile);
+      const res = await parseMealAudio(userId, audioFile);
       const confidenceNote = res.confidenceNote != null ? String(res.confidenceNote) : undefined;
 
       if (isClarificationOrError(res)) {
@@ -254,7 +256,7 @@ export const NutriaChatFeed: React.FC<NutriaChatFeedProps> = ({
     setIsLoading(true);
 
     try {
-      const res = await parseMealImage(file);
+      const res = await parseMealImage(userId, file);
       const confidenceNote = res.confidenceNote != null ? String(res.confidenceNote) : undefined;
 
       if (isClarificationOrError(res)) {
@@ -554,6 +556,7 @@ export const NutriaChatFeed: React.FC<NutriaChatFeedProps> = ({
       {/* Fixed Bottom Smart Omnibar with Favorite Meals Mockup Bar */}
       <div className="shrink-0 pt-1 pb-[calc(0.5rem+env(safe-area-inset-bottom,0px))]">
         <FavoriteMealsMockupBar
+          userId={userId}
           onSelectFavorite={handleSelectFavorite}
           favorites={favorites}
           onAddFavorite={onAddFavorite}

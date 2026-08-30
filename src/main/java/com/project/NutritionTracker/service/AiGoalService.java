@@ -4,7 +4,10 @@ import com.project.NutritionTracker.dto.AiGoalRequestDTO;
 import com.project.NutritionTracker.dto.AiGoalResponseDTO;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.openai.OpenAiAudioTranscriptionModel;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
+
+import java.util.UUID;
 
 @Service
 public class AiGoalService {
@@ -14,7 +17,8 @@ public class AiGoalService {
         this.chatClient = builder.build(); // SpringAi injects the key
     }
 
-    public AiGoalResponseDTO calculateGoal(AiGoalRequestDTO dto) {
+    @PreAuthorize("isAuthenticated() && #userId == principal.id")
+    public AiGoalResponseDTO calculateGoal(UUID userId, AiGoalRequestDTO dto) {
 
         String systemPrompt = "You are an expert sports nutritionist and precision dietitian for NutritionTracker.\n" +
                 "Your role is to formulate a personalized, science-based daily caloric target (kcal) and macronutrient split (protein, carbs, fat in grams) uniquely tailored to the user's lifestyle, objective, and dietary preferences.\n" +

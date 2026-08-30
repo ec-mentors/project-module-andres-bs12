@@ -35,5 +35,10 @@ public class GlobalExceptionHandler {
                 );
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errors);
     }
+
+    @ExceptionHandler(AiQuotaExceededException.class)
+    public ResponseEntity<String> handleAiQuotaExceeded(AiQuotaExceededException ex) {
+        return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).body(ex.getMessage());
+    }
 }
 

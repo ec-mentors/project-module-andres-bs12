@@ -40,6 +40,8 @@ public class AiMealServiceTest {
     }
 
 
+    private final java.util.UUID sampleUserId = java.util.UUID.randomUUID();
+
     // parseMealFromText
 
     @Test
@@ -61,7 +63,7 @@ public class AiMealServiceTest {
                 .call()
                 .entity(AiMealResponseDTO.class)).thenReturn(expectedResponse);
 
-        AiMealResponseDTO result = service.parseMealFromText("Chicken");
+        AiMealResponseDTO result = service.parseMealFromText(sampleUserId, "Chicken");
 
         assertNotNull(result);
         assertEquals(10, result.kcal());
@@ -74,12 +76,12 @@ public class AiMealServiceTest {
 
     @Test
     void parseMealFromText_WithNullDescription_ThrowsIAE() {
-        assertThrows(IllegalArgumentException.class, () -> service.parseMealFromText(null));
+        assertThrows(IllegalArgumentException.class, () -> service.parseMealFromText(sampleUserId, null));
     }
 
     @Test
     void parseMealFromText_WithBlankDescription_ThrowsIAE() {
-        assertThrows(IllegalArgumentException.class, () -> service.parseMealFromText(" "));
+        assertThrows(IllegalArgumentException.class, () -> service.parseMealFromText(sampleUserId, " "));
     }
 
 
@@ -111,7 +113,7 @@ public class AiMealServiceTest {
                 .call()
                 .entity(AiMealResponseDTO.class)).thenReturn(expectedResponse);
 
-        AiMealResponseDTO result = service.parseMealFromImage(imageFile);
+        AiMealResponseDTO result = service.parseMealFromImage(sampleUserId, imageFile);
 
         assertNotNull(result);
         assertEquals(10, result.kcal());
@@ -124,7 +126,7 @@ public class AiMealServiceTest {
 
     @Test
     void parseMealFromImage_WithNullImage_ThrowsIAE() {
-        assertThrows(IllegalArgumentException.class, () -> service.parseMealFromImage(null));
+        assertThrows(IllegalArgumentException.class, () -> service.parseMealFromImage(sampleUserId, null));
     }
 
     @Test
@@ -135,7 +137,7 @@ public class AiMealServiceTest {
                 " ",
                 "fake_bytes".getBytes()
         );
-        assertThrows(IllegalArgumentException.class, () -> service.parseMealFromImage(imageFile));
+        assertThrows(IllegalArgumentException.class, () -> service.parseMealFromImage(sampleUserId, imageFile));
     }
 
 }

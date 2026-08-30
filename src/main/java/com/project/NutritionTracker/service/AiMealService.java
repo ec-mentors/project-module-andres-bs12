@@ -4,11 +4,13 @@ import com.project.NutritionTracker.dto.AiGoalRequestDTO;
 import com.project.NutritionTracker.dto.AiMealResponseDTO;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.model.Media;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.util.MimeTypeUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.awt.*;
+import java.util.UUID;
 
 @Service
 public class AiMealService {
@@ -49,7 +51,8 @@ public class AiMealService {
         this.chatClient = builder.build();
     }
 
-    public AiMealResponseDTO parseMealFromText(String description) {
+    @PreAuthorize("isAuthenticated() && #userId == principal.id")
+    public AiMealResponseDTO parseMealFromText(UUID userId, String description) {
         if (description == null || description.isBlank()) {
             throw new IllegalArgumentException("Meal description can't be blank");
         }
@@ -67,7 +70,8 @@ public class AiMealService {
     }
 
 
-    public AiMealResponseDTO parseMealFromImage(MultipartFile image) {
+    @PreAuthorize("isAuthenticated() && #userId == principal.id")
+    public AiMealResponseDTO parseMealFromImage(UUID userId, MultipartFile image) {
         if (image == null || image.isEmpty()) {
             throw new IllegalArgumentException("Image file cannot be empty");
         }

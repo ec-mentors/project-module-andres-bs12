@@ -37,6 +37,8 @@ public class AiAudioServiceTest {
             "fake_bytes".getBytes()
     );
 
+    private final java.util.UUID sampleUserId = java.util.UUID.randomUUID();
+
     @Test
     void transcribe_WithValidAudio_ReturnsTranscribedText() {
         AudioTranscription transcription = new AudioTranscription("I ate half chicken");
@@ -44,20 +46,20 @@ public class AiAudioServiceTest {
 
         when(transcriptionModel.call(any(AudioTranscriptionPrompt.class))).thenReturn(mockResponse);
 
-        String result = service.transcribe(audioFile);
+        String result = service.transcribe(sampleUserId, audioFile);
 
         assertEquals("I ate half chicken", result);
     }
 
     @Test
     void transcribe_WithNullAudio_ThrowsIAE() {
-        assertThrows(IllegalArgumentException.class,() -> service.transcribe(null));
+        assertThrows(IllegalArgumentException.class, () -> service.transcribe(sampleUserId, null));
     }
 
     @Test
     void transcribe_WithEmptyAudio_ThrowsIAE() {
-    MockMultipartFile emptyFile = new MockMultipartFile("audio", new byte[0]);
-    assertThrows(IllegalArgumentException.class, () -> service.transcribe(emptyFile));
+        MockMultipartFile emptyFile = new MockMultipartFile("audio", new byte[0]);
+        assertThrows(IllegalArgumentException.class, () -> service.transcribe(sampleUserId, emptyFile));
     }
 
 }

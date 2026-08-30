@@ -2,6 +2,7 @@ DROP TABLE IF EXISTS favorite_meal CASCADE;
 DROP TABLE IF EXISTS entry CASCADE;
 DROP TABLE IF EXISTS goal CASCADE;
 DROP TABLE IF EXISTS users CASCADE;
+DROP TABLE IF EXISTS daily_ai_usage CASCADE;
 
 CREATE TABLE users (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -37,6 +38,19 @@ CREATE TABLE entry (
     protein DECIMAL(5,2) NOT NULL,
     meal_type VARCHAR(50)
 );
+
+CREATE TABLE daily_ai_usage
+(
+    id             UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id       UUID    NOT NULL REFERENCES users (id) ON DELETE CASCADE,
+    usage_date DATE NOT NULL DEFAULT CURRENT_DATE,
+    goals_used      INTEGER NOT NULL DEFAULT 0,
+    favorites_used INTEGER NOT NULL DEFAULT 0,
+    entries_used   INTEGER NOT NULL DEFAULT 0,
+--   Security, makes sure there is just une register per user per day
+    CONSTRAINT uk_user_daily_usage UNIQUE (user_id, usage_date)
+);
+CREATE INDEX idx_daily_ai_usage_lookup ON daily_ai_usage(user_id, usage_date);
 
 CREATE TABLE favorite_meal (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
