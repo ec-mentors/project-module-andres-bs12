@@ -416,6 +416,7 @@ export function App() {
       <OnboardingModal
         isOpen={isOnboardingOpen}
         onClose={() => setIsOnboardingOpen(false)}
+        userId={userId}
         onCompleteOnboarding={handleOnboardingComplete}
         initialGoal={goal}
         theme={theme}
@@ -493,6 +494,7 @@ export function App() {
         <div className={`w-full ${activeTab === 'nutria' ? 'flex-1 h-full flex flex-col overflow-hidden min-h-0' : ''}`}>
         {activeTab === 'nutria' ? (
           <NutriaChatFeed
+            userId={userId}
             messages={chatMessages}
             setMessages={setChatMessages}
             summary={displaySummary}
@@ -531,6 +533,7 @@ export function App() {
                   {/* MOBILE INTERMEDIATE SIDEBAR */}
                   <div className="block lg:hidden order-2 transition-all duration-500 ease-out">
                     <LatestEntriesSidebar
+                      userId={userId}
                       entries={mealsToShow}
                       favorites={favorites}
                       onAddMeal={handleAddMeal}
@@ -562,6 +565,7 @@ export function App() {
                 <div className="hidden lg:block lg:col-span-4 relative order-2 transition-all duration-500 ease-out">
                   <div className="absolute inset-0">
                     <LatestEntriesSidebar
+                      userId={userId}
                       entries={mealsToShow}
                       favorites={favorites}
                       onAddMeal={handleAddMeal}
@@ -625,6 +629,7 @@ export function App() {
       <ManageFavoritesModal
         isOpen={isGlobalFavoritesOpen}
         onClose={() => setIsGlobalFavoritesOpen(false)}
+        userId={userId}
         favorites={favorites}
         onAddFavorite={handleAddFavorite}
         onUpdateFavorite={handleUpdateFavorite}

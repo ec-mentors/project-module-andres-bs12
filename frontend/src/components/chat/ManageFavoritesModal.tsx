@@ -23,6 +23,7 @@ import { MEAL_TYPE_LABELS, getCurrentTimeMealType, SortDropdown, MealTypeFormSel
 interface ManageFavoritesModalProps {
   isOpen: boolean;
   onClose: () => void;
+  userId: string;
   favorites: FavoriteMeal[];
   onAddFavorite: (payload: CreateFavoriteMealPayload) => void;
   onUpdateFavorite: (id: string, payload: CreateFavoriteMealPayload) => void;
@@ -34,6 +35,7 @@ interface ManageFavoritesModalProps {
 export const ManageFavoritesModal: React.FC<ManageFavoritesModalProps> = ({
   isOpen,
   onClose,
+  userId,
   favorites,
   onAddFavorite,
   onUpdateFavorite,
@@ -176,7 +178,7 @@ export const ManageFavoritesModal: React.FC<ManageFavoritesModalProps> = ({
     setIsAiLoading(true);
     setErrorMessage('');
     try {
-      const res = await parseMealText(aiInputText.trim());
+      const res = await parseMealText(userId, aiInputText.trim());
       setFormMealName(res.mealName || aiInputText.trim());
       setFormKcal(String(res.kcal || 0));
       setFormProtein(String(res.protein || 0));
@@ -228,7 +230,7 @@ export const ManageFavoritesModal: React.FC<ManageFavoritesModalProps> = ({
 
       try {
         const audioFile = new File([audioBlob], `voice-fav-${Date.now()}.webm`, { type: 'audio/webm' });
-        const res = await parseMealAudio(audioFile);
+        const res = await parseMealAudio(userId, audioFile);
         setFormMealName(res.mealName || 'Voice Estimated Meal');
         setFormKcal(String(res.kcal || 0));
         setFormProtein(String(res.protein || 0));
@@ -253,7 +255,7 @@ export const ManageFavoritesModal: React.FC<ManageFavoritesModalProps> = ({
       setIsAiLoading(true);
       setErrorMessage('');
       try {
-        const res = await parseMealImage(file);
+        const res = await parseMealImage(userId, file);
         setFormMealName(res.mealName || 'Photo Estimated Meal');
         setFormKcal(String(res.kcal || 0));
         setFormProtein(String(res.protein || 0));

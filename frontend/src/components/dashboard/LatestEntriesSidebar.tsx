@@ -8,6 +8,7 @@ import { ManageFavoritesModal } from '../chat/ManageFavoritesModal';
 import { getCurrentTimeMealType, favoritesTypography, TOUCH_TARGET_MIN } from '../chat/favorites';
 
 interface LatestEntriesSidebarProps {
+  userId: string;
   entries: MealEntry[];
   favorites?: FavoriteMeal[];
   onAddMeal: (payload: CreateMealEntryPayload) => void;
@@ -22,6 +23,7 @@ interface LatestEntriesSidebarProps {
 }
 
 export const LatestEntriesSidebar: React.FC<LatestEntriesSidebarProps> = ({
+  userId,
   entries,
   favorites = [],
   onAddMeal,
@@ -773,6 +775,7 @@ export const LatestEntriesSidebar: React.FC<LatestEntriesSidebarProps> = ({
       <ManageFavoritesModal
         isOpen={isFavoritesModalOpen}
         onClose={() => setIsFavoritesModalOpen(false)}
+        userId={userId}
         favorites={favorites}
         onAddFavorite={onAddFavorite}
         onUpdateFavorite={onUpdateFavorite}

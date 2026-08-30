@@ -19,6 +19,7 @@ import { calculateAiGoalRoadmap } from '../../services/api';
 interface OnboardingModalProps {
   isOpen: boolean;
   onClose: () => void;
+  userId: string;
   onCompleteOnboarding: (result: OnboardingCompletionResult) => void;
   initialGoal?: NutritionGoal;
   theme?: 'dark' | 'light';
@@ -39,6 +40,7 @@ const DEFAULT_AI_STATE: AiOnboardingState = {
 export const OnboardingModal: React.FC<OnboardingModalProps> = ({
   isOpen,
   onClose,
+  userId,
   onCompleteOnboarding,
   initialGoal,
   theme = 'dark',
@@ -140,7 +142,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
     setIsAiCalculationReady(false);
 
     try {
-      const apiRoadmap = await calculateAiGoalRoadmap(completedState);
+      const apiRoadmap = await calculateAiGoalRoadmap(userId, completedState);
 
       if (apiRoadmap && apiRoadmap.kcal) {
         setPendingGoal({

@@ -132,14 +132,13 @@ export const api = {
         carbs: Number(payload.carbs),
         fat: Number(payload.fat),
         protein: Number(payload.protein),
-        mealType: mealType,
+        mealType,
       }),
     });
 
     await throwIfNotOk(response, 'Create meal entry');
     return await response.json();
   },
-
 
   /** DELETE /api/entry/{entryId} - Delete a meal entry */
   async deleteEntry(entryId: string): Promise<void> {
@@ -192,10 +191,19 @@ export const api = {
 
   // --- AI GOAL ROADMAP (GPT-5.6 Luna Service) ---
 
-  /** POST /api/ai/calculate-goal - Calculate tailored AI goal using GPT-5.6 Luna */
-  async calculateAiGoalRoadmap(data: AiOnboardingState): Promise<NutritionGoal> {
+  /** POST /api/ai/calculate-goal/{userId} - Calculate tailored AI goal using GPT-5.6 Luna */
+  async calculateAiGoalRoadmap(userId: string, data: AiOnboardingState): Promise<NutritionGoal> {
+    if (!userId) {
+      throw new ApiError({
+        status: 400,
+        message: 'User ID is required for AI goal calculation',
+        userMessage: 'Please sign in before calculating an AI goal.',
+        code: 'missing_user_id',
+      });
+    }
+
     try {
-      const response = await fetch(`${API_BASE}/ai/calculate-goal`, {
+      const response = await fetch(`${API_BASE}/ai/calculate-goal/${userId}`, {
         method: 'POST',
         headers: authHeaders('application/json'),
         body: JSON.stringify({
@@ -242,9 +250,18 @@ export const api = {
 
   // --- MULTIMODAL AI MEAL PARSER (Text, Audio, Photo) ---
 
-  /** POST /api/ai/parse-meal-text - Parse natural language text description into macros */
-  async parseMealText(description: string): Promise<AiMealResponseDTO> {
-    const response = await fetch(`${API_BASE}/ai/parse-meal-text`, {
+  /** POST /api/ai/parse-meal-text/{userId} - Parse natural language text description into macros */
+  async parseMealText(userId: string, description: string): Promise<AiMealResponseDTO> {
+    if (!userId) {
+      throw new ApiError({
+        status: 400,
+        message: 'User ID is required for AI meal parsing',
+        userMessage: 'Please sign in before using AI meal parsing.',
+        code: 'missing_user_id',
+      });
+    }
+
+    const response = await fetch(`${API_BASE}/ai/parse-meal-text/${userId}`, {
       method: 'POST',
       headers: authHeaders('application/json'),
       body: JSON.stringify({ description }),
@@ -254,8 +271,16 @@ export const api = {
     return await response.json();
   },
 
-  /** POST /api/ai/parse-meal-audio - Transcribe & parse audio recording into macros */
-  async parseMealAudio(audioBlob: Blob): Promise<AiMealResponseDTO> {
+  /** POST /api/ai/parse-meal-audio/{userId} - Transcribe & parse audio recording into macros */
+  async parseMealAudio(userId: string, audioBlob: Blob): Promise<AiMealResponseDTO> {
+    if (!userId) {
+      throw new ApiError({
+        status: 400,
+        message: 'User ID is required for AI meal parsing',
+        userMessage: 'Please sign in before using AI meal parsing.',
+        code: 'missing_user_id',
+      });
+    }
     const formData = new FormData();
     formData.append('audio', audioBlob, 'meal_audio.webm');
 
@@ -265,7 +290,7 @@ export const api = {
       headers['Authorization'] = `Bearer ${token}`;
     }
 
-    const response = await fetch(`${API_BASE}/ai/parse-meal-audio`, {
+    const response = await fetch(`${API_BASE}/ai/parse-meal-audio/${userId}`, {
       method: 'POST',
       headers,
       body: formData,
@@ -275,8 +300,16 @@ export const api = {
     return await response.json();
   },
 
-  /** POST /api/ai/parse-meal-image - Scan & estimate nutritional breakdown from photo */
-  async parseMealImage(imageFile: File | Blob): Promise<AiMealResponseDTO> {
+  /** POST /api/ai/parse-meal-image/{userId} - Scan & estimate nutritional breakdown from photo */
+  async parseMealImage(userId: string, imageFile: File | Blob): Promise<AiMealResponseDTO> {
+    if (!userId) {
+      throw new ApiError({
+        status: 400,
+        message: 'User ID is required for AI meal parsing',
+        userMessage: 'Please sign in before using AI meal parsing.',
+        code: 'missing_user_id',
+      });
+    }
     const formData = new FormData();
     formData.append('image', imageFile, 'meal_photo.jpg');
 
@@ -286,7 +319,7 @@ export const api = {
       headers['Authorization'] = `Bearer ${token}`;
     }
 
-    const response = await fetch(`${API_BASE}/ai/parse-meal-image`, {
+    const response = await fetch(`${API_BASE}/ai/parse-meal-image/${userId}`, {
       method: 'POST',
       headers,
       body: formData,
@@ -307,20 +340,20 @@ export interface AiMealResponseDTO {
 }
 
 // Convenience named exports matching App.tsx imports
-export const parseMealText = async (description: string): Promise<AiMealResponseDTO> => {
-  return await api.parseMealText(description);
+export const parseMealText = async (userId: string, description: string): Promise<AiMealResponseDTO> => {
+  return await api.parseMealText(userId, description);
 };
 
-export const parseMealAudio = async (audioBlob: Blob): Promise<AiMealResponseDTO> => {
-  return await api.parseMealAudio(audioBlob);
+export const parseMealAudio = async (userId: string, audioBlob: Blob): Promise<AiMealResponseDTO> => {
+  return await api.parseMealAudio(userId, audioBlob);
 };
 
-export const parseMealImage = async (imageFile: File | Blob): Promise<AiMealResponseDTO> => {
-  return await api.parseMealImage(imageFile);
+export const parseMealImage = async (userId: string, imageFile: File | Blob): Promise<AiMealResponseDTO> => {
+  return await api.parseMealImage(userId, imageFile);
 };
 
-export const calculateAiGoalRoadmap = async (data: AiOnboardingState): Promise<NutritionGoal> => {
-  return await api.calculateAiGoalRoadmap(data);
+export const calculateAiGoalRoadmap = async (userId: string, data: AiOnboardingState): Promise<NutritionGoal> => {
+  return await api.calculateAiGoalRoadmap(userId, data);
 };
 
 export const fetchTodayEntries = async (userId?: string, dateStr?: string): Promise<MealEntry[]> => {
@@ -388,40 +421,37 @@ export const fetchFavorites = async (userId?: string): Promise<FavoriteMeal[]> =
     headers: authHeaders(), // Authorization: Bearer <token>
   });
 
-  // Check
   await throwIfNotOk(response, 'Fetch favorite meals');
-
-  // Parse
   return await response.json();
-}
-
+};
 
 // Create a new favorite meal
-export const createFavoriteMeal = async(userId: string, payload: CreateFavoriteMealPayload
+export const createFavoriteMeal = async (
+  userId: string,
+  payload: CreateFavoriteMealPayload
 ): Promise<FavoriteMeal> => {
-
   if (!userId) {
-    throw new Error(`User ID is required`);
+    throw new Error('User ID is required');
   }
 
   const response = await fetch(`/api/favorite-meal/create/${userId}`, {
-    method: `POST`,
-    headers: authHeaders(`application/json`),
+    method: 'POST',
+    headers: authHeaders('application/json'),
     body: JSON.stringify(payload),
   });
 
   await throwIfNotOk(response, 'Create favorite meal');
   return await response.json();
-}
+};
 
 // Update a favorite meal
 export const updateFavoriteMeal = async (
-  fMealId: string, 
+  fMealId: string,
   payload: CreateFavoriteMealPayload
 ): Promise<FavoriteMeal> => {
   const response = await fetch(`/api/favorite-meal/update/${fMealId}`, {
-    method: `PUT`,
-    headers: authHeaders(`application/json`),
+    method: 'PUT',
+    headers: authHeaders('application/json'),
     body: JSON.stringify(payload),
   });
 
@@ -432,7 +462,7 @@ export const updateFavoriteMeal = async (
 // Delete a favorite
 export const removeFavoriteMeal = async (fMealId: string): Promise<void> => {
   const response = await fetch(`/api/favorite-meal/remove/${fMealId}`, {
-    method: `DELETE`,
+    method: 'DELETE',
     headers: authHeaders(),
   });
 

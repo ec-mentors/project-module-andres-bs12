@@ -1,7 +1,8 @@
 package com.project.NutritionTracker.exception;
 
-public class AiQuotaExcededException extends RuntimeException {
-  public AiQuotaExcededException(String message) {
-    super(message);
-  }
+public class AiQuotaExceededException extends RuntimeException {
+
+    public AiQuotaExceededException(String message) {
+        super(message);
+    }
 }
