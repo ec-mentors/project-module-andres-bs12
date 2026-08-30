@@ -77,117 +77,143 @@ public class UserControllerTest {
     // ---------- findByEmail ----------
 
     @Test
-    @DisplayName("GET /api/user/search - Success")
+    @DisplayName("GET /api/user/search - Success (200)")
     void findByEmail_ShouldReturn200_AndUserResponseDTO() throws Exception {
-
         when(userService.findByEmail(sampleEmail)).thenReturn(sampleResponseDTO);
 
-        mockMvc.perform(get("/api/user/search").param("email", sampleEmail)).andExpect(status().isOk()).andExpect(jsonPath("$.id").value(sampleId.toString())).andExpect(jsonPath("$.firstName").value("John")).andExpect(jsonPath("$.email").value(sampleEmail));
+        mockMvc.perform(get("/api/user/search").param("email", sampleEmail))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(sampleId.toString()))
+                .andExpect(jsonPath("$.firstName").value("John"))
+                .andExpect(jsonPath("$.email").value(sampleEmail));
 
         verify(userService).findByEmail(sampleEmail);
     }
 
     @Test
-    @DisplayName("GET /api/user/search - Email not found(404)")
+    @DisplayName("GET /api/user/search - Email Not Found (404)")
     void findByEmail_WhenNotFound_Returns404() throws Exception {
         String fakeEmail = "fake@email.com";
-        when(userService.findByEmail(fakeEmail)).thenThrow(new NotFoundException(("Email not found")));
+        when(userService.findByEmail(fakeEmail)).thenThrow(new NotFoundException("Email not found"));
 
-        mockMvc.perform(get("/api/user/search").param("email", fakeEmail)).andExpect(status().isNotFound());
+        mockMvc.perform(get("/api/user/search").param("email", fakeEmail))
+                .andExpect(status().isNotFound());
 
         verify(userService).findByEmail(fakeEmail);
     }
 
-
     // ---------- findById ----------
 
     @Test
-    @DisplayName("GET /api/user/{id} - Success")
+    @DisplayName("GET /api/user/{id} - Success (200)")
     void findById_ShouldReturn200_AndUserResponseDTO() throws Exception {
-
         when(userService.findById(sampleId)).thenReturn(sampleResponseDTO);
 
-        mockMvc.perform(get("/api/user/{id}", sampleId)).andExpect(status().isOk()).andExpect(jsonPath("$.id").value(sampleId.toString())).andExpect(jsonPath("$.firstName").value("John")).andExpect(jsonPath("$.email").value(sampleEmail));
+        mockMvc.perform(get("/api/user/{id}", sampleId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(sampleId.toString()))
+                .andExpect(jsonPath("$.firstName").value("John"))
+                .andExpect(jsonPath("$.email").value(sampleEmail));
 
         verify(userService).findById(sampleId);
     }
 
     @Test
-    @DisplayName("GET /api/user/{id} - User not found(404)")
+    @DisplayName("GET /api/user/{id} - User Not Found (404)")
     void findById_WhenIdDoesNotExist_ShouldReturn404() throws Exception {
         UUID fakeId = UUID.randomUUID();
         when(userService.findById(fakeId)).thenThrow(new NotFoundException("Id not found"));
 
-        mockMvc.perform(get("/api/user/{id}", fakeId)).andExpect(status().isNotFound());
+        mockMvc.perform(get("/api/user/{id}", fakeId))
+                .andExpect(status().isNotFound());
+
         verify(userService).findById(fakeId);
     }
-
 
     // ---------- findAllUsers ----------
 
     @Test
-    @DisplayName("GET /api/user - Success")
+    @DisplayName("GET /api/user - Success (200)")
     void findByAllUsers_ShouldReturn200_AndListOfUserResponseDTO() throws Exception {
         List<UserResponseDTO> userList = List.of(sampleResponseDTO, sampleResponseDTO2);
         when(userService.getAllUsers()).thenReturn(userList);
 
-        mockMvc.perform(get("/api/user")).andExpect(status().isOk()).andExpect(jsonPath("$.length()").value(2)).andExpect(jsonPath("$[0].id").value(sampleId.toString())).andExpect(jsonPath("$[1].id").value(sampleId2.toString())).andExpect(jsonPath("$[0].firstName").value("John")).andExpect(jsonPath("$[1].firstName").value("Felix")).andExpect(jsonPath("$[0].email").value(sampleEmail)).andExpect(jsonPath("$[1].email").value(sampleEmail2));
+        mockMvc.perform(get("/api/user"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(2))
+                .andExpect(jsonPath("$[0].id").value(sampleId.toString()))
+                .andExpect(jsonPath("$[1].id").value(sampleId2.toString()))
+                .andExpect(jsonPath("$[0].firstName").value("John"))
+                .andExpect(jsonPath("$[1].firstName").value("Felix"))
+                .andExpect(jsonPath("$[0].email").value(sampleEmail))
+                .andExpect(jsonPath("$[1].email").value(sampleEmail2));
 
         verify(userService).getAllUsers();
     }
 
-
     // ---------- UpdateUser ----------
 
-
     @Test
-    @DisplayName("PUT /api/user/{id} - Success")
+    @DisplayName("PUT /api/user/{id} - Success (200)")
     void updateUser_ShouldReturn200_AndUserResponseDTO() throws Exception {
-
         UserResponseDTO updatedResponse = new UserResponseDTO("Felix", sampleId, "White", sampleEmail, LocalDateTime.of(2026, 8, 1, 12, 0), "google-123");
-
         when(userService.updateUser(sampleId, sampleRequestDTO2)).thenReturn(updatedResponse);
 
-        mockMvc.perform(put("/api/user/{id}", sampleId).contentType(MediaType.APPLICATION_JSON).content(objectMapper.writeValueAsString(sampleRequestDTO2))).andExpect(status().isOk()).andExpect(jsonPath("$.firstName").value("Felix")).andExpect(jsonPath("$.lastName").value("White")).andExpect(jsonPath("$.email").value(sampleEmail));
+        mockMvc.perform(put("/api/user/{id}", sampleId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(sampleRequestDTO2)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.firstName").value("Felix"))
+                .andExpect(jsonPath("$.lastName").value("White"))
+                .andExpect(jsonPath("$.email").value(sampleEmail));
 
         verify(userService).updateUser(sampleId, sampleRequestDTO2);
     }
 
     @Test
-    @DisplayName("PUT /api/user/{id} - User not found (404)")
+    @DisplayName("PUT /api/user/{id} - User Not Found (404)")
     void updateUser_WhenUserDoesNotExist_ShouldReturn404() throws Exception {
-
         UUID fakeId = UUID.randomUUID();
+        when(userService.updateUser(eq(fakeId), any(UserRequestDTO.class)))
+                .thenThrow(new NotFoundException("User not found"));
 
-        when(userService.updateUser(eq(fakeId), any(UserRequestDTO.class))).thenThrow(new NotFoundException("User not found"));
-
-        mockMvc.perform(put("/api/user/{id}", fakeId).contentType(MediaType.APPLICATION_JSON).content(objectMapper.writeValueAsString(sampleRequestDTO2))).andExpect(status().isNotFound());
+        mockMvc.perform(put("/api/user/{id}", fakeId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(sampleRequestDTO2)))
+                .andExpect(status().isNotFound());
 
         verify(userService).updateUser(eq(fakeId), any(UserRequestDTO.class));
     }
 
-
     // ---------- authWithGoogle ----------
 
-
     @Test
-    @DisplayName("POST /api/user/auth/google - Success")
+    @DisplayName("POST /api/user/auth/google - Success (200)")
     void authWithGoogle_ShouldReturn200_AndUserResponseDTO() throws Exception {
         String googleIdToken = "google-token-123";
         when(userService.verifyAndProcessGoogleToken(googleIdToken)).thenReturn(sampleResponseDTO);
 
-        mockMvc.perform(post("/api/user/auth/google").contentType(MediaType.TEXT_PLAIN).content(googleIdToken)).andExpect(status().isOk()).andExpect(jsonPath("$.id").value(sampleId.toString())).andExpect(jsonPath("$.firstName").value("John")).andExpect(jsonPath("$.email").value(sampleEmail));
+        mockMvc.perform(post("/api/user/auth/google")
+                        .contentType(MediaType.TEXT_PLAIN)
+                        .content(googleIdToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(sampleId.toString()))
+                .andExpect(jsonPath("$.firstName").value("John"))
+                .andExpect(jsonPath("$.email").value(sampleEmail));
 
         verify(userService).verifyAndProcessGoogleToken(googleIdToken);
     }
 
     @Test
-    @DisplayName("POST /api/user/auth/google - Not found (404)")
+    @DisplayName("POST /api/user/auth/google - Invalid Token (404)")
     void authWithGoogle_WhenTokenIsNotValid_ShouldReturn404() throws Exception {
         String fakeGoogleId = "fake-googleId";
-        when(userService.verifyAndProcessGoogleToken(fakeGoogleId)).thenThrow(new NotFoundException(("Id nor found, Sign up")));
+        when(userService.verifyAndProcessGoogleToken(fakeGoogleId)).thenThrow(new NotFoundException("Id not found, Sign up"));
 
-        mockMvc.perform(post("/api/user/auth/google").contentType(MediaType.TEXT_PLAIN).content(fakeGoogleId)).andExpect(status().isNotFound());
+        mockMvc.perform(post("/api/user/auth/google")
+                        .contentType(MediaType.TEXT_PLAIN)
+                        .content(fakeGoogleId))
+                .andExpect(status().isNotFound());
 
         verify(userService).verifyAndProcessGoogleToken(fakeGoogleId);
     }

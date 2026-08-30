@@ -1,5 +1,6 @@
 package com.project.NutritionTracker.model;
 
+import com.project.NutritionTracker.enums.MealType;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -31,4 +32,5 @@ public class Entry {
     private Double carbs;
     private Double fat;
     private Double protein;
+    private MealType mealType;
 }

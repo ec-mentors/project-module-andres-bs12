@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, LogOut, Mail } from 'lucide-react';
+import { X, LogOut, Mail, Bookmark } from 'lucide-react';
 import type { UserProfile } from '../../types/user';
 
 interface UserProfileModalProps {
@@ -7,6 +7,7 @@ interface UserProfileModalProps {
   onClose: () => void;
   user: UserProfile;
   onLogout: () => void;
+  onOpenManageFavorites?: () => void;
   theme?: 'dark' | 'light';
 }
 
@@ -15,6 +16,7 @@ export const UserProfileModal: React.FC<React.PropsWithChildren<UserProfileModal
   onClose,
   user,
   onLogout,
+  onOpenManageFavorites,
   theme = 'dark',
 }) => {
   const isLight = theme === 'light';
@@ -88,6 +90,25 @@ export const UserProfileModal: React.FC<React.PropsWithChildren<UserProfileModal
           <Mail className="w-3.5 h-3.5" />
           <span>{user.email}</span>
         </div>
+
+        {/* Manage Favorites Action Button */}
+        {onOpenManageFavorites && (
+          <button
+            type="button"
+            onClick={() => {
+              onClose();
+              onOpenManageFavorites();
+            }}
+            className={`w-full py-3 rounded-2xl font-bold text-sm border transition-all active:scale-95 flex items-center justify-center space-x-2 mb-2.5 cursor-pointer shadow-2xs ${
+              isLight
+                ? 'bg-slate-100 hover:bg-slate-200 text-slate-900 border-slate-200'
+                : 'bg-white/5 hover:bg-white/10 text-white border-white/[0.08]'
+            }`}
+          >
+            <Bookmark className="w-4 h-4 text-amber-500" />
+            <span>Manage Favorites</span>
+          </button>
+        )}
 
         {/* Sign Out Action Button */}
         <button

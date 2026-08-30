@@ -4,6 +4,7 @@ import com.project.NutritionTracker.dto.GoalRequestDTO;
 import com.project.NutritionTracker.dto.GoalResponseDTO;
 import com.project.NutritionTracker.model.User;
 import com.project.NutritionTracker.service.GoalService;
+import jakarta.validation.Valid;
 import org.apache.tomcat.util.buf.UEncoder;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -27,7 +28,7 @@ public class GoalController {
 
     @PostMapping("/{userId}")
     public ResponseEntity<GoalResponseDTO> createGoal(
-            @RequestBody GoalRequestDTO dto,
+            @Valid @RequestBody GoalRequestDTO dto,
             @PathVariable UUID userId) {
         GoalResponseDTO created = service.createGoal(dto, userId);
 
@@ -37,14 +38,14 @@ public class GoalController {
     @PutMapping("/{goalId}")
     public ResponseEntity<GoalResponseDTO> updateGoal(
             @PathVariable UUID goalId,
-            @RequestBody GoalRequestDTO dto) {
+            @Valid @RequestBody GoalRequestDTO dto) {
         return ResponseEntity.ok(service.updateGoal(goalId, dto)); //  code 201
     }
 
     @GetMapping("/user/{userId}/date")
     public ResponseEntity<GoalResponseDTO> getGoalByUserAndDate(
             @PathVariable UUID userId,
-            @RequestParam LocalDate date) {
+            @Valid @RequestParam LocalDate date) {
         return ResponseEntity.ok(service.getGoalByUserAndDate(userId, date)); // code 201
     }
 

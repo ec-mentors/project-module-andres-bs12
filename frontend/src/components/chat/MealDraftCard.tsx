@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
-import { Check, Edit2, Trash2, Sparkles, CheckCircle2, Loader2, X } from 'lucide-react';
+import { Check, Edit2, Trash2, Sparkles, CheckCircle2, Loader2, X, Star } from 'lucide-react';
 import { MACRO_COLORS } from '../../utils/macroTokens';
+import { favoritesTypography } from './favorites';
+import type { FavoriteMeal, CreateFavoriteMealPayload } from '../../types/favoriteMeal';
 
 export interface MealDraftData {
   id: string;
@@ -16,8 +18,12 @@ export interface MealDraftData {
 
 interface MealDraftCardProps {
   draft: MealDraftData;
-  onSave: (data: Omit<MealDraftData, 'id' | 'isSaved'>) => Promise<void>;
+  onSave: (data: Omit<MealDraftData, 'id' | 'isSaved'>, isFavorite?: boolean) => Promise<void>;
   onDiscard: (id: string) => void;
+  isFavorite?: boolean;
+  favoriteItem?: FavoriteMeal | null;
+  onToggleFavorite?: () => void;
+  onUpdateFavorite?: (id: string, data: CreateFavoriteMealPayload) => void;
   theme?: 'dark' | 'light';
 }
 
@@ -25,11 +31,24 @@ export const MealDraftCard: React.FC<MealDraftCardProps> = ({
   draft,
   onSave,
   onDiscard,
+  isFavorite = false,
+  favoriteItem = null,
+  onToggleFavorite,
+  onUpdateFavorite,
   theme = 'dark',
 }) => {
   const isLight = theme === 'light';
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isFavoriteMeal, setIsFavoriteMeal] = useState(isFavorite);
+  const [showUnfavoriteConfirm, setShowUnfavoriteConfirm] = useState(false);
+  const [showFavoriteUpdatePrompt, setShowFavoriteUpdatePrompt] = useState(false);
+
+  const [prevIsFavorite, setPrevIsFavorite] = useState(isFavorite);
+  if (prevIsFavorite !== isFavorite) {
+    setPrevIsFavorite(isFavorite);
+    setIsFavoriteMeal(isFavorite);
+  }
 
   // Local editable state using strings to prevent stuck '0' on backspace
   const [mealName, setMealName] = useState(draft.mealName);
@@ -38,22 +57,63 @@ export const MealDraftCard: React.FC<MealDraftCardProps> = ({
   const [carbsInput, setCarbsInput] = useState(String(draft.carbs ?? ''));
   const [fatInput, setFatInput] = useState(String(draft.fat ?? ''));
 
+  const isFavActive = isFavoriteMeal;
+
+  const hasModifiedValues =
+    mealName.trim() !== (draft.mealName || '').trim() ||
+    Number(kcalInput) !== (draft.kcal ?? 0) ||
+    Number(proteinInput) !== (draft.protein ?? 0) ||
+    Number(carbsInput) !== (draft.carbs ?? 0) ||
+    Number(fatInput) !== (draft.fat ?? 0);
+
   const handleSaveClick = async () => {
     if (draft.isSaved || isSaving) return;
+
+    // If it's an existing favorite AND the user modified values, ask how they want to save!
+    if (isFavActive && (favoriteItem || draft.source === 'FAVORITE') && hasModifiedValues) {
+      setShowFavoriteUpdatePrompt(true);
+      return;
+    }
+
+    await executeSave(false);
+  };
+
+  const executeSave = async (updateFavoriteToo: boolean) => {
     setIsSaving(true);
+    const payload = {
+      mealName: mealName.trim() || 'Meal Entry',
+      kcal: Number(kcalInput) || 0,
+      protein: Number(proteinInput) || 0,
+      carbs: Number(carbsInput) || 0,
+      fat: Number(fatInput) || 0,
+      source: isFavActive ? 'FAVORITE' : (draft.source || 'AI_PARSER'),
+    };
+
     try {
-      await onSave({
-        mealName: mealName.trim() || 'Meal Entry',
-        kcal: Number(kcalInput) || 0,
-        protein: Number(proteinInput) || 0,
-        carbs: Number(carbsInput) || 0,
-        fat: Number(fatInput) || 0,
-        confidenceNote: draft.confidenceNote,
-        source: draft.source || 'AI_PARSER',
-      });
+      if (updateFavoriteToo && favoriteItem && onUpdateFavorite) {
+        onUpdateFavorite(favoriteItem.id, {
+          mealName: payload.mealName,
+          kcal: payload.kcal,
+          protein: payload.protein,
+          carbs: payload.carbs,
+          fat: payload.fat,
+          mealType: favoriteItem.mealType,
+        });
+      }
+      await onSave(payload, isFavActive);
     } finally {
       setIsSaving(false);
       setIsEditing(false);
+      setShowFavoriteUpdatePrompt(false);
+    }
+  };
+
+  const handleFavoriteClick = () => {
+    if (isFavActive) {
+      setShowUnfavoriteConfirm(true);
+    } else {
+      setIsFavoriteMeal(true);
+      onToggleFavorite?.();
     }
   };
 
@@ -69,23 +129,8 @@ export const MealDraftCard: React.FC<MealDraftCardProps> = ({
     ? 'bg-slate-100 border-slate-300 text-slate-900 focus:bg-white'
     : 'bg-[#18181b] border-white/[0.12] text-white focus:bg-[#202024] focus:border-white/30';
 
-  // Format confidence note: if it's a number like "90", show "Confidence: 90%"
-  const formatConfidence = (note?: string) => {
-    if (!note) return null;
-    const trimmed = note.trim();
-    if (/^\d+$/.test(trimmed)) {
-      return `Confidence: ${trimmed}%`;
-    }
-    if (trimmed.includes('%')) {
-      return `Confidence: ${trimmed}`;
-    }
-    return `Confidence: ${trimmed}`;
-  };
-
-  const confidenceDisplay = formatConfidence(draft.confidenceNote);
-
   return (
-    <div className={`w-full max-w-xl rounded-2xl sm:rounded-3xl p-4 sm:p-6 border transition-all duration-300 ${cardBg}`}>
+    <div className={`w-full max-w-xl rounded-2xl sm:rounded-3xl p-4 sm:p-6 border transition-all duration-300 relative ${cardBg}`}>
       
       {/* HEADER ROW */}
       <div className="flex items-start justify-between gap-3 mb-4">
@@ -113,31 +158,33 @@ export const MealDraftCard: React.FC<MealDraftCardProps> = ({
               </h4>
             )}
 
-            {/* Subtle Confidence Tag (No bulky box) */}
+            {/* Subtitle */}
             <div className="flex items-center space-x-2 mt-0.5">
               <span className={`text-[10px] sm:text-xs font-bold uppercase tracking-wider ${isLight ? 'text-slate-700' : 'text-zinc-400'}`}>
                 {draft.isSaved ? 'Recorded Entry' : 'Estimated Intake'}
               </span>
-              {confidenceDisplay && (
-                <>
-                  <span className="text-zinc-500 text-xs">•</span>
-                  <span className={`text-[10px] sm:text-[11px] font-semibold ${isLight ? 'text-slate-500' : 'text-zinc-400'}`}>
-                    {confidenceDisplay}
-                  </span>
-                </>
-              )}
             </div>
           </div>
         </div>
 
-        {/* KCAL BADGE */}
+        {/* FAVORITE STAR BUTTON IN TOP-RIGHT (Replaces Kcal badge) */}
         {!isEditing && (
-          <div className={`px-3 py-1 rounded-xl sm:rounded-2xl border flex items-center space-x-1 shrink-0 ${
-            isLight ? MACRO_COLORS.kcal.badgeLight : MACRO_COLORS.kcal.badgeDark
-          }`}>
-            <span className="text-xs sm:text-sm font-black">{Number(kcalInput) || 0}</span>
-            <span className="text-[10px] font-bold opacity-80">Kcal</span>
-          </div>
+          <button
+            type="button"
+            onClick={handleFavoriteClick}
+            className={`p-2.5 rounded-2xl border transition-all active:scale-95 cursor-pointer shrink-0 flex items-center justify-center ${
+              isFavActive
+                ? isLight
+                  ? 'bg-amber-50 border-amber-300/80 text-amber-500 shadow-xs'
+                  : 'bg-amber-500/15 border-amber-500/30 text-amber-400 shadow-xs'
+                : isLight
+                ? 'bg-slate-100 hover:bg-slate-200 border-slate-200 text-slate-400 hover:text-amber-500'
+                : 'bg-white/5 hover:bg-white/10 border-white/[0.08] text-zinc-500 hover:text-amber-400'
+            }`}
+            title={isFavActive ? 'Remove from favorites' : 'Add to favorite meals'}
+          >
+            <Star className={`w-4 h-4 sm:w-5 sm:h-5 ${isFavActive ? 'fill-amber-500 text-amber-500' : 'stroke-[2]'}`} />
+          </button>
         )}
       </div>
 
@@ -145,7 +192,7 @@ export const MealDraftCard: React.FC<MealDraftCardProps> = ({
       {isEditing ? (
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 mb-2">
           <div>
-            <label className={`text-[10px] font-bold uppercase block mb-1 ${isLight ? MACRO_COLORS.kcal.textLight : MACRO_COLORS.kcal.text}`}>Kcal</label>
+            <label className={`${favoritesTypography.macroLabel} block mb-1 ${isLight ? MACRO_COLORS.kcal.textLight : MACRO_COLORS.kcal.text}`}>Kcal</label>
             <input
               type="number"
               value={kcalInput}
@@ -157,7 +204,7 @@ export const MealDraftCard: React.FC<MealDraftCardProps> = ({
             />
           </div>
           <div>
-            <label className={`text-[10px] font-bold uppercase block mb-1 ${isLight ? MACRO_COLORS.protein.textLight : MACRO_COLORS.protein.text}`}>
+            <label className={`${favoritesTypography.macroLabel} block mb-1 ${isLight ? MACRO_COLORS.protein.textLight : MACRO_COLORS.protein.text}`}>
               Protein (g)
             </label>
             <input
@@ -171,7 +218,7 @@ export const MealDraftCard: React.FC<MealDraftCardProps> = ({
             />
           </div>
           <div>
-            <label className={`text-[10px] font-bold uppercase block mb-1 ${isLight ? MACRO_COLORS.carbs.textLight : MACRO_COLORS.carbs.text}`}>
+            <label className={`${favoritesTypography.macroLabel} block mb-1 ${isLight ? MACRO_COLORS.carbs.textLight : MACRO_COLORS.carbs.text}`}>
               Carbs (g)
             </label>
             <input
@@ -185,7 +232,7 @@ export const MealDraftCard: React.FC<MealDraftCardProps> = ({
             />
           </div>
           <div>
-            <label className={`text-[10px] font-bold uppercase block mb-1 ${isLight ? MACRO_COLORS.fat.textLight : MACRO_COLORS.fat.text}`}>
+            <label className={`${favoritesTypography.macroLabel} block mb-1 ${isLight ? MACRO_COLORS.fat.textLight : MACRO_COLORS.fat.text}`}>
               Fat (g)
             </label>
             <input
@@ -202,24 +249,24 @@ export const MealDraftCard: React.FC<MealDraftCardProps> = ({
       ) : (
         <div className="grid grid-cols-4 gap-2 mb-2">
           <div className={`p-2 sm:p-2.5 rounded-xl sm:rounded-2xl border text-center ${pillBg}`}>
-            <span className={`text-xs sm:text-sm font-black block ${isLight ? 'text-slate-900' : 'text-white'}`}>{Number(kcalInput) || 0}</span>
-            <span className={`text-[9px] sm:text-[10px] font-bold uppercase ${isLight ? MACRO_COLORS.kcal.textLight : MACRO_COLORS.kcal.text}`}>Kcal</span>
+            <span className={`${favoritesTypography.macroValue} block ${isLight ? 'text-slate-900' : 'text-white'}`}>{Number(kcalInput) || 0}</span>
+            <span className={`${favoritesTypography.macroLabel} ${isLight ? MACRO_COLORS.kcal.textLight : MACRO_COLORS.kcal.text}`}>Kcal</span>
           </div>
           <div className={`p-2 sm:p-2.5 rounded-xl sm:rounded-2xl border text-center ${pillBg}`}>
-            <span className={`text-xs sm:text-sm font-black block ${isLight ? 'text-slate-900' : 'text-white'}`}>{Number(proteinInput) || 0}g</span>
-            <span className={`text-[9px] sm:text-[10px] font-bold uppercase ${isLight ? MACRO_COLORS.protein.textLight : MACRO_COLORS.protein.text}`}>
+            <span className={`${favoritesTypography.macroValue} block ${isLight ? 'text-slate-900' : 'text-white'}`}>{Number(proteinInput) || 0}g</span>
+            <span className={`${favoritesTypography.macroLabel} ${isLight ? MACRO_COLORS.protein.textLight : MACRO_COLORS.protein.text}`}>
               {MACRO_COLORS.protein.label}
             </span>
           </div>
           <div className={`p-2 sm:p-2.5 rounded-xl sm:rounded-2xl border text-center ${pillBg}`}>
-            <span className={`text-xs sm:text-sm font-black block ${isLight ? 'text-slate-900' : 'text-white'}`}>{Number(carbsInput) || 0}g</span>
-            <span className={`text-[9px] sm:text-[10px] font-bold uppercase ${isLight ? MACRO_COLORS.carbs.textLight : MACRO_COLORS.carbs.text}`}>
+            <span className={`${favoritesTypography.macroValue} block ${isLight ? 'text-slate-900' : 'text-white'}`}>{Number(carbsInput) || 0}g</span>
+            <span className={`${favoritesTypography.macroLabel} ${isLight ? MACRO_COLORS.carbs.textLight : MACRO_COLORS.carbs.text}`}>
               {MACRO_COLORS.carbs.label}
             </span>
           </div>
           <div className={`p-2 sm:p-2.5 rounded-xl sm:rounded-2xl border text-center ${pillBg}`}>
-            <span className={`text-xs sm:text-sm font-black block ${isLight ? 'text-slate-900' : 'text-white'}`}>{Number(fatInput) || 0}g</span>
-            <span className={`text-[9px] sm:text-[10px] font-bold uppercase ${isLight ? MACRO_COLORS.fat.textLight : MACRO_COLORS.fat.text}`}>
+            <span className={`${favoritesTypography.macroValue} block ${isLight ? 'text-slate-900' : 'text-white'}`}>{Number(fatInput) || 0}g</span>
+            <span className={`${favoritesTypography.macroLabel} ${isLight ? MACRO_COLORS.fat.textLight : MACRO_COLORS.fat.text}`}>
               {MACRO_COLORS.fat.label}
             </span>
           </div>
@@ -320,6 +367,142 @@ export const MealDraftCard: React.FC<MealDraftCardProps> = ({
 
       </div>
 
+      {/* Unfavorite Confirmation Pop-up Modal */}
+      {showUnfavoriteConfirm && (
+        <div
+          onClick={() => setShowUnfavoriteConfirm(false)}
+          className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-150"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className={`p-6 rounded-[28px] max-w-sm w-full border shadow-2xl space-y-4 animate-in zoom-in-95 duration-150 text-center ${
+              isLight
+                ? 'bg-white border-slate-200 text-slate-900 shadow-slate-900/15'
+                : 'bg-[#121214] border-white/[0.12] text-white shadow-black/80'
+            }`}
+          >
+            <div className="w-12 h-12 rounded-2xl bg-amber-500/10 text-amber-500 flex items-center justify-center mx-auto">
+              <Star className="w-6 h-6 fill-amber-500" />
+            </div>
+
+            <div className="space-y-1">
+              <h3 className="text-base font-bold">Remove from Favorites?</h3>
+              <p className={`text-xs ${isLight ? 'text-slate-600' : 'text-zinc-400'}`}>
+                Are you sure you want to remove <span className="font-bold text-amber-500">"{mealName}"</span> from your favorite meals?
+              </p>
+            </div>
+
+            <div className="flex items-center space-x-2 pt-2">
+              <button
+                type="button"
+                onClick={() => setShowUnfavoriteConfirm(false)}
+                className={`flex-1 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                  isLight ? 'bg-slate-100 hover:bg-slate-200 text-slate-700' : 'bg-white/10 hover:bg-white/15 text-zinc-300'
+                }`}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setIsFavoriteMeal(false);
+                  onToggleFavorite?.();
+                  setShowUnfavoriteConfirm(false);
+                }}
+                className="flex-1 py-2.5 rounded-xl text-xs font-extrabold bg-rose-500 hover:bg-rose-600 text-white transition-all active:scale-95 shadow-xs cursor-pointer"
+              >
+                Remove
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Choice Modal: Save as Entry Only vs Update Favorite Preset */}
+      {showFavoriteUpdatePrompt && (
+        <div
+          onClick={() => setShowFavoriteUpdatePrompt(false)}
+          className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-150"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className={`p-6 rounded-[28px] max-w-md w-full border shadow-2xl space-y-4 animate-in zoom-in-95 duration-150 text-center ${
+              isLight
+                ? 'bg-white border-slate-200 text-slate-900 shadow-slate-900/15'
+                : 'bg-[#121214] border-white/[0.12] text-white shadow-black/80'
+            }`}
+          >
+            <div className="w-12 h-12 rounded-2xl bg-amber-500/10 text-amber-500 flex items-center justify-center mx-auto">
+              <Sparkles className="w-6 h-6" />
+            </div>
+
+            <div className="space-y-1">
+              <h3 className="text-base font-extrabold tracking-tight">Favorite Meal Modified</h3>
+              <p className={`text-xs leading-relaxed ${isLight ? 'text-slate-600' : 'text-zinc-400'}`}>
+                You modified <span className="font-bold text-amber-500">"{mealName}"</span>. How would you like to save these changes?
+              </p>
+            </div>
+
+            <div className="space-y-2.5 pt-2 text-left">
+              {/* Option 1: Log today only */}
+              <button
+                type="button"
+                onClick={() => executeSave(false)}
+                className={`w-full p-4 rounded-2xl border transition-all flex items-center space-x-3.5 active:scale-98 cursor-pointer ${
+                  isLight
+                    ? 'bg-slate-50 hover:bg-slate-100 border-slate-200 hover:border-slate-300 text-slate-900'
+                    : 'bg-[#18181b] hover:bg-[#202024] border-white/[0.08] hover:border-white/[0.16] text-white'
+                }`}
+              >
+                <div className={`p-2.5 rounded-xl shrink-0 ${isLight ? 'bg-slate-200 text-slate-700' : 'bg-white/10 text-white'}`}>
+                  <CheckCircle2 className="w-5 h-5" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <h4 className="text-sm sm:text-base font-extrabold tracking-tight">Save as Today's Entry Only</h4>
+                  <p className={`text-xs mt-0.5 leading-snug ${isLight ? 'text-slate-500' : 'text-zinc-400'}`}>
+                    Log today's meal with {kcalInput} kcal. Your saved favorite preset stays untouched.
+                  </p>
+                </div>
+              </button>
+
+              {/* Option 2: Update Favorite Preset */}
+              <button
+                type="button"
+                onClick={() => executeSave(true)}
+                className={`w-full p-4 rounded-2xl border transition-all flex items-center space-x-3.5 active:scale-98 cursor-pointer ${
+                  isLight
+                    ? 'bg-amber-50 hover:bg-amber-100/80 border-amber-200 text-slate-900'
+                    : 'bg-amber-500/10 hover:bg-amber-500/15 border-amber-500/30 text-white'
+                }`}
+              >
+                <div className="p-2.5 rounded-xl bg-amber-500/20 text-amber-500 shrink-0">
+                  <Star className="w-5 h-5 fill-amber-500" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <h4 className="text-sm sm:text-base font-extrabold tracking-tight text-amber-500">Update Favorite Preset Too</h4>
+                  <p className={`text-xs mt-0.5 leading-snug ${isLight ? 'text-slate-600' : 'text-zinc-300'}`}>
+                    Update the master recipe in your favorites bar and log today's intake.
+                  </p>
+                </div>
+              </button>
+            </div>
+
+            <div className="pt-2">
+              <button
+                type="button"
+                onClick={() => setShowFavoriteUpdatePrompt(false)}
+                className={`w-full py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                  isLight ? 'text-slate-500 hover:text-slate-800' : 'text-zinc-400 hover:text-white'
+                }`}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 };
+

@@ -9,9 +9,11 @@ import { GoogleLoginModal } from './components/auth/GoogleLoginModal';
 import { UserProfileModal } from './components/auth/UserProfileModal';
 import { OnboardingModal } from './components/onboarding/OnboardingModal';
 import { OverviewDashboard } from './components/overview/OverviewDashboard';
+import { ManageFavoritesModal } from './components/chat/ManageFavoritesModal';
 
 import type { UserProfile } from './types/user';
 import type { MealEntry, NutritionGoal, DailySummary, CreateMealEntryPayload } from './types/nutrition';
+import type { FavoriteMeal, CreateFavoriteMealPayload } from './types/favoriteMeal';
 import type { OnboardingCompletionResult } from './components/onboarding/types';
 import { 
   fetchAllEntries,
@@ -22,6 +24,10 @@ import {
   fetchGoal, 
   updateGoal,
   clearAuthToken,
+  fetchFavorites,
+  createFavoriteMeal,
+  updateFavoriteMeal,
+  removeFavoriteMeal,
 } from './services/api';
 import { toLocalYmd } from './utils/dateLocal';
 import { CheckCircle2 } from 'lucide-react';
@@ -30,6 +36,7 @@ export function App() {
   const [activeTab, setActiveTab] = useState<'nutria' | 'overview'>('nutria');
   const [user, setUser] = useState<UserProfile | null>(null);
   const [theme, setTheme] = useState<'dark' | 'light'>('dark');
+  const [isGlobalFavoritesOpen, setIsGlobalFavoritesOpen] = useState(false);
 
   // Smart Header visibility on Overview scroll
   const [isHeaderVisible, setIsHeaderVisible] = useState(true);
@@ -90,6 +97,48 @@ export function App() {
     carbs: 200,
     fat: 65,
   });
+  const [favorites, setFavorites] = useState<FavoriteMeal[]>([]);
+  
+// ----- Favorite Meal Handlers -----
+  const handleAddFavorite = async(payload: CreateFavoriteMealPayload) => {
+    if (!userId) return;
+
+    try{ 
+      // BE call to create new favorite
+      const newFavorite = await createFavoriteMeal(userId, payload);
+      // Update local state, prev = current favorites, newFavorite = new favorite meal
+      setFavorites((prev) => [newFavorite, ...prev]);
+    } catch (err) {
+      console.error('Failed to add favorite:', err);
+    }
+  };
+
+
+  const handleUpdateFavorite = async(id: string, payload: CreateFavoriteMealPayload) => {
+    if (!userId) return;
+
+    try {
+      const updatedFavorite = await updateFavoriteMeal(id, payload);
+      setFavorites((prev) =>
+        prev.map((fav) => (fav.id === id ? updatedFavorite : fav))
+      );
+    } catch (err) {
+      console.error('Failed to update favorite:', err);
+    }
+  };
+
+  
+  const handleDeleteFavorite = async(id: string) => {
+    if (!userId) return;
+
+  try {
+    await removeFavoriteMeal(id);
+    setFavorites((prev) => prev.filter((fav) => fav.id !== id))
+  } catch (err) {
+    console.error('Failed to delete favorite:', err);
+  }
+  };
+
   const [, setSummary] = useState<DailySummary>({
     consumedKcal: 0,
     consumedProtein: 0,
@@ -160,6 +209,24 @@ export function App() {
     loadGoals();
   }, [userId]);
 
+  // Load all favorites
+  useEffect(() => {
+    async function loadFavorites() {
+      if (!userId) {
+        setFavorites([]);
+        return;
+      }
+
+      try {
+        const data = await fetchFavorites(userId);
+        setFavorites(data || []);
+      } catch (err) {
+        console.error('Error fetching Favorites:', err);
+      }
+    }
+    loadFavorites();
+  }, [userId]);
+
   // Load all entries + day entries + daily summary whenever selectedDate or userId changes
   useEffect(() => {
     async function loadDataForDate() {
@@ -214,49 +281,38 @@ export function App() {
   }, [toastMessage]);
 
   const refreshEntriesForSelectedDate = async () => {
+    if (!userId) return;
     const dateStr = toLocalYmd(selectedDate);
     const [updatedAll, updatedDay] = await Promise.all([
       fetchAllEntries(userId),
       fetchTodayEntries(userId, dateStr),
     ]);
-    setEntries(updatedAll);
-    setDayEntries(updatedDay);
+    setEntries(updatedAll || []);
+    setDayEntries(updatedDay || []);
     setSummary({
-      consumedKcal: updatedDay.reduce((s, e) => s + (Number(e.kcal) || 0), 0),
-      consumedProtein: updatedDay.reduce((s, e) => s + (Number(e.protein) || 0), 0),
-      consumedFat: updatedDay.reduce((s, e) => s + (Number(e.fat) || 0), 0),
-      consumedCarbs: updatedDay.reduce((s, e) => s + (Number(e.carbs) || 0), 0),
+      consumedKcal: (updatedDay || []).reduce((s, e) => s + (Number(e.kcal) || 0), 0),
+      consumedProtein: (updatedDay || []).reduce((s, e) => s + (Number(e.protein) || 0), 0),
+      consumedFat: (updatedDay || []).reduce((s, e) => s + (Number(e.fat) || 0), 0),
+      consumedCarbs: (updatedDay || []).reduce((s, e) => s + (Number(e.carbs) || 0), 0),
     });
   };
 
   // Handle Add Meal
   const handleAddMeal = async (payload: CreateMealEntryPayload) => {
-    try {
-      await createMealEntry(userId, payload);
-      await refreshEntriesForSelectedDate();
-    } catch (err) {
-      console.error('Failed to create meal entry:', err);
-    }
+    await createMealEntry(userId, payload);
+    await refreshEntriesForSelectedDate();
   };
 
   // Handle Update Meal
   const handleUpdateMeal = async (id: string, payload: CreateMealEntryPayload) => {
-    try {
-      await updateMealEntry(id, payload);
-      await refreshEntriesForSelectedDate();
-    } catch (err) {
-      console.error('Failed to update meal entry:', err);
-    }
+    await updateMealEntry(id, payload);
+    await refreshEntriesForSelectedDate();
   };
 
   // Handle Delete Meal
   const handleDeleteMeal = async (id: string) => {
-    try {
-      await deleteMealEntry(id);
-      await refreshEntriesForSelectedDate();
-    } catch (err) {
-      console.error('Failed to delete meal entry:', err);
-    }
+    await deleteMealEntry(id);
+    await refreshEntriesForSelectedDate();
   };
 
   // Handle Save Goal
@@ -443,6 +499,10 @@ export function App() {
             goal={goal}
             onAddMeal={handleAddMeal}
             onOpenSetGoals={() => setIsSetGoalsOpen(true)}
+            favorites={favorites}
+            onAddFavorite={handleAddFavorite}
+            onUpdateFavorite={handleUpdateFavorite}
+            onDeleteFavorite={handleDeleteFavorite}
             theme={theme}
           />
         ) : (
@@ -472,9 +532,13 @@ export function App() {
                   <div className="block lg:hidden order-2 transition-all duration-500 ease-out">
                     <LatestEntriesSidebar
                       entries={mealsToShow}
+                      favorites={favorites}
                       onAddMeal={handleAddMeal}
                       onUpdateMeal={handleUpdateMeal}
                       onDeleteMeal={handleDeleteMeal}
+                      onAddFavorite={handleAddFavorite}
+                      onUpdateFavorite={handleUpdateFavorite}
+                      onDeleteFavorite={handleDeleteFavorite}
                       selectedDateFormatted={selectedDateFormatted}
                       theme={theme}
                       isLoading={loading}
@@ -499,9 +563,13 @@ export function App() {
                   <div className="absolute inset-0">
                     <LatestEntriesSidebar
                       entries={mealsToShow}
+                      favorites={favorites}
                       onAddMeal={handleAddMeal}
                       onUpdateMeal={handleUpdateMeal}
                       onDeleteMeal={handleDeleteMeal}
+                      onAddFavorite={handleAddFavorite}
+                      onUpdateFavorite={handleUpdateFavorite}
+                      onDeleteFavorite={handleDeleteFavorite}
                       selectedDateFormatted={selectedDateFormatted}
                       theme={theme}
                       isLoading={loading}
@@ -548,18 +616,20 @@ export function App() {
           onClose={() => setIsProfileOpen(false)}
           user={user}
           onLogout={handleLogout}
+          onOpenManageFavorites={() => setIsGlobalFavoritesOpen(true)}
           theme={theme}
         />
       )}
 
-      {/* Multi-Step First-Time Onboarding Modal (Goal Setup) */}
-      <OnboardingModal
-        isOpen={isOnboardingOpen}
-        onClose={() => setIsOnboardingOpen(false)}
-        onCompleteOnboarding={handleOnboardingComplete}
-        initialGoal={goal}
+      {/* Global Manage Favorites Modal (opened from Profile) */}
+      <ManageFavoritesModal
+        isOpen={isGlobalFavoritesOpen}
+        onClose={() => setIsGlobalFavoritesOpen(false)}
+        favorites={favorites}
+        onAddFavorite={handleAddFavorite}
+        onUpdateFavorite={handleUpdateFavorite}
+        onDeleteFavorite={handleDeleteFavorite}
         theme={theme}
-        onToggleTheme={toggleTheme}
       />
 
     </div>

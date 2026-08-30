@@ -1,3 +1,4 @@
+DROP TABLE IF EXISTS favorite_meal CASCADE;
 DROP TABLE IF EXISTS entry CASCADE;
 DROP TABLE IF EXISTS goal CASCADE;
 DROP TABLE IF EXISTS users CASCADE;
@@ -33,7 +34,20 @@ CREATE TABLE entry (
     kcal INTEGER NOT NULL,
     carbs DECIMAL(5,2) NOT NULL,
     fat DECIMAL(5,2) NOT NULL,
-    protein DECIMAL(5,2) NOT NULL
+    protein DECIMAL(5,2) NOT NULL,
+    meal_type VARCHAR(50)
+);
+
+CREATE TABLE favorite_meal (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    meal_name VARCHAR(100) NOT NULL,
+    kcal INTEGER NOT NULL,
+    carbs DECIMAL(5,2) NOT NULL,
+    fat DECIMAL(5,2) NOT NULL,
+    protein DECIMAL(5,2) NOT NULL,
+    meal_type VARCHAR(50),
+    created_at DATE DEFAULT CURRENT_DATE
 );
 
 -- SEED DATA FOR LOCAL DEVELOPMENT --
@@ -44,7 +58,11 @@ INSERT INTO users (id, google_id, first_name, last_name, email, role) VALUES
 INSERT INTO goal (user_id, start_date, kcal, carbs, fat, protein) VALUES 
 ('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', CURRENT_DATE, 2000, 200.00, 70.00, 140.00);
 
-INSERT INTO entry (user_id, meal_name, source, kcal, carbs, fat, protein) VALUES 
-('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 'Eggs and coffee', 'Manual', 350, 60.00, 5.00, 12.00),
-('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 'Rice and chicken', 'Manual', 650, 75.00, 12.00, 55.00),
-('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 'Protein shake', 'Manual', 150, 3.00, 1.50, 30.00);
+INSERT INTO entry (user_id, meal_name, source, kcal, carbs, fat, protein, meal_type) VALUES 
+('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 'Eggs and coffee', 'Manual', 350, 60.00, 5.00, 12.00, 'BREAKFAST'),
+('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 'Rice and chicken', 'Manual', 650, 75.00, 12.00, 55.00, 'LUNCH'),
+('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 'Protein shake', 'Manual', 150, 3.00, 1.50, 30.00, 'SNACK');
+
+INSERT INTO favorite_meal (user_id, meal_name, kcal, carbs, fat, protein, meal_type) VALUES
+('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 'Chicken and Broccoli', 450, 20.00, 8.00, 65.00, 'DINNER');
+

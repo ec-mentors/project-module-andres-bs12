@@ -3,6 +3,7 @@ package com.project.NutritionTracker.controller;
 import com.project.NutritionTracker.dto.EntryRequestDTO;
 import com.project.NutritionTracker.dto.EntryResponseDTO;
 import com.project.NutritionTracker.service.EntryService;
+import jakarta.validation.Valid;
 import org.apache.tomcat.util.net.openssl.ciphers.Authentication;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -32,7 +33,7 @@ public class EntryController {
     @PostMapping("/{userId}")
     public ResponseEntity<EntryResponseDTO> createEntry(
             @PathVariable UUID userId,
-            @RequestBody EntryRequestDTO dto) {
+            @Valid @RequestBody EntryRequestDTO dto) {
 
         EntryResponseDTO created = service.createEntry(dto, userId);
         return ResponseEntity.created(URI.create("/api/entry/" + created.id())).body(created);
@@ -46,7 +47,7 @@ public class EntryController {
     }
 
     @GetMapping("/{userId}/today")
-    public ResponseEntity<List<EntryResponseDTO>> findTodayEntriesByUser(@PathVariable UUID userId) {
+    public ResponseEntity<List<EntryResponseDTO>> findTodayEntriesByUser(@Valid @PathVariable UUID userId) {
         return ResponseEntity.ok(service.findTodayEntriesByUser(userId));
     }
 
@@ -54,7 +55,7 @@ public class EntryController {
     @PutMapping("/{entryId}/update")
     public ResponseEntity<EntryResponseDTO> updateEntry(
             @PathVariable UUID entryId,
-            @RequestBody EntryRequestDTO dto) {
+            @Valid @RequestBody EntryRequestDTO dto) {
 
         return ResponseEntity.ok(service.updateEntry(entryId, dto));
     }

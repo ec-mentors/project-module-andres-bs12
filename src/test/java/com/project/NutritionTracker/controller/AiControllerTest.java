@@ -5,10 +5,7 @@ import com.project.NutritionTracker.dto.AiGoalRequestDTO;
 import com.project.NutritionTracker.dto.AiGoalResponseDTO;
 import com.project.NutritionTracker.dto.AiMealResponseDTO;
 import com.project.NutritionTracker.dto.AiMealTextRequestDTO;
-import com.project.NutritionTracker.enums.ActivityLevel;
-import com.project.NutritionTracker.enums.DietPreference;
-import com.project.NutritionTracker.enums.Gender;
-import com.project.NutritionTracker.enums.PrimaryObjective;
+import com.project.NutritionTracker.enums.*;
 import com.project.NutritionTracker.repository.UserRepository;
 import com.project.NutritionTracker.service.AiAudioService;
 import com.project.NutritionTracker.service.AiGoalService;
@@ -113,7 +110,8 @@ public class AiControllerTest {
                 190.0,
                 65.0,
                 210.0,
-                "100"
+                "100",
+                MealType.BREAKFAST
         );
 
         when(aiMealService.parseMealFromText("I ate some chicken")).thenReturn(mockAiMealResponse);
@@ -126,7 +124,8 @@ public class AiControllerTest {
                 .andExpect(jsonPath("$.kcal").value(2200))
                 .andExpect(jsonPath("$.carbs").value(190.0))
                 .andExpect(jsonPath("$.protein").value(210.0))
-                .andExpect(jsonPath("$.confidenceNote").value(100));
+                .andExpect(jsonPath("$.confidenceNote").value(100))
+                .andExpect(jsonPath("$.mealType").value("breakfast"));
     }
 
     @Test
@@ -168,7 +167,8 @@ public class AiControllerTest {
                 190.0,
                 65.0,
                 210.0,
-                "100"
+                "100",
+                MealType.BREAKFAST
         );
         when(audioService.transcribe(any())).thenReturn("I ate half chicken");
         when(aiMealService.parseMealFromText("I ate half chicken")).thenReturn(mockAiMealResponse);
@@ -180,7 +180,8 @@ public class AiControllerTest {
                 .andExpect(jsonPath("$.carbs").value(190.0))
                 .andExpect(jsonPath("$.fat").value(65.0))
                 .andExpect(jsonPath("$.protein").value(210.0))
-                .andExpect(jsonPath("$.confidenceNote").value("100"));
+                .andExpect(jsonPath("$.confidenceNote").value("100"))
+                .andExpect(jsonPath("$.mealType").value("breakfast"));
     }
 
 
@@ -202,7 +203,8 @@ public class AiControllerTest {
                 190.0,
                 65.0,
                 210.0,
-                "100"
+                "100",
+                MealType.BREAKFAST
         );
 
         when(aiMealService.parseMealFromImage(imageFile)).thenReturn(mockAiMealResponse);
@@ -213,7 +215,9 @@ public class AiControllerTest {
                 .andExpect(jsonPath("$.kcal").value(2200))
                 .andExpect(jsonPath("$.carbs").value(190.0))
                 .andExpect(jsonPath("$.protein").value(210.0))
-                .andExpect(jsonPath("$.confidenceNote").value(100));
+                .andExpect(jsonPath("$.confidenceNote").value(100))
+                .andExpect(jsonPath("$.mealType").value("breakfast"));
+
     }
 
     @Test
@@ -232,11 +236,10 @@ public class AiControllerTest {
     }
 
     @Test
-    @DisplayName("POST /parse-meal-image - Bad Request (415)")
-    void parseMealFromImage_WithWrongFormat_ShouldReturn400() throws Exception {
+    @DisplayName("POST /api/ai/parse-meal-image - Unsupported Media Type (415)")
+    void parseMealFromImage_WithWrongContentType_ShouldReturn415() throws Exception {
         mockMvc.perform(multipart("/api/ai/parse-meal-image")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isUnsupportedMediaType());
     }
-
 }

@@ -2,6 +2,7 @@ package com.project.NutritionTracker.service;
 
 import com.project.NutritionTracker.dto.EntryRequestDTO;
 import com.project.NutritionTracker.dto.EntryResponseDTO;
+import com.project.NutritionTracker.enums.MealType;
 import com.project.NutritionTracker.exception.NotFoundException;
 import com.project.NutritionTracker.mapper.EntryMapper;
 import com.project.NutritionTracker.model.Entry;
@@ -57,10 +58,10 @@ public class EntryServiceTest {
         sampleUser = new User();
         sampleUser.setId(sampleId);
 
-        sampleEntry = new Entry(sampleId, sampleUser, "Pasta carbonara", "MANUAL", LocalDateTime.now(), 500, 50.0, 15.0, 30.0);
+        sampleEntry = new Entry(sampleId, sampleUser, "Pasta carbonara", "MANUAL", LocalDateTime.now(), 500, 50.0, 15.0, 30.0, MealType.BREAKFAST);
 
-        sampleEntryRequestDTO = new EntryRequestDTO("Pasta Carbonara", 500, 50.0, 15.0, 30.0);
-        sampleEntryResponseDTO = new EntryResponseDTO(sampleId, "Pasta Carbonara", "MANUAL", LocalDateTime.now(), 500, 50.0, 15.0, 30.0);
+        sampleEntryRequestDTO = new EntryRequestDTO("Pasta Carbonara", 500, 50.0, 15.0, 30.0, MealType.BREAKFAST);
+        sampleEntryResponseDTO = new EntryResponseDTO(sampleId, "Pasta Carbonara", "MANUAL", LocalDateTime.now(), 500, 50.0, 15.0, 30.0, MealType.BREAKFAST);
     }
 
 
@@ -257,8 +258,8 @@ public class EntryServiceTest {
 
     @Test
     void updateEntry() {
-        EntryRequestDTO newEntryRequestDTO = new EntryRequestDTO( "Chicken",99900, 950.0, 915.0, 930.0);
-        EntryResponseDTO newEntryResponseDTO = new EntryResponseDTO(sampleId, "Chicken", "Telegram",  LocalDateTime.now(), 99900, 950.0, 915.0, 930.0);
+        EntryRequestDTO newEntryRequestDTO = new EntryRequestDTO( "Chicken",99900, 950.0, 915.0, 930.0, MealType.BREAKFAST);
+        EntryResponseDTO newEntryResponseDTO = new EntryResponseDTO(sampleId, "Chicken", "Telegram",  LocalDateTime.now(), 99900, 950.0, 915.0, 930.0, MealType.BREAKFAST);
 
         when(repository.findById(sampleId)).thenReturn(Optional.of(sampleEntry));
         when(repository.save(sampleEntry)).thenReturn(sampleEntry);
@@ -286,7 +287,7 @@ public class EntryServiceTest {
 
     @Test
     void updateEntry_ThrowsNFE_WhenEntryIsNotFound() {
-        EntryRequestDTO newEntryRequestDTO = new EntryRequestDTO( "Chicken",99900, 950.0, 915.0, 930.0);
+        EntryRequestDTO newEntryRequestDTO = new EntryRequestDTO( "Chicken",99900, 950.0, 915.0, 930.0, MealType.BREAKFAST);
         when(repository.findById(sampleId)).thenReturn(Optional.empty());
 
         assertThrows(NotFoundException.class, () -> service.updateEntry(sampleId, newEntryRequestDTO));

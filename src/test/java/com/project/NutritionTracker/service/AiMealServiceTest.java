@@ -3,6 +3,7 @@ package com.project.NutritionTracker.service;
 import com.project.NutritionTracker.dto.AiGoalResponseDTO;
 import com.project.NutritionTracker.dto.AiMealResponseDTO;
 import com.project.NutritionTracker.dto.AiMealTextRequestDTO;
+import com.project.NutritionTracker.enums.MealType;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -16,7 +17,9 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.platform.commons.function.Try.call;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
+
 import java.util.function.Consumer;
+
 import static org.mockito.ArgumentMatchers.any;
 
 @ExtendWith(MockitoExtension.class)
@@ -49,7 +52,8 @@ public class AiMealServiceTest {
                 54.0,
                 97.6,
                 71.3,
-                "100"
+                "100",
+                MealType.BREAKFAST
         );
         when(chatClient.prompt()
                 .system(anyString())
@@ -65,6 +69,7 @@ public class AiMealServiceTest {
         assertEquals(97.6, result.fat());
         assertEquals(71.3, result.protein());
         assertEquals("100", result.confidenceNote());
+        assertEquals(MealType.BREAKFAST, result.mealType());
     }
 
     @Test
@@ -97,7 +102,8 @@ public class AiMealServiceTest {
                 54.0,
                 97.6,
                 71.3,
-                "100"
+                "100",
+                MealType.BREAKFAST
         );
         when(chatClient.prompt()
                 .system(anyString())
@@ -113,6 +119,7 @@ public class AiMealServiceTest {
         assertEquals(97.6, result.fat());
         assertEquals(71.3, result.protein());
         assertEquals("100", result.confidenceNote());
+        assertEquals(MealType.BREAKFAST, result.mealType());
     }
 
     @Test
