@@ -1,6 +1,68 @@
 # 📓 NutritionTracker - Learning Journal
 
 This document serves as a development and learning journal to record key concepts, architectural decisions, and notes learned throughout the **NutritionTracker** project.
+
+---
+
+## 📅 2026-08-28 - (Sprint 4) - Full-Stack Favorites Architecture, Template vs. Instance Decoupling & Jackson `@JsonCreator` Resiliency
+
+### 💡 Key Concepts Learned & Architectural Decisions
+
+1. **Separation of Concerns: Master Recipe Templates (`FavoriteMeal`) vs. Daily Log Occurrences (`Entry`):**
+   - *The Core Concept:* A `FavoriteMeal` represents a reusable **master preset / blueprint** (e.g. *"Oatmeal with Protein = 400 kcal"*), stored in the `favorite_meal` table. An `Entry` represents a **concrete consumption event on a specific date and time**, stored in the `entry` table.
+   - *1-Tap Logging Lifecycle:* When the user taps a favorite meal pill, it does not alter the `favorite_meal` record. Instead, it extracts the preset's macros and sends `POST /api/entry/{userId}`, creating a brand-new row in `entry` with a fresh UUID and `source = 'FAVORITE'`.
+   - *Editing Logged Cards in Chat:* If the user consumes a larger portion today and edits the chat card (e.g. increasing to 500 kcal), the frontend sends `PUT /api/entry/{id}/update`. **This updates only that single `Entry` row in PostgreSQL.**
+   - *Provenance vs. Mutation:* The star ⭐ icon remains lit on the chat card as a visual indicator of provenance (that the entry was spawned from a favorite), but the underlying master preset in `favorite_meal` remains 100% untouched for future days.
+
+2. **Jackson Enum Deserialization Resiliency with `@JsonCreator`:**
+   - *The Problem:* Jackson's default enum deserialization is strictly case-sensitive. When `@JsonProperty("dinner")` is declared on an enum constant in lowercase, Jackson rejects `"DINNER"` in uppercase, throwing `InvalidFormatException` (`500 Server Error`).
+   - *Why LLMs Trigger This:* Multimodal AI responses (`gpt-5.6-luna`) frequently return standard UPPERCASE enum strings (e.g. `"DINNER"`, `"BREAKFAST"`).
+   - *The Architecture Solution:* Decorate the enum with a `@JsonCreator` factory method:
+     ```java
+     @JsonCreator
+     public static MealType fromString(String value) {
+         if (value == null || value.isBlank()) return null;
+         try {
+             return MealType.valueOf(value.trim().toUpperCase());
+         } catch (IllegalArgumentException e) {
+             return null; // Defensive fallback without crashing the server
+         }
+     }
+     ```
+   - *Benefits:* Grants total case-insensitivity (`"dinner"`, `"DINNER"`, `"Dinner"`) and defensive fallback without throwing 500s.
+
+3. **Frontend-to-Backend State Synchronization (`App.tsx` Single Source of Truth):**
+   - *State Lifting:* Placing `const [favorites, setFavorites] = useState<FavoriteMeal[]>([])` in `App.tsx` allows sibling components (`FavoriteMealsMockupBar`, `NutriaChatFeed`, `ManageFavoritesModal`, `LatestEntriesSidebar`) to share real-time synchronized data without state divergence.
+   - *Asynchronous CRUD Actions:* Writing handlers (`handleAddFavorite`, `handleUpdateFavorite`, `handleDeleteFavorite`) with `await` and immutable functional updates (`[newFav, ...prev]`, `prev.map(...)`, `prev.filter(...)`) guarantees that the local UI state strictly mirrors PostgreSQL.
+
+4. **Interactive Modal Choice on Modified Favorites (Nutria Chat & Meal Intake):**
+   - *The Concept:* When a user modifies an existing favorite meal (e.g. changing calories, grams of protein/carbs/fat or the title) and clicks Save:
+     - The application prompts with a clear two-option decision modal:
+       - **Option 1: "Save for Today Only"** $\rightarrow$ Saves or updates the daily intake entry for today only with the adjusted portions, preserving the original master preset recipe in PostgreSQL.
+       - **Option 2: "Update Favorite Preset Too"** $\rightarrow$ Dispatches `PUT /api/favorite-meal/update/{id}` to update the master preset recipe template in PostgreSQL AND saves today's intake.
+     - If the user didn't modify macros/name or the meal is not a saved favorite, it saves normally without interruption.
+   - *Uniform UX:* Applied consistently in both **Nutria Chat** ([`MealDraftCard.tsx`](file:///Users/andresbejarano/dev/NutritionTracker/frontend/src/components/chat/MealDraftCard.tsx)) and the **Meal Intake sidebar** ([`LatestEntriesSidebar.tsx`](file:///Users/andresbejarano/dev/NutritionTracker/frontend/src/components/dashboard/LatestEntriesSidebar.tsx)).
+
+5. **DTO Validation Contracts & Missing `@NotNull MealType` in `createEntry`:**
+   - *The Bug:* Adding meals from Nutria chat or the Meal Intake sidebar failed silently with `400 Bad Request` and did not update the Overview charts or daily totals.
+   - *The Root Cause:* Spring Boot's [`EntryRequestDTO.java`](file:///Users/andresbejarano/dev/NutritionTracker/src/main/java/com/project/NutritionTracker/dto/EntryRequestDTO.java) defines `@NotNull(message = "MealType is required") MealType mealType`. The frontend REST client [`services/api.ts`](file:///Users/andresbejarano/dev/NutritionTracker/frontend/src/services/api.ts) was sending JSON without `mealType`.
+   - *The Fix:* Updated [`types/nutrition.ts`](file:///Users/andresbejarano/dev/NutritionTracker/frontend/src/types/nutrition.ts) and [`services/api.ts`](file:///Users/andresbejarano/dev/NutritionTracker/frontend/src/services/api.ts) to always supply `mealType` (or auto-infer based on time of day).
+
+6. **Controller Testing & REST Contract for Favorite Presets (`FavoriteMealController.java`):**
+   - *Endpoint Harmonization:* Refined `PUT /api/favorite-meal/update/{fMealId}` and `GET /api/favorite-meal/get-all/{id}` with strict validation (`@Valid @RequestBody FavoriteMealRequestDTO`).
+   - *Exception Boundary Testing:* Tested with `@WebMvcTest` to verify that domain `NotFoundException` returns `404 Not Found` with meaningful messages, and valid updates return `200 OK`. Utilized Mockito argument matchers (`any(FavoriteMealRequestDTO.class), eq(sampleFavoriteMealId)`) and Jackson `ObjectMapper` serialization to avoid memory reference equality pitfalls.
+
+7. **Pre-Production Milestone: AI Token & Budget Control (Rate Limiting per User):**
+   - *The Realization:* Before releasing NutritionTracker to friends or deploying to production, exposing open and unrestricted AI endpoints (`gpt-5.6-luna`, `whisper-1`) poses a serious financial and operational risk. Friends testing vision scans, voice notes, or goal generations could quickly burn through OpenAI API balances.
+   - *The Rate Limiting Architecture:* Designed a robust daily quota system stored in PostgreSQL (`daily_ai_usage`) to enforce fair usage limits per calendar day per user:
+     - **Goals con IA:** Máximo **2 por día** (`/api/ai/calculate-goal`).
+     - **Favorites con IA:** Máximo **3 por día**.
+     - **Meal Entries con IA:** Máximo **5 por día** (abarcando texto, audio y fotos).
+   - *HTTP Status & UX Semantics:* When a user exhausts their daily quota, the server responds with **`HTTP 429 Too Many Requests`** and a clear explanation. Manual logging (`POST /api/entry/{userId}`) remains 100% unrestricted so core tracking functionality is never blocked.
+
+
+---
+
 ## 📅 2026-08-27 - (Sprint 4) - Context-Aware MealType Inference, Mockito Argument Matchers & Controller Test Invariants
 
 ### 💡 Key Concepts Learned & Architectural Decisions

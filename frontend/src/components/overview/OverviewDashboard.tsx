@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { TrendingUp, Flame, Target, Award, Calendar, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
 import type { NutritionGoal, MealEntry } from '../../types/nutrition';
 import { MACRO_COLORS, formatCompactNumber } from '../../utils/macroTokens';
+import { toLocalYmd, entryCreatedOnToLocalYmd } from '../../utils/dateLocal';
 
 interface OverviewDashboardProps {
   goal: NutritionGoal;
@@ -90,13 +91,13 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({ goal, entr
     const dateObj = new Date(mondayDate);
     dateObj.setDate(mondayDate.getDate() + index);
 
-    const dayNumber = dateObj.getDate();
+    const dayYmd = toLocalYmd(dateObj);
     const isFutureDay = dateObj > today;
 
     const dayEntries = entries.filter((entry) => {
-      if (!entry.createdOn) return false;
-      const d = new Date(entry.createdOn);
-      return d.getDate() === dayNumber && d.getMonth() === dateObj.getMonth() && d.getFullYear() === dateObj.getFullYear();
+      const entryDate = entryCreatedOnToLocalYmd(entry.createdOn);
+      if (!entryDate) return false;
+      return entryDate === dayYmd;
     });
 
     let value = 0;
@@ -154,12 +155,13 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({ goal, entr
   const monthlyData = Array.from({ length: daysInMonth }, (_, i) => {
     const dayNumber = i + 1;
     const dateObj = new Date(currentMonthDate.getFullYear(), currentMonthDate.getMonth(), dayNumber);
+    const dayYmd = toLocalYmd(dateObj);
     const isFutureDay = dateObj > today;
 
     const dayEntries = entries.filter((entry) => {
-      if (!entry.createdOn) return false;
-      const d = new Date(entry.createdOn);
-      return d.getDate() === dayNumber && d.getMonth() === currentMonthDate.getMonth() && d.getFullYear() === currentMonthDate.getFullYear();
+      const entryDate = entryCreatedOnToLocalYmd(entry.createdOn);
+      if (!entryDate) return false;
+      return entryDate === dayYmd;
     });
 
     let value = 0;

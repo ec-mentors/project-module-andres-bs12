@@ -1,5 +1,6 @@
 package com.project.NutritionTracker.enums;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public enum MealType {
@@ -10,5 +11,18 @@ public enum MealType {
     @JsonProperty("snack")
     SNACK,
     @JsonProperty("dinner")
-    DINNER
+    DINNER;
+
+    @JsonCreator
+    public static MealType fromString(String value) {
+        if (value == null || value.isBlank()) {
+            return null;
+        }
+        try {
+            return MealType.valueOf(value.trim().toUpperCase());
+        } catch (IllegalArgumentException e) {
+            return null;
+        }
+    }
 }
+

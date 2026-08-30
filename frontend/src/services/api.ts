@@ -1,8 +1,12 @@
 import type { MealEntry, CreateMealEntryPayload, NutritionGoal, SetGoalPayload, DailySummary } from '../types/nutrition';
+import type { FavoriteMeal, CreateFavoriteMealPayload } from '../types/favoriteMeal';
 import type { UserProfile } from '../types/user';
 import type { AiOnboardingState } from '../components/onboarding/types';
 import { calculateAiNutritionGoal } from '../components/onboarding/utils';
 import { toLocalYmd, entryCreatedOnToLocalYmd } from '../utils/dateLocal';
+import { ApiError, throwIfNotOk } from './apiErrors';
+
+export { ApiError, isRateLimitError, isApiError, getApiErrorUserMessage } from './apiErrors';
 
 // Base API URL (Vite dev server proxies /api to http://localhost:8080)
 const API_BASE = '/api';
@@ -57,9 +61,7 @@ export const api = {
       body: credentialToken,
     });
 
-    if (!response.ok) {
-      throw new Error(`Google Authentication failed with status ${response.status}`);
-    }
+    await throwIfNotOk(response, 'Google authentication');
 
     setAuthToken(credentialToken);
 
@@ -116,6 +118,10 @@ export const api = {
 
   /** POST /api/entry/{userId} - Create a new meal entry */
   async createEntry(payload: CreateMealEntryPayload, userId: string): Promise<MealEntry> {
+    const hour = new Date().getHours();
+    const defaultMealType = hour >= 5 && hour < 12 ? 'BREAKFAST' : hour >= 12 && hour < 17 ? 'LUNCH' : hour >= 17 && hour < 22 ? 'DINNER' : 'SNACK';
+    const mealType = payload.mealType || defaultMealType;
+
     const response = await fetch(`${API_BASE}/entry/${userId}`, {
       method: 'POST',
       headers: authHeaders('application/json'),
@@ -126,25 +132,22 @@ export const api = {
         carbs: Number(payload.carbs),
         fat: Number(payload.fat),
         protein: Number(payload.protein),
+        mealType: mealType,
       }),
     });
 
-    if (response.ok) {
-      return await response.json();
-    }
-    throw new Error(`Failed to create entry with status: ${response.status}`);
+    await throwIfNotOk(response, 'Create meal entry');
+    return await response.json();
   },
+
 
   /** DELETE /api/entry/{entryId} - Delete a meal entry */
   async deleteEntry(entryId: string): Promise<void> {
-    try {
-      await fetch(`${API_BASE}/entry/${entryId}`, { 
-        method: 'DELETE',
-        headers: authHeaders(),
-      });
-    } catch {
-      console.info('[REST API] Failed to delete entry from server.');
-    }
+    const response = await fetch(`${API_BASE}/entry/${entryId}`, {
+      method: 'DELETE',
+      headers: authHeaders(),
+    });
+    await throwIfNotOk(response, 'Delete meal entry');
   },
 
   // --- GOALS (Nutritional Target Goals) ---
@@ -183,10 +186,8 @@ export const api = {
       }),
     });
 
-    if (response.ok) {
-      return await response.json();
-    }
-    throw new Error(`Failed to save goal with status: ${response.status}`);
+    await throwIfNotOk(response, 'Save goal');
+    return await response.json();
   },
 
   // --- AI GOAL ROADMAP (GPT-5.6 Luna Service) ---
@@ -221,7 +222,12 @@ export const api = {
           startDate: TODAY_STR,
         };
       }
+
+      if (response.status === 429) {
+        await throwIfNotOk(response, 'AI goal calculation');
+      }
     } catch (error) {
+      if (error instanceof ApiError) throw error;
       console.warn('[REST API] Backend AI service offline, using client-side fallback calculation.', error);
     }
 
@@ -244,10 +250,7 @@ export const api = {
       body: JSON.stringify({ description }),
     });
 
-    if (!response.ok) {
-      throw new Error(`Failed to parse meal text with status ${response.status}`);
-    }
-
+    await throwIfNotOk(response, 'Parse meal text');
     return await response.json();
   },
 
@@ -268,10 +271,7 @@ export const api = {
       body: formData,
     });
 
-    if (!response.ok) {
-      throw new Error(`Failed to parse meal audio with status ${response.status}`);
-    }
-
+    await throwIfNotOk(response, 'Parse meal audio');
     return await response.json();
   },
 
@@ -292,10 +292,7 @@ export const api = {
       body: formData,
     });
 
-    if (!response.ok) {
-      throw new Error(`Failed to analyze meal photo with status ${response.status}`);
-    }
-
+    await throwIfNotOk(response, 'Parse meal image');
     return await response.json();
   },
 };
@@ -349,15 +346,20 @@ export const createMealEntry = async (userId: string, payload: CreateMealEntryPa
 };
 
 export const updateMealEntry = async (id: string, payload: CreateMealEntryPayload): Promise<MealEntry> => {
+  const hour = new Date().getHours();
+  const defaultMealType = hour >= 5 && hour < 12 ? 'BREAKFAST' : hour >= 12 && hour < 17 ? 'LUNCH' : hour >= 17 && hour < 22 ? 'DINNER' : 'SNACK';
+  const mealType = payload.mealType || defaultMealType;
+
   const response = await fetch(`/api/entry/${id}/update`, {
     method: 'PUT',
     headers: authHeaders('application/json'),
-    body: JSON.stringify(payload),
+    body: JSON.stringify({
+      ...payload,
+      mealType,
+    }),
   });
-  if (response.ok) {
-    return await response.json();
-  }
-  throw new Error(`Failed to update meal entry with status: ${response.status}`);
+  await throwIfNotOk(response, 'Update meal entry');
+  return await response.json();
 };
 
 export const deleteMealEntry = async (entryId: string): Promise<void> => {
@@ -370,4 +372,70 @@ export const fetchGoal = async (userId?: string): Promise<NutritionGoal | null> 
 
 export const updateGoal = async (userId: string, newGoal: NutritionGoal): Promise<NutritionGoal> => {
   return await api.createGoal(newGoal, userId);
+};
+
+
+// --- FAVORITE MEALS ---
+
+
+// Fetch all favorite meals for a user
+export const fetchFavorites = async (userId?: string): Promise<FavoriteMeal[]> => {
+  if (!userId) return [];
+
+  // HTTP
+  const response = await fetch(`/api/favorite-meal/get-all/${userId}`, {
+    method: `GET`,
+    headers: authHeaders(), // Authorization: Bearer <token>
+  });
+
+  // Check
+  await throwIfNotOk(response, 'Fetch favorite meals');
+
+  // Parse
+  return await response.json();
+}
+
+
+// Create a new favorite meal
+export const createFavoriteMeal = async(userId: string, payload: CreateFavoriteMealPayload
+): Promise<FavoriteMeal> => {
+
+  if (!userId) {
+    throw new Error(`User ID is required`);
+  }
+
+  const response = await fetch(`/api/favorite-meal/create/${userId}`, {
+    method: `POST`,
+    headers: authHeaders(`application/json`),
+    body: JSON.stringify(payload),
+  });
+
+  await throwIfNotOk(response, 'Create favorite meal');
+  return await response.json();
+}
+
+// Update a favorite meal
+export const updateFavoriteMeal = async (
+  fMealId: string, 
+  payload: CreateFavoriteMealPayload
+): Promise<FavoriteMeal> => {
+  const response = await fetch(`/api/favorite-meal/update/${fMealId}`, {
+    method: `PUT`,
+    headers: authHeaders(`application/json`),
+    body: JSON.stringify(payload),
+  });
+
+  await throwIfNotOk(response, 'Update favorite meal');
+  return await response.json();
+};
+
+// Delete a favorite
+export const removeFavoriteMeal = async (fMealId: string): Promise<void> => {
+  const response = await fetch(`/api/favorite-meal/remove/${fMealId}`, {
+    method: `DELETE`,
+    headers: authHeaders(),
+  });
+
+  if (response.status === 204) return;
+  await throwIfNotOk(response, 'Delete favorite meal');
 };

@@ -2,8 +2,10 @@ import React, { useState, useRef, useEffect } from 'react';
 import { StickyMacroBar } from './StickyMacroBar';
 import { MealDraftCard, type MealDraftData } from './MealDraftCard';
 import { SmartOmnibar } from './SmartOmnibar';
+import { FavoriteMealsMockupBar } from './FavoriteMealsMockupBar';
+import type { FavoriteMeal, CreateFavoriteMealPayload, MealType } from '../../types/favoriteMeal';
 import type { DailySummary, NutritionGoal, CreateMealEntryPayload } from '../../types/nutrition';
-import { parseMealText, parseMealAudio, parseMealImage } from '../../services/api';
+import { parseMealText, parseMealAudio, parseMealImage, getApiErrorUserMessage } from '../../services/api';
 import { Mic, Loader2 } from 'lucide-react';
 
 export interface ChatMessage {
@@ -24,8 +26,21 @@ interface NutriaChatFeedProps {
   goal: NutritionGoal;
   onAddMeal: (payload: CreateMealEntryPayload) => Promise<void>;
   onOpenSetGoals?: () => void;
+  favorites?: FavoriteMeal[];
+  onAddFavorite?: (payload: CreateFavoriteMealPayload) => void;
+  onUpdateFavorite?: (id: string, payload: CreateFavoriteMealPayload) => void;
+  onDeleteFavorite?: (id: string) => void;
   theme?: 'dark' | 'light';
 }
+
+const sanitizeConfidenceNote = (note: string | undefined, defaultNote: string): string => {
+  if (!note) return defaultNote;
+  const trimmed = note.trim();
+  if (/^\d+%?$/.test(trimmed)) {
+    return defaultNote;
+  }
+  return trimmed;
+};
 
 export const NutriaChatFeed: React.FC<NutriaChatFeedProps> = ({
   messages,
@@ -34,6 +49,10 @@ export const NutriaChatFeed: React.FC<NutriaChatFeedProps> = ({
   goal,
   onAddMeal,
   onOpenSetGoals,
+  favorites = [],
+  onAddFavorite = () => {},
+  onUpdateFavorite = () => {},
+  onDeleteFavorite = () => {},
   theme = 'dark',
 }) => {
   const isLight = theme === 'light';
@@ -123,7 +142,7 @@ export const NutriaChatFeed: React.FC<NutriaChatFeedProps> = ({
             protein: res.protein || 0,
             carbs: res.carbs || 0,
             fat: res.fat || 0,
-            confidenceNote: confidenceNote || 'Estimated with AI',
+            confidenceNote: sanitizeConfidenceNote(confidenceNote, 'Estimated with AI'),
             isSaved: false,
             source: 'TEXT',
           },
@@ -137,7 +156,10 @@ export const NutriaChatFeed: React.FC<NutriaChatFeedProps> = ({
         id: 'nutria-' + Date.now(),
         sender: 'nutria',
         type: 'coach_note',
-        text: 'Sorry, I ran into an issue connecting to the nutrition service. Please try again.',
+        text: getApiErrorUserMessage(
+          err,
+          'Sorry, I ran into an issue connecting to the nutrition service. Please try again.'
+        ),
         timestamp: getFormattedTime(),
       };
       setMessages((prev) => [...prev, errorMsg]);
@@ -189,7 +211,7 @@ export const NutriaChatFeed: React.FC<NutriaChatFeedProps> = ({
             protein: res.protein || 0,
             carbs: res.carbs || 0,
             fat: res.fat || 0,
-            confidenceNote: confidenceNote || 'Estimated from voice memo',
+            confidenceNote: sanitizeConfidenceNote(confidenceNote, 'Estimated from voice memo'),
             isSaved: false,
             source: 'AUDIO',
           },
@@ -203,7 +225,10 @@ export const NutriaChatFeed: React.FC<NutriaChatFeedProps> = ({
         id: 'nutria-' + Date.now(),
         sender: 'nutria',
         type: 'coach_note',
-        text: "I couldn't clearly transcribe that audio note. Please try speaking closer to your mic or write the meal text.",
+        text: getApiErrorUserMessage(
+          err,
+          "I couldn't clearly transcribe that audio note. Please try speaking closer to your mic or write the meal text."
+        ),
         timestamp: getFormattedTime(),
       };
       setMessages((prev) => [...prev, errorMsg]);
@@ -254,7 +279,7 @@ export const NutriaChatFeed: React.FC<NutriaChatFeedProps> = ({
             protein: res.protein || 0,
             carbs: res.carbs || 0,
             fat: res.fat || 0,
-            confidenceNote: confidenceNote || 'Estimated from photo scan',
+            confidenceNote: sanitizeConfidenceNote(confidenceNote, 'Estimated from photo scan'),
             isSaved: false,
             source: 'IMAGE',
           },
@@ -268,7 +293,10 @@ export const NutriaChatFeed: React.FC<NutriaChatFeedProps> = ({
         id: 'nutria-' + Date.now(),
         sender: 'nutria',
         type: 'coach_note',
-        text: "I couldn't analyze the food photo. Please check your network connection or describe your meal in text.",
+        text: getApiErrorUserMessage(
+          err,
+          "I couldn't analyze the food photo. Please check your network connection or describe your meal in text."
+        ),
         timestamp: getFormattedTime(),
       };
       setMessages((prev) => [...prev, errorMsg]);
@@ -279,35 +307,78 @@ export const NutriaChatFeed: React.FC<NutriaChatFeedProps> = ({
 
   // 4. Handle Save Draft to PostgreSQL
   const handleSaveDraft = async (draftId: string, data: Omit<MealDraftData, 'id' | 'isSaved'>) => {
-    await onAddMeal({
-      mealName: data.mealName,
-      kcal: data.kcal,
-      protein: data.protein,
-      carbs: data.carbs,
-      fat: data.fat,
-      source: data.source || 'AI_PARSER',
-    });
+    try {
+      await onAddMeal({
+        mealName: data.mealName,
+        kcal: data.kcal,
+        protein: data.protein,
+        carbs: data.carbs,
+        fat: data.fat,
+        source: data.source || 'AI_PARSER',
+      });
 
-    setMessages((prev) =>
-      prev.map((msg) => {
-        if (msg.draftData && msg.draftData.id === draftId) {
-          return {
-            ...msg,
-            draftData: {
-              ...msg.draftData,
-              ...data,
-              isSaved: true,
-            },
-          };
-        }
-        return msg;
-      })
-    );
+      setMessages((prev) =>
+        prev.map((msg) => {
+          if (msg.draftData && msg.draftData.id === draftId) {
+            return {
+              ...msg,
+              draftData: {
+                ...msg.draftData,
+                ...data,
+                isSaved: true,
+              },
+            };
+          }
+          return msg;
+        })
+      );
+    } catch (err) {
+      console.error('Failed to save meal draft:', err);
+      const errorMsg: ChatMessage = {
+        id: 'nutria-' + Date.now(),
+        sender: 'nutria',
+        type: 'coach_note',
+        text: getApiErrorUserMessage(err, 'Could not save this meal. Please try again.'),
+        timestamp: getFormattedTime(),
+      };
+      setMessages((prev) => [...prev, errorMsg]);
+    }
   };
 
   // 5. Handle Discard Draft
   const handleDiscardDraft = (draftId: string) => {
     setMessages((prev) => prev.filter((msg) => !(msg.draftData && msg.draftData.id === draftId)));
+  };
+
+  // 6. Handle 1-Tap Favorite Meal Click -> Spawns Draft Card directly in Chat
+  const handleSelectFavorite = (meal: FavoriteMeal) => {
+    const userMsg: ChatMessage = {
+      id: 'user-' + Date.now(),
+      sender: 'user',
+      type: 'text',
+      text: `Quick log: ${meal.mealName}`,
+      timestamp: getFormattedTime(),
+    };
+
+    const draftMsg: ChatMessage = {
+      id: 'nutria-' + (Date.now() + 1),
+      sender: 'nutria',
+      type: 'draft_card',
+      draftData: {
+        id: 'draft-' + Date.now(),
+        mealName: meal.mealName.replace(/^[\p{Emoji}\s]+/u, '').trim() || meal.mealName,
+        kcal: meal.kcal,
+        protein: meal.protein,
+        carbs: meal.carbs,
+        fat: meal.fat,
+        confidenceNote: `Logged from ${meal.mealType.toLowerCase()} favorites ⭐`,
+        isSaved: false,
+        source: 'FAVORITE',
+      },
+      timestamp: getFormattedTime(),
+    };
+
+    setMessages((prev) => [...prev, userMsg, draftMsg]);
   };
 
   return (
@@ -337,10 +408,10 @@ export const NutriaChatFeed: React.FC<NutriaChatFeedProps> = ({
                 
                 {/* User Text Bubble */}
                 {msg.type === 'text' && (
-                  <div className={`max-w-[85%] sm:max-w-md px-4 sm:px-5 py-3 rounded-2xl sm:rounded-3xl text-sm sm:text-base font-medium shadow-sm ${
+                  <div className={`max-w-[85%] sm:max-w-md px-4 sm:px-5 py-3 rounded-2xl sm:rounded-3xl text-sm sm:text-base font-medium shadow-xs border ${
                     isLight
-                      ? 'bg-black text-white rounded-tr-xs'
-                      : 'bg-white text-black font-semibold rounded-tr-xs shadow-md shadow-black/40'
+                      ? 'bg-slate-100/90 border-slate-200/90 text-slate-900 rounded-tr-xs'
+                      : 'bg-[#27272a] border-white/[0.08] text-zinc-100 rounded-tr-xs shadow-xs'
                   }`}>
                     <p className="leading-relaxed whitespace-pre-wrap">{msg.text}</p>
                   </div>
@@ -348,13 +419,13 @@ export const NutriaChatFeed: React.FC<NutriaChatFeedProps> = ({
 
                 {/* User Voice Bubble */}
                 {msg.type === 'voice' && (
-                  <div className={`max-w-md px-4 sm:px-5 py-2.5 rounded-2xl sm:rounded-3xl border flex items-center space-x-3 shadow-sm ${
+                  <div className={`max-w-md px-4 sm:px-5 py-2.5 rounded-2xl sm:rounded-3xl border flex items-center space-x-3 shadow-xs ${
                     isLight
-                      ? 'bg-slate-100 border-slate-300 text-slate-900 rounded-tr-xs'
-                      : 'bg-[#18181b] border-white/[0.08] text-white rounded-tr-xs'
+                      ? 'bg-slate-100/90 border-slate-200/90 text-slate-900 rounded-tr-xs'
+                      : 'bg-[#27272a] border-white/[0.08] text-zinc-100 rounded-tr-xs'
                   }`}>
                     <div className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 ${
-                      isLight ? 'bg-black text-white' : 'bg-white text-black'
+                      isLight ? 'bg-slate-200 text-slate-800' : 'bg-white/10 text-zinc-200'
                     }`}>
                       <Mic className="w-3.5 h-3.5" />
                     </div>
@@ -362,12 +433,12 @@ export const NutriaChatFeed: React.FC<NutriaChatFeedProps> = ({
                       {[8, 16, 12, 20, 14, 24, 10, 18, 6].map((h, idx) => (
                         <div
                           key={idx}
-                          className={`w-1 rounded-full ${isLight ? 'bg-black' : 'bg-white'}`}
+                          className={`w-1 rounded-full ${isLight ? 'bg-slate-700' : 'bg-zinc-300'}`}
                           style={{ height: `${h}px` }}
                         />
                       ))}
                     </div>
-                    <span className="text-xs font-bold text-zinc-400 font-mono pl-1">
+                    <span className={`text-xs font-bold font-mono pl-1 ${isLight ? 'text-slate-500' : 'text-zinc-400'}`}>
                       {msg.audioDuration || '0:05'}
                     </span>
                   </div>
@@ -416,16 +487,49 @@ export const NutriaChatFeed: React.FC<NutriaChatFeedProps> = ({
               )}
 
               {/* Assistant Draft Meal Card */}
-              {msg.type === 'draft_card' && msg.draftData && (
-                <div className="w-full mt-1">
-                  <MealDraftCard
-                    draft={msg.draftData}
-                    onSave={(data) => handleSaveDraft(msg.draftData!.id, data)}
-                    onDiscard={handleDiscardDraft}
-                    theme={theme}
-                  />
-                </div>
-              )}
+              {msg.type === 'draft_card' && msg.draftData && (() => {
+                const matchedFav = favorites.find(
+                  (f) => f.mealName.trim().toLowerCase() === msg.draftData!.mealName.trim().toLowerCase()
+                );
+                const isFav = !!matchedFav;
+
+                return (
+                  <div className="w-full mt-1">
+                    <MealDraftCard
+                      draft={msg.draftData}
+                      onSave={(data) => handleSaveDraft(msg.draftData!.id, data)}
+                      onDiscard={handleDiscardDraft}
+                      isFavorite={isFav}
+                      favoriteItem={matchedFav}
+                      onToggleFavorite={() => {
+                        if (matchedFav) {
+                          onDeleteFavorite?.(matchedFav.id);
+                          setMessages((prev) =>
+                            prev.map((m) =>
+                              m.id === msg.id && m.draftData
+                                ? { ...m, draftData: { ...m.draftData, source: 'MANUAL' } }
+                                : m
+                            )
+                          );
+                        } else {
+                          const hour = new Date().getHours();
+                          const inferredType: MealType = hour >= 5 && hour < 12 ? 'BREAKFAST' : hour >= 12 && hour < 17 ? 'LUNCH' : hour >= 17 && hour < 22 ? 'DINNER' : 'SNACK';
+                          onAddFavorite?.({
+                            mealName: msg.draftData!.mealName,
+                            kcal: Math.round(msg.draftData!.kcal),
+                            protein: msg.draftData!.protein,
+                            carbs: msg.draftData!.carbs,
+                            fat: msg.draftData!.fat,
+                            mealType: inferredType,
+                          });
+                        }
+                      }}
+                      onUpdateFavorite={onUpdateFavorite}
+                      theme={theme}
+                    />
+                  </div>
+                );
+              })()}
 
               <span className="text-[10px] font-semibold text-zinc-500 mt-1 px-1">
                 {msg.timestamp}
@@ -447,8 +551,17 @@ export const NutriaChatFeed: React.FC<NutriaChatFeedProps> = ({
         <div className="h-1" />
       </div>
 
-      {/* Fixed Bottom Smart Omnibar with Mobile Safe Area */}
+      {/* Fixed Bottom Smart Omnibar with Favorite Meals Mockup Bar */}
       <div className="shrink-0 pt-1 pb-[calc(0.5rem+env(safe-area-inset-bottom,0px))]">
+        <FavoriteMealsMockupBar
+          onSelectFavorite={handleSelectFavorite}
+          favorites={favorites}
+          onAddFavorite={onAddFavorite}
+          onUpdateFavorite={onUpdateFavorite}
+          onDeleteFavorite={onDeleteFavorite}
+          theme={theme}
+        />
+
         <SmartOmnibar
           onSendText={handleSendText}
           onSendVoice={handleSendVoice}

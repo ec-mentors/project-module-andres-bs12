@@ -40,3 +40,42 @@ Integrity mode: development
 
 ### Build Verification
 - [ ] `npm run build` inside `frontend/` succeeds with 0 TypeScript compilation errors.
+
+## 2026-08-28T12:22:59Z
+
+This is a single self-contained fix; keep it small and focused.
+
+Overhaul the mobile UX and typography hierarchy of the Favorites modal (`ManageFavoritesModal.tsx`) in NutritionTracker, implementing an Apple-style bottom sheet with top drag-indicator, consistent readable typography between search/browse and creation sheets, explicit back navigation from create to search, and polished UX margins.
+
+Working directory: /Users/andresbejarano/dev/NutritionTracker
+
+## Requirements
+
+### R1. Apple-Style iOS Bottom Sheet & Safe Area UX
+- On mobile viewports, the favorites modal and create/edit sheet must behave like an iOS bottom sheet modal (`items-end sm:items-center`, `rounded-t-[32px] sm:rounded-[32px]`, `max-h-[86vh]` with top safe spacing from device status bar).
+- Include an Apple-style top drag indicator pill (`w-10 h-1 rounded-full bg-zinc-300 dark:bg-zinc-700 mx-auto mt-2 mb-1 sm:hidden`).
+- Maintain comfortable interior UX margins and padding so content never touches screen borders or is clipped by notches/safe areas.
+
+### R2. Typography Harmonization Between Search/Browse and Create Sheets
+- Ensure font sizes in the search/browse view match the legibility of the create sheet:
+  - Search bar input & category filter pills: `text-sm sm:text-base font-semibold`.
+  - Meal item cards: title `text-sm sm:text-base font-extrabold`, macro chips `text-xs sm:text-sm font-bold`.
+  - Action buttons (`+ Log`, `Edit`, `Delete`): comfortable touch targets with crisp readable labels.
+
+### R3. Back Navigation from Create/Edit to Search
+- Inside the Create/Edit Favorite overlay, provide a clear "Back" navigation control (e.g. `← Back to Favorites`) in the header and cancel button to return seamlessly to the search/browse list without losing filter context.
+- Keep the top-right `✕` button for dismissing the modal entirely.
+
+## Acceptance Criteria
+
+### iOS Sheet Behavior & Layout
+- [ ] On mobile screens (<640px), modal sits anchored to the bottom with rounded top corners, top drag pill, and does not push all the way to 100% height (leaving Apple HIG top inset).
+- [ ] On desktop screens, modal remains a centered dialog with smooth entrance animation.
+
+### Typography & Readability
+- [ ] No sub-12px unreadable microtext in search inputs, category filter pills, or meal list cards.
+- [ ] Visual weight and text sizing between Browse mode and Create mode feel coherent and unified.
+
+### Navigation Flow
+- [ ] Tapping "Back" or "Cancel" in the Create/Edit sheet returns the user to the Favorites search/browse list.
+- [ ] Tapping "✕" closes the modal completely.

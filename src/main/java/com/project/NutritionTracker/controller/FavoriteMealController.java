@@ -48,19 +48,18 @@ public class FavoriteMealController {
         return ResponseEntity.noContent().build();
     }
 
-    @GetMapping("get-all/{id}")
+    @GetMapping("/get-all/{id}")
     public ResponseEntity<List<FavoriteMealResponseDTO>> getAllFavorites(
             @PathVariable UUID id
     ) {
         return ResponseEntity.ok(service.getAllFavorites(id));
     }
 
-    @GetMapping("get-all-by-user/{id}")
-    public ResponseEntity<List<FavoriteMealResponseDTO>> findAllByUser(
-            @PathVariable UUID id
+    @PutMapping("/update/{fMealId}")
+    public ResponseEntity<FavoriteMealResponseDTO> updateFavorite(
+            @PathVariable UUID fMealId,
+            @Valid @RequestBody FavoriteMealRequestDTO dto
     ) {
-        return ResponseEntity.ok(service.getAllFavorites(id));
+        return ResponseEntity.ok(service.updateFavorite(dto, fMealId));
     }
-
-
 }

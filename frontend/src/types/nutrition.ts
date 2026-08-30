@@ -3,6 +3,7 @@ export interface MealEntry {
   id?: string;
   mealName: string;
   source?: string;
+  mealType?: string;
   createdOn?: string;
   kcal: number;
   protein: number;
@@ -14,6 +15,7 @@ export interface MealEntry {
 export interface CreateMealEntryPayload {
   mealName: string;
   source?: string;
+  mealType?: string;
   kcal: number;
   protein: number;
   carbs: number;

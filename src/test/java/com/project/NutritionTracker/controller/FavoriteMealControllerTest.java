@@ -213,20 +213,37 @@ public class FavoriteMealControllerTest {
         verify(favoriteMealService).getAllFavorites(sampleUserId);
     }
 
-    // ---------- findAllByUser ----------
+    // ---------- updateFavorite ----------
 
     @Test
-    @DisplayName("GET /api/favorite-meal/get-all-by-user/{id} - Success (200)")
-    void findAllByUser_ShouldReturn200_AndFavoriteMealList() throws Exception {
-        List<FavoriteMealResponseDTO> expectedList = List.of(sampleResponseDTO);
-        when(favoriteMealService.getAllFavorites(sampleUserId)).thenReturn(expectedList);
+    @DisplayName("PUT /api/favorite-meal/update/{fMealId} - Success (200)")
+    void updateFavorite_ShouldReturn200_AndFavoriteMealResponseDTO() throws Exception {
+        when(favoriteMealService.updateFavorite(any(FavoriteMealRequestDTO.class), eq(sampleFavoriteMealId)))
+                .thenReturn(sampleResponseDTO);
 
-        mockMvc.perform(get("/api/favorite-meal/get-all-by-user/{id}", sampleUserId))
+        mockMvc.perform(put("/api/favorite-meal/update/{fMealId}", sampleFavoriteMealId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(sampleRequestDTO)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(1))
-                .andExpect(jsonPath("$[0].mealName").value("Chicken"))
-                .andExpect(jsonPath("$[0].kcal").value(100));
+                .andExpect(jsonPath("$.id").value(sampleFavoriteMealId.toString()))
+                .andExpect(jsonPath("$.mealName").value("Chicken"))
+                .andExpect(jsonPath("$.kcal").value(100));
 
-        verify(favoriteMealService).getAllFavorites(sampleUserId);
+        verify(favoriteMealService).updateFavorite(any(FavoriteMealRequestDTO.class), eq(sampleFavoriteMealId));
+    }
+
+    @Test
+    @DisplayName("PUT /api/favorite-meal/update/{fMealId} - Favorite Meal Not Found (404)")
+    void updateFavorite_ShouldReturn404_WhenFavoriteMealNotFound() throws Exception {
+        doThrow(new NotFoundException("Entry not found"))
+                .when(favoriteMealService).updateFavorite(any(FavoriteMealRequestDTO.class), eq(sampleFavoriteMealId));
+
+        mockMvc.perform(put("/api/favorite-meal/update/{fMealId}", sampleFavoriteMealId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(sampleRequestDTO)))
+                .andExpect(status().isNotFound())
+                .andExpect(content().string("Entry not found"));
+
+        verify(favoriteMealService).updateFavorite(any(FavoriteMealRequestDTO.class), eq(sampleFavoriteMealId));
     }
 }

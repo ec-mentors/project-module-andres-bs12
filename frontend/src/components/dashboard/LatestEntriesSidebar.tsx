@@ -1,14 +1,21 @@
 import React, { useState } from 'react';
-import { Plus, Edit2, Trash2, Utensils, X, Check, AlertTriangle } from 'lucide-react';
+import { Plus, Edit2, Trash2, X, Check, AlertTriangle, Star, CheckCircle2, ChevronRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { MealEntry, CreateMealEntryPayload } from '../../types/nutrition';
+import type { FavoriteMeal, CreateFavoriteMealPayload } from '../../types/favoriteMeal';
 import { MACRO_COLORS, formatCompactNumber } from '../../utils/macroTokens';
+import { ManageFavoritesModal } from '../chat/ManageFavoritesModal';
+import { getCurrentTimeMealType, favoritesTypography, TOUCH_TARGET_MIN } from '../chat/favorites';
 
 interface LatestEntriesSidebarProps {
   entries: MealEntry[];
+  favorites?: FavoriteMeal[];
   onAddMeal: (payload: CreateMealEntryPayload) => void;
   onUpdateMeal: (id: string, payload: CreateMealEntryPayload) => void;
   onDeleteMeal: (entryId: string) => void;
+  onAddFavorite?: (payload: CreateFavoriteMealPayload) => void;
+  onUpdateFavorite?: (id: string, payload: CreateFavoriteMealPayload) => void;
+  onDeleteFavorite?: (id: string) => void;
   selectedDateFormatted: string;
   theme?: 'dark' | 'light';
   isLoading?: boolean;
@@ -16,17 +23,28 @@ interface LatestEntriesSidebarProps {
 
 export const LatestEntriesSidebar: React.FC<LatestEntriesSidebarProps> = ({
   entries,
+  favorites = [],
   onAddMeal,
   onUpdateMeal,
   onDeleteMeal,
+  onAddFavorite = () => {},
+  onUpdateFavorite = () => {},
+  onDeleteFavorite = () => {},
   selectedDateFormatted,
   theme = 'dark',
   isLoading = false,
 }) => {
   const isLight = theme === 'light';
   const [isAddingInline, setIsAddingInline] = useState(false);
+  const [isFavoritesModalOpen, setIsFavoritesModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+  const [unfavoriteConfirm, setUnfavoriteConfirm] = useState<FavoriteMeal | null>(null);
+  const [favoriteUpdatePrompt, setFavoriteUpdatePrompt] = useState<{
+    id: string;
+    matchedFavorite: FavoriteMeal;
+    payload: CreateMealEntryPayload;
+  } | null>(null);
 
   // Form State for Adding / Editing
   const [mealName, setMealName] = useState('');
@@ -44,11 +62,13 @@ export const LatestEntriesSidebar: React.FC<LatestEntriesSidebarProps> = ({
     setIsAddingInline(false);
     setEditingId(null);
     setDeleteConfirmId(null);
+    setFavoriteUpdatePrompt(null);
   };
 
   const handleStartAdd = () => {
     setEditingId(null);
     setDeleteConfirmId(null);
+    setFavoriteUpdatePrompt(null);
     setMealName('');
     setKcal('');
     setProtein('');
@@ -60,6 +80,7 @@ export const LatestEntriesSidebar: React.FC<LatestEntriesSidebarProps> = ({
   const handleStartEdit = (entry: MealEntry) => {
     setIsAddingInline(false);
     setDeleteConfirmId(null);
+    setFavoriteUpdatePrompt(null);
     setEditingId(entry.id || null);
     setMealName(entry.mealName);
     setKcal(String(entry.kcal || ''));
@@ -71,6 +92,7 @@ export const LatestEntriesSidebar: React.FC<LatestEntriesSidebarProps> = ({
   const handlePromptDelete = (id: string) => {
     setIsAddingInline(false);
     setEditingId(null);
+    setFavoriteUpdatePrompt(null);
     setDeleteConfirmId(id);
   };
 
@@ -94,15 +116,58 @@ export const LatestEntriesSidebar: React.FC<LatestEntriesSidebarProps> = ({
     e.preventDefault();
     if (!mealName.trim()) return;
 
-    onUpdateMeal(id, {
+    const payload: CreateMealEntryPayload = {
       mealName: mealName.trim(),
       kcal: Number(kcal) || 0,
       protein: Number(protein) || 0,
       carbs: Number(carbs) || 0,
       fat: Number(fat) || 0,
       source: 'MANUAL',
-    });
+    };
 
+    const editingEntry = entries.find((entry) => entry.id === id);
+    const matchedFavorite = favorites.find(
+      (f) => f.mealName.trim().toLowerCase() === editingEntry?.mealName.trim().toLowerCase()
+    );
+
+    // Check if the user modified any macro or name
+    const isModified =
+      editingEntry &&
+      (mealName.trim() !== editingEntry.mealName.trim() ||
+        Number(kcal) !== Number(editingEntry.kcal) ||
+        Number(protein) !== Number(editingEntry.protein) ||
+        Number(carbs) !== Number(editingEntry.carbs) ||
+        Number(fat) !== Number(editingEntry.fat));
+
+    if (matchedFavorite && isModified) {
+      setFavoriteUpdatePrompt({
+        id,
+        matchedFavorite,
+        payload,
+      });
+      return;
+    }
+
+    onUpdateMeal(id, payload);
+    resetForm();
+  };
+
+  const executeSaveEditWithFavorite = (updateFavoriteToo: boolean) => {
+    if (!favoriteUpdatePrompt) return;
+    const { id, matchedFavorite, payload } = favoriteUpdatePrompt;
+
+    if (updateFavoriteToo && onUpdateFavorite) {
+      onUpdateFavorite(matchedFavorite.id, {
+        mealName: payload.mealName,
+        kcal: payload.kcal,
+        protein: payload.protein,
+        carbs: payload.carbs,
+        fat: payload.fat,
+        mealType: matchedFavorite.mealType,
+      });
+    }
+
+    onUpdateMeal(id, payload);
     resetForm();
   };
 
@@ -133,20 +198,36 @@ export const LatestEntriesSidebar: React.FC<LatestEntriesSidebarProps> = ({
           </p>
         </div>
 
-        {/* Add Meal Button */}
+        {/* Add Meal & Favorites Buttons */}
         {!isAddingInline && !editingId && (
-          <button
-            type="button"
-            onClick={handleStartAdd}
-            className={`flex items-center space-x-1 px-3.5 py-2 rounded-2xl text-xs font-bold transition-all active:scale-95 cursor-pointer shadow-xs ${
-              isLight
-                ? 'bg-black hover:bg-zinc-800 text-white shadow-xs'
-                : 'bg-white hover:bg-zinc-200 text-black font-extrabold'
-            }`}
-          >
-            <Plus className="w-4 h-4 stroke-[2.5]" />
-            <span>Add Meal</span>
-          </button>
+          <div className="flex items-center space-x-2">
+            <button
+              type="button"
+              onClick={() => setIsFavoritesModalOpen(true)}
+              className={`p-2.5 rounded-2xl border transition-all active:scale-95 cursor-pointer flex items-center justify-center min-h-[44px] min-w-[44px] ${
+                isLight
+                  ? 'bg-slate-100 hover:bg-slate-200 border-slate-200 text-amber-600 shadow-2xs'
+                  : 'bg-white/5 hover:bg-white/10 border-white/[0.08] text-amber-400 shadow-2xs'
+              }`}
+              title="Manage & Import Favorites"
+              aria-label="Manage & Import Favorites"
+            >
+              <Star className="w-4 h-4 fill-amber-500/30 text-amber-500" />
+            </button>
+
+            <button
+              type="button"
+              onClick={handleStartAdd}
+              className={`flex items-center gap-1.5 px-3.5 py-2.5 sm:py-2 rounded-2xl ${favoritesTypography.buttonText} transition-all active:scale-95 cursor-pointer shadow-xs ${TOUCH_TARGET_MIN} ${
+                isLight
+                  ? 'bg-black hover:bg-zinc-800 text-white shadow-xs'
+                  : 'bg-white hover:bg-zinc-200 text-black font-extrabold'
+              }`}
+            >
+              <Plus className="w-4 h-4 stroke-[2.5]" />
+              <span>Add Meal</span>
+            </button>
+          </div>
         )}
       </div>
 
@@ -166,22 +247,49 @@ export const LatestEntriesSidebar: React.FC<LatestEntriesSidebarProps> = ({
                 : 'bg-[#18181b] border-white/[0.12] text-white shadow-black/60'
             }`}
           >
-            <div className="flex items-center justify-between">
-              <span className={`text-xs font-bold uppercase tracking-wider flex items-center space-x-1.5 ${
-                isLight ? 'text-slate-900' : 'text-zinc-200'
-              }`}>
-                <Utensils className="w-3.5 h-3.5" />
-                <span>Log New Meal</span>
+            {/* Header */}
+            <div className="flex items-center justify-between gap-2">
+              <span className={`text-xs font-extrabold uppercase tracking-wider ${isLight ? 'text-slate-600' : 'text-zinc-400'}`}>
+                New Meal Entry
               </span>
+
               <button
                 type="button"
                 onClick={resetForm}
-                className="text-zinc-400 hover:text-white p-1"
+                className="text-zinc-400 hover:text-white p-1 cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
+            {/* Import from Favorites — secondary action, single-line */}
+            <button
+              type="button"
+              onClick={() => setIsFavoritesModalOpen(true)}
+              className={`w-full py-2.5 px-4 rounded-xl ${favoritesTypography.buttonText} transition-all flex items-center justify-center gap-2 border cursor-pointer active:scale-[0.99] group ${TOUCH_TARGET_MIN} ${
+                isLight
+                  ? 'bg-slate-100 hover:bg-slate-200 border-slate-200 text-slate-900 shadow-2xs'
+                  : 'bg-[#141416] hover:bg-[#1a1a1e] border-white/[0.1] text-white shadow-2xs'
+              }`}
+            >
+              <Star className="w-4 h-4 text-amber-500 fill-amber-500/30 shrink-0" />
+              <span className="whitespace-nowrap">
+                <span className="sm:hidden">Import Favorites</span>
+                <span className="hidden sm:inline">Import from Favorites</span>
+              </span>
+              <ChevronRight className={`w-4 h-4 shrink-0 transition-transform group-hover:translate-x-0.5 ${isLight ? 'text-slate-500' : 'text-zinc-400'}`} />
+            </button>
+
+            {/* Divider */}
+            <div className="relative flex items-center py-1">
+              <div className={`flex-grow border-t ${isLight ? 'border-slate-200' : 'border-white/[0.08]'}`} />
+              <span className={`flex-shrink mx-2 text-[10px] sm:text-xs font-bold uppercase tracking-wider ${isLight ? 'text-slate-400' : 'text-zinc-500'}`}>
+                or enter manually
+              </span>
+              <div className={`flex-grow border-t ${isLight ? 'border-slate-200' : 'border-white/[0.08]'}`} />
+            </div>
+
+            {/* MANUAL ENTRY INPUTS */}
             <input
               type="text"
               placeholder="Meal description (e.g. Salmon & Brown Rice)"
@@ -196,7 +304,7 @@ export const LatestEntriesSidebar: React.FC<LatestEntriesSidebarProps> = ({
 
             <div className="grid grid-cols-4 gap-2">
               <div>
-                <label className={`text-[10px] sm:text-xs font-black uppercase block mb-1 ${isLight ? MACRO_COLORS.kcal.textLight : MACRO_COLORS.kcal.text}`}>Kcal</label>
+                <label className={`${favoritesTypography.macroLabel} block mb-1 ${isLight ? MACRO_COLORS.kcal.textLight : MACRO_COLORS.kcal.text}`}>Kcal</label>
                 <input
                   type="number"
                   inputMode="numeric"
@@ -212,7 +320,7 @@ export const LatestEntriesSidebar: React.FC<LatestEntriesSidebarProps> = ({
                 />
               </div>
               <div>
-                <label className={`text-[10px] sm:text-xs font-black uppercase block mb-1 ${isLight ? MACRO_COLORS.protein.textLight : MACRO_COLORS.protein.text}`}>
+                <label className={`${favoritesTypography.macroLabel} block mb-1 ${isLight ? MACRO_COLORS.protein.textLight : MACRO_COLORS.protein.text}`}>
                   {MACRO_COLORS.protein.shortLabel}
                 </label>
                 <input
@@ -229,7 +337,7 @@ export const LatestEntriesSidebar: React.FC<LatestEntriesSidebarProps> = ({
                 />
               </div>
               <div>
-                <label className={`text-[10px] sm:text-xs font-black uppercase block mb-1 ${isLight ? MACRO_COLORS.carbs.textLight : MACRO_COLORS.carbs.text}`}>
+                <label className={`${favoritesTypography.macroLabel} block mb-1 ${isLight ? MACRO_COLORS.carbs.textLight : MACRO_COLORS.carbs.text}`}>
                   {MACRO_COLORS.carbs.shortLabel}
                 </label>
                 <input
@@ -246,7 +354,7 @@ export const LatestEntriesSidebar: React.FC<LatestEntriesSidebarProps> = ({
                 />
               </div>
               <div>
-                <label className={`text-[10px] sm:text-xs font-black uppercase block mb-1 ${isLight ? MACRO_COLORS.fat.textLight : MACRO_COLORS.fat.text}`}>
+                <label className={`${favoritesTypography.macroLabel} block mb-1 ${isLight ? MACRO_COLORS.fat.textLight : MACRO_COLORS.fat.text}`}>
                   {MACRO_COLORS.fat.shortLabel}
                 </label>
                 <input
@@ -276,10 +384,13 @@ export const LatestEntriesSidebar: React.FC<LatestEntriesSidebarProps> = ({
               </button>
               <button
                 type="submit"
-                className={`flex items-center space-x-1.5 px-4 py-2 rounded-2xl text-xs font-extrabold active:scale-95 shadow-xs cursor-pointer ${
-                  isLight
-                    ? 'text-white bg-black hover:bg-zinc-800'
-                    : 'text-black bg-white hover:bg-zinc-200'
+                disabled={!mealName.trim()}
+                className={`flex items-center space-x-1.5 px-4 py-2 rounded-2xl text-xs font-extrabold active:scale-95 shadow-xs transition-all ${
+                  !mealName.trim()
+                    ? 'opacity-40 cursor-not-allowed bg-zinc-700 text-zinc-400'
+                    : isLight
+                    ? 'text-white bg-black hover:bg-zinc-800 cursor-pointer'
+                    : 'text-black bg-white hover:bg-zinc-200 cursor-pointer'
                 }`}
               >
                 <Check className="w-4 h-4" />
@@ -349,6 +460,10 @@ export const LatestEntriesSidebar: React.FC<LatestEntriesSidebarProps> = ({
               .map((entry) => {
               const isEditing = editingId === entry.id;
               const isDeletingConfirm = deleteConfirmId === entry.id;
+              const matchedFav = favorites.find(
+                (fav) => fav.mealName.trim().toLowerCase() === entry.mealName.trim().toLowerCase()
+              );
+              const isFav = !!matchedFav;
 
               return (
                 <motion.div
@@ -426,7 +541,7 @@ export const LatestEntriesSidebar: React.FC<LatestEntriesSidebarProps> = ({
 
                       <div className="grid grid-cols-4 gap-2">
                         <div>
-                          <label className={`text-[10px] sm:text-xs font-black uppercase block mb-1 ${isLight ? MACRO_COLORS.kcal.textLight : MACRO_COLORS.kcal.text}`}>Kcal</label>
+                          <label className={`${favoritesTypography.macroLabel} block mb-1 ${isLight ? MACRO_COLORS.kcal.textLight : MACRO_COLORS.kcal.text}`}>Kcal</label>
                           <input
                             type="number"
                             inputMode="numeric"
@@ -436,11 +551,12 @@ export const LatestEntriesSidebar: React.FC<LatestEntriesSidebarProps> = ({
                             className={`w-full border rounded-xl px-2 py-1.5 text-xs sm:text-sm font-bold focus:outline-none ${
                               isLight ? 'bg-white border-slate-300 text-slate-900 focus:border-slate-500' : 'bg-[#121214] border-white/[0.12] text-white focus:border-white/30'
                             }`}
+                            required
                             autoComplete="off"
                           />
                         </div>
                         <div>
-                          <label className={`text-[10px] sm:text-xs font-black uppercase block mb-1 ${isLight ? MACRO_COLORS.protein.textLight : MACRO_COLORS.protein.text}`}>
+                          <label className={`${favoritesTypography.macroLabel} block mb-1 ${isLight ? MACRO_COLORS.protein.textLight : MACRO_COLORS.protein.text}`}>
                             {MACRO_COLORS.protein.shortLabel}
                           </label>
                           <input
@@ -456,7 +572,7 @@ export const LatestEntriesSidebar: React.FC<LatestEntriesSidebarProps> = ({
                           />
                         </div>
                         <div>
-                          <label className={`text-[10px] sm:text-xs font-black uppercase block mb-1 ${isLight ? MACRO_COLORS.carbs.textLight : MACRO_COLORS.carbs.text}`}>
+                          <label className={`${favoritesTypography.macroLabel} block mb-1 ${isLight ? MACRO_COLORS.carbs.textLight : MACRO_COLORS.carbs.text}`}>
                             {MACRO_COLORS.carbs.shortLabel}
                           </label>
                           <input
@@ -472,7 +588,7 @@ export const LatestEntriesSidebar: React.FC<LatestEntriesSidebarProps> = ({
                           />
                         </div>
                         <div>
-                          <label className={`text-[10px] sm:text-xs font-black uppercase block mb-1 ${isLight ? MACRO_COLORS.fat.textLight : MACRO_COLORS.fat.text}`}>
+                          <label className={`${favoritesTypography.macroLabel} block mb-1 ${isLight ? MACRO_COLORS.fat.textLight : MACRO_COLORS.fat.text}`}>
                             {MACRO_COLORS.fat.shortLabel}
                           </label>
                           <input
@@ -533,12 +649,40 @@ export const LatestEntriesSidebar: React.FC<LatestEntriesSidebarProps> = ({
                           )}
                         </div>
 
-                        {/* Edit & Delete Action Buttons */}
+                        {/* Favorite, Edit & Delete Action Buttons */}
                         <div className="flex items-center space-x-1 opacity-90 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity shrink-0">
                           <button
                             type="button"
+                            onClick={() => {
+                              if (isFav && matchedFav) {
+                                setUnfavoriteConfirm(matchedFav);
+                              } else {
+                                onAddFavorite?.({
+                                  mealName: entry.mealName,
+                                  kcal: entry.kcal,
+                                  protein: entry.protein,
+                                  carbs: entry.carbs,
+                                  fat: entry.fat,
+                                  mealType: getCurrentTimeMealType(),
+                                });
+                              }
+                            }}
+                            className={`p-2 rounded-xl transition-all active:scale-95 min-w-[44px] min-h-[44px] flex items-center justify-center cursor-pointer ${
+                              isFav
+                                ? 'text-amber-500 hover:bg-amber-500/10'
+                                : isLight
+                                ? 'hover:bg-slate-200 text-slate-400 hover:text-amber-500'
+                                : 'hover:bg-white/10 text-zinc-500 hover:text-amber-400'
+                            }`}
+                            title={isFav ? 'Remove from favorites' : 'Add to favorites'}
+                          >
+                            <Star className={`w-4 h-4 ${isFav ? 'fill-amber-500 text-amber-500' : 'stroke-[2]'}`} />
+                          </button>
+
+                          <button
+                            type="button"
                             onClick={() => handleStartEdit(entry)}
-                            className={`p-2 rounded-xl transition-all active:scale-95 min-w-[32px] min-h-[32px] flex items-center justify-center ${
+                            className={`p-2 rounded-xl transition-all active:scale-95 min-w-[44px] min-h-[44px] flex items-center justify-center cursor-pointer ${
                               isLight
                                 ? 'hover:bg-slate-200 text-slate-700'
                                 : 'hover:bg-white/10 text-zinc-300 hover:text-white'
@@ -550,7 +694,7 @@ export const LatestEntriesSidebar: React.FC<LatestEntriesSidebarProps> = ({
                           <button
                             type="button"
                             onClick={() => handlePromptDelete(entry.id!)}
-                            className={`p-2 rounded-xl transition-all active:scale-95 min-w-[32px] min-h-[32px] flex items-center justify-center ${
+                            className={`p-2 rounded-xl transition-all active:scale-95 min-w-[44px] min-h-[44px] flex items-center justify-center cursor-pointer ${
                               isLight
                                 ? 'hover:bg-rose-100 text-rose-600'
                                 : 'hover:bg-rose-500/20 text-rose-400'
@@ -567,10 +711,10 @@ export const LatestEntriesSidebar: React.FC<LatestEntriesSidebarProps> = ({
                         <div className={`p-2 sm:p-2.5 rounded-xl border transition-colors ${
                           isLight ? 'bg-white border-slate-200/80' : 'bg-[#121214] border-white/[0.06]'
                         }`}>
-                          <div className={`text-xs sm:text-sm font-black ${isLight ? 'text-slate-900' : 'text-white'}`}>
+                          <div className={`${favoritesTypography.macroValue} ${isLight ? 'text-slate-900' : 'text-white'}`}>
                             {formatCompactNumber(entry.kcal)}
                           </div>
-                          <div className={`text-[10px] sm:text-xs font-black tracking-wider uppercase mt-0.5 ${
+                          <div className={`${favoritesTypography.macroLabel} mt-0.5 ${
                             isLight ? MACRO_COLORS.kcal.textLight : MACRO_COLORS.kcal.text
                           }`}>
                             Kcal
@@ -580,10 +724,10 @@ export const LatestEntriesSidebar: React.FC<LatestEntriesSidebarProps> = ({
                         <div className={`p-2 sm:p-2.5 rounded-xl border transition-colors ${
                           isLight ? 'bg-white border-slate-200/80' : 'bg-[#121214] border-white/[0.06]'
                         }`}>
-                          <div className={`text-xs sm:text-sm font-black ${isLight ? 'text-slate-900' : 'text-white'}`}>
+                          <div className={`${favoritesTypography.macroValue} ${isLight ? 'text-slate-900' : 'text-white'}`}>
                             {formatCompactNumber(entry.protein)}g
                           </div>
-                          <div className={`text-[10px] sm:text-xs font-black tracking-wider uppercase mt-0.5 ${
+                          <div className={`${favoritesTypography.macroLabel} mt-0.5 ${
                             isLight ? MACRO_COLORS.protein.textLight : MACRO_COLORS.protein.text
                           }`}>
                             {MACRO_COLORS.protein.shortLabel}
@@ -593,10 +737,10 @@ export const LatestEntriesSidebar: React.FC<LatestEntriesSidebarProps> = ({
                         <div className={`p-2 sm:p-2.5 rounded-xl border transition-colors ${
                           isLight ? 'bg-white border-slate-200/80' : 'bg-[#121214] border-white/[0.06]'
                         }`}>
-                          <div className={`text-xs sm:text-sm font-black ${isLight ? 'text-slate-900' : 'text-white'}`}>
+                          <div className={`${favoritesTypography.macroValue} ${isLight ? 'text-slate-900' : 'text-white'}`}>
                             {formatCompactNumber(entry.carbs)}g
                           </div>
-                          <div className={`text-[10px] sm:text-xs font-black tracking-wider uppercase mt-0.5 ${
+                          <div className={`${favoritesTypography.macroLabel} mt-0.5 ${
                             isLight ? MACRO_COLORS.carbs.textLight : MACRO_COLORS.carbs.text
                           }`}>
                             {MACRO_COLORS.carbs.shortLabel}
@@ -606,10 +750,10 @@ export const LatestEntriesSidebar: React.FC<LatestEntriesSidebarProps> = ({
                         <div className={`p-2 sm:p-2.5 rounded-xl border transition-colors ${
                           isLight ? 'bg-white border-slate-200/80' : 'bg-[#121214] border-white/[0.06]'
                         }`}>
-                          <div className={`text-xs sm:text-sm font-black ${isLight ? 'text-slate-900' : 'text-white'}`}>
+                          <div className={`${favoritesTypography.macroValue} ${isLight ? 'text-slate-900' : 'text-white'}`}>
                             {formatCompactNumber(entry.fat)}g
                           </div>
-                          <div className={`text-[10px] sm:text-xs font-black tracking-wider uppercase mt-0.5 ${
+                          <div className={`${favoritesTypography.macroLabel} mt-0.5 ${
                             isLight ? MACRO_COLORS.fat.textLight : MACRO_COLORS.fat.text
                           }`}>
                             {MACRO_COLORS.fat.shortLabel}
@@ -624,6 +768,156 @@ export const LatestEntriesSidebar: React.FC<LatestEntriesSidebarProps> = ({
           )}
         </AnimatePresence>
       </div>
+
+      {/* Manage/Log Favorites Modal (Exact same modal from Settings with help text and + New Favorite) */}
+      <ManageFavoritesModal
+        isOpen={isFavoritesModalOpen}
+        onClose={() => setIsFavoritesModalOpen(false)}
+        favorites={favorites}
+        onAddFavorite={onAddFavorite}
+        onUpdateFavorite={onUpdateFavorite}
+        onDeleteFavorite={onDeleteFavorite}
+        onLogMeal={(payload) => {
+          onAddMeal(payload);
+          resetForm();
+          setIsFavoritesModalOpen(false);
+        }}
+        theme={theme}
+      />
+
+      {/* Unfavorite Confirmation Pop-up Modal */}
+      {unfavoriteConfirm && (
+        <div
+          onClick={() => setUnfavoriteConfirm(null)}
+          className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-150"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className={`p-6 rounded-[28px] max-w-sm w-full border shadow-2xl space-y-4 animate-in zoom-in-95 duration-150 text-center ${
+              isLight
+                ? 'bg-white border-slate-200 text-slate-900 shadow-slate-900/15'
+                : 'bg-[#121214] border-white/[0.12] text-white shadow-black/80'
+            }`}
+          >
+            <div className="w-12 h-12 rounded-2xl bg-amber-500/10 text-amber-500 flex items-center justify-center mx-auto">
+              <Star className="w-6 h-6 fill-amber-500" />
+            </div>
+
+            <div className="space-y-1">
+              <h3 className="text-base font-bold">Remove from Favorites?</h3>
+              <p className={`text-xs ${isLight ? 'text-slate-600' : 'text-zinc-400'}`}>
+                Are you sure you want to remove <span className="font-bold text-amber-500">"{unfavoriteConfirm.mealName}"</span> from your saved favorite meals?
+              </p>
+            </div>
+
+            <div className="flex items-center space-x-2 pt-2">
+              <button
+                type="button"
+                onClick={() => setUnfavoriteConfirm(null)}
+                className={`flex-1 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                  isLight ? 'bg-slate-100 hover:bg-slate-200 text-slate-700' : 'bg-white/10 hover:bg-white/15 text-zinc-300'
+                }`}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  onDeleteFavorite?.(unfavoriteConfirm.id);
+                  setUnfavoriteConfirm(null);
+                }}
+                className="flex-1 py-2.5 rounded-xl text-xs font-extrabold bg-rose-500 hover:bg-rose-600 text-white transition-all active:scale-95 shadow-xs cursor-pointer"
+              >
+                Remove
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Favorite Update Decision Pop-up Modal (When modifying a favorite entry) */}
+      {favoriteUpdatePrompt && (
+        <div
+          onClick={() => setFavoriteUpdatePrompt(null)}
+          className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-150"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className={`p-6 rounded-[28px] max-w-sm w-full border shadow-2xl space-y-4 animate-in zoom-in-95 duration-150 text-center ${
+              isLight
+                ? 'bg-white border-slate-200 text-slate-900 shadow-slate-900/15'
+                : 'bg-[#121214] border-white/[0.12] text-white shadow-black/80'
+            }`}
+          >
+            <div className="w-12 h-12 rounded-2xl bg-amber-500/10 text-amber-500 flex items-center justify-center mx-auto">
+              <Star className="w-6 h-6 fill-amber-500" />
+            </div>
+
+            <div className="space-y-1">
+              <h3 className="text-base font-bold">Update Favorite Preset?</h3>
+              <p className={`text-xs ${isLight ? 'text-slate-600' : 'text-zinc-400'}`}>
+                You modified <span className="font-bold text-amber-500">"{favoriteUpdatePrompt.matchedFavorite.mealName}"</span>. How would you like to apply these changes?
+              </p>
+            </div>
+
+            <div className="space-y-2.5 pt-1 text-left">
+              {/* Option 1: Update today's entry only */}
+              <button
+                type="button"
+                onClick={() => executeSaveEditWithFavorite(false)}
+                className={`w-full p-4 rounded-2xl border transition-all flex items-center space-x-3.5 active:scale-98 cursor-pointer ${
+                  isLight
+                    ? 'bg-slate-50 hover:bg-slate-100 border-slate-200 text-slate-900'
+                    : 'bg-[#18181b] hover:bg-[#202024] border-white/[0.08] text-white'
+                }`}
+              >
+                <div className={`p-2.5 rounded-xl shrink-0 ${isLight ? 'bg-slate-200 text-slate-700' : 'bg-white/10 text-white'}`}>
+                  <CheckCircle2 className="w-5 h-5" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <h4 className="text-sm sm:text-base font-extrabold tracking-tight">Save for Today Only</h4>
+                  <p className={`text-xs mt-0.5 leading-snug ${isLight ? 'text-slate-500' : 'text-zinc-400'}`}>
+                    Updates today's meal entry ({favoriteUpdatePrompt.payload.kcal} kcal). Favorite preset remains unchanged.
+                  </p>
+                </div>
+              </button>
+
+              {/* Option 2: Update favorite preset too */}
+              <button
+                type="button"
+                onClick={() => executeSaveEditWithFavorite(true)}
+                className={`w-full p-4 rounded-2xl border transition-all flex items-center space-x-3.5 active:scale-98 cursor-pointer ${
+                  isLight
+                    ? 'bg-amber-50 hover:bg-amber-100/80 border-amber-200 text-slate-900'
+                    : 'bg-amber-500/10 hover:bg-amber-500/15 border-amber-500/30 text-white'
+                }`}
+              >
+                <div className="p-2.5 rounded-xl bg-amber-500/20 text-amber-500 shrink-0">
+                  <Star className="w-5 h-5 fill-amber-500" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <h4 className="text-sm sm:text-base font-extrabold tracking-tight text-amber-500">Update Favorite Preset Too</h4>
+                  <p className={`text-xs mt-0.5 leading-snug ${isLight ? 'text-slate-600' : 'text-zinc-300'}`}>
+                    Updates both today's intake and your saved favorite recipe template.
+                  </p>
+                </div>
+              </button>
+            </div>
+
+            <div className="pt-1">
+              <button
+                type="button"
+                onClick={() => setFavoriteUpdatePrompt(null)}
+                className={`w-full py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                  isLight ? 'text-slate-500 hover:text-slate-800' : 'text-zinc-400 hover:text-white'
+                }`}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
