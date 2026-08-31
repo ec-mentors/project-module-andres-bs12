@@ -13,6 +13,7 @@ public record UserResponseDTO (
     String lastName,
     String email,
     LocalDateTime createdAt,
-    String googleId
+    String googleId,
+    Long telegramChatId
 ) {}
 
