@@ -4,6 +4,61 @@ This document serves as a development and learning journal to record key concept
 
 ---
 
+## 📅 2026-08-31 - (Sprint 5) - Multimodal Telegram Bot Architecture, Long Polling, Deep Linking & Object-Oriented Adapter Pattern
+
+### 💡 Key Concepts Learned & Architectural Decisions
+
+1. **Telegram Long Polling Architecture vs. Webhooks & Spring Boot Lifecycle:**
+   - *Why Long Polling for Local Development:* Unlike Webhooks (which require a publicly accessible HTTPS domain, open router ports, and SSL certificates like ngrok), Long Polling uses outbound HTTPS polling requests from the Spring Boot server to Telegram's cloud (`api.telegram.org`).
+   - *Constructor-Based Dependency & Property Injection:*
+     - When extending `TelegramLongPollingBot`, the bot token must be passed to the superclass constructor `super(botToken)`.
+     - Injected configuration properties directly into constructor arguments using `@Value("${telegram.bot.token}") String botToken` and `@Value("${telegram.bot.name}") String botUserName`.
+     - *Configuration Fallback Invariant:* Configured `telegram.bot.token=${TELEGRAM_BOT_TOKEN:}` in `application.properties`. The trailing colon `:` provides an empty default fallback, preventing application context crashes (`IllegalArgumentException: Could not resolve placeholder`) during unit tests or environments where the environment variable is not yet exported.
+     - *IDE Property Warnings:* Clarified that IntelliJ IDEA highlights custom properties like `telegram.bot.token` in yellow because they are not part of Spring's built-in `@ConfigurationProperties` metadata; it is a cosmetic IDE hint, not a Java or Spring error.
+
+2. **Object-Oriented Design & The Adapter Pattern (`MultipartFileConvertor`):**
+   - *The Architectural Challenge:* Telegram's API downloads files to the local disk as raw `java.io.File` objects. However, existing Spring AI services (`AiMealService.parseMealFromImage` and `AiAudioService.transcribe`) were originally designed for web uploads accepting Spring's `MultipartFile` interface.
+   - *Preserving the Open-Closed Principle (OCP):* Rather than modifying or breaking working AI services, I created an Adapter class `MultipartFileConvertor` in the `util` package that implements `MultipartFile` (`MultipartFileConvertor implements MultipartFile`).
+   - *Polymorphism in Action:* Because `MultipartFileConvertor` satisfies the `MultipartFile` interface contract, Java's compiler treats it as a 100% valid `MultipartFile`, allowing transparent reuse of existing AI vision and Whisper services with zero modifications.
+   - *Content vs. Metadata (`File` vs. `contentType`):*
+     - `File`: Encapsulates the actual binary payload (the megabytes of pixels or sound waves on disk).
+     - `contentType`: Encapsulates the MIME format label (`"image/jpeg"` for photos, `"audio/ogg"` for voice notes) required by OpenAI vision and audio decoders.
+   - *Java File API Nuances:* Learned that `file.length()` returns the exact file size in bytes, whereas `file.getTotalSpace()` returns the capacity of the entire disk partition. Furthermore, `new File("")` resolves to the root project directory in Java, which throws `IOException: Is a directory` when read as bytes.
+
+3. **Telegram Command Pattern & Media File Lifecycle:**
+   - *The Command Pattern (`GetFile` & `SendMessage`):* In the Telegram Bots library, operations are modeled as Command objects (`new GetFile(fileId)`, `new SendMessage(...)`) and dispatched across the network via a single unified executor method: `execute(command)`.
+   - *The `fileId` Tracking Ticket:* Telegram does not embed heavy binary payloads inside the message JSON. Instead, Telegram stores media on its CDN and provides a lightweight tracking string (`fileId`). The bot exchanges this `fileId` with Telegram's servers (`new GetFile(fileId)`) to download the actual temporary file.
+   - *Resolution Selection with `PhotoSize`:* Telegram generates multiple thumbnail resolutions for every uploaded photo. The `message.getPhoto()` list is ordered from lowest to highest resolution. Selecting the last element (`photos.get(photos.size() - 1)`) guarantees maximum visual fidelity for GPT-5.6 vision nutritional analysis.
+   - *Voice Notes (`hasVoice()`) vs. Audio Attachments (`hasAudio()`):* Realized that spoken voice notes recorded via the microphone button are accessed via `message.getVoice()`, whereas `message.getAudio()` is reserved for MP3 music attachments.
+   - *In-Flight Streaming vs. Cloud Persistence (Zero Storage Cost & 100% Privacy):* 
+     - Evaluated whether photos/audio should be permanently stored in AWS S3.
+     - Decided on in-flight memory/temporary disk processing: bytes are analyzed by AI, the nutritional numbers are persisted in PostgreSQL, and the temporary file is immediately deleted (`localFile.delete()`). This incurs $0.00 in cloud storage costs and guarantees total user data privacy.
+
+4. **Multimodal AI Pipeline & Two-Step Relay Execution:**
+   - **Text Meals:** `message.getText()` $\rightarrow$ `aiMealService.parseMealFromText` $\rightarrow$ `AiMealResponseDTO` $\rightarrow$ `entryService.createEntry`.
+   - **Photo Meals:** Download photo $\rightarrow$ `MultipartFileConvertor("image/jpeg", localFile)` $\rightarrow$ `aiMealService.parseMealFromImage` (GPT-5.6 Vision) $\rightarrow$ `entryService.createEntry` $\rightarrow$ `localFile.delete()`.
+   - **Voice Note Relay (Whisper + GPT-5.6):**
+     - Step 1: Download `.ogg` audio $\rightarrow$ `MultipartFileConvertor("audio/ogg", localFile)` $\rightarrow$ `aiAudioService.transcribe` (OpenAI Whisper) converts speech to text.
+     - Step 2: Transcribed text is passed to `aiMealService.parseMealFromText` to extract calories and macronutrients.
+     - Step 3: Saved to PostgreSQL via `entryService.createEntry` $\rightarrow$ `localFile.delete()`.
+
+5. **Deep Linking & Identity Pairing Architecture (`/start <UUID>`):**
+   - *The Deep Linking Protocol:* Web links formatted as `https://t.me/Bot?start=<UUID>` trigger Telegram to open the chat and automatically dispatch the text message `/start <UUID>` when the user taps "Start".
+   - *Execution Order Invariant:* The `/start` command check must precede the `if (user.isEmpty())` guard clause. A new user has `telegram_chat_id = NULL` in PostgreSQL; checking `findByTelegramChatId` first would mistakenly block their account pairing attempt.
+   - *Single-Table Database Design:* Avoided redundant mapping tables by adding `telegram_chat_id BIGINT UNIQUE` directly to the `users` table. The `/start` handler parses the UUID, locates the user via `uRepository.findById(webUserId)`, assigns `user.setTelegramChatId(chatId)`, and persists it via `uRepository.save(user)`.
+
+6. **Rate Limiting Integration & Friendly Telegram Feedback:**
+   - Integrated Sprint 4's `AiQuotaService.saveQuota(userId, AiFeatureType.ENTRY_AI)` before initiating AI processing across all three input modalities (photos, voice notes, text).
+   - Wrapped operations in `try-catch (AiQuotaExceededException e)`: when a user exhausts their daily 5 AI meals, the bot intercepts the exception and sends a polite Telegram message (`replyQuotaFinished`) without crashing or leaving the user in silence.
+
+
+7**Frontend Integration (React, Vite & TypeScript):**
+   - Added `telegramChatId?: number | null` to `UserProfile` in `types/user.ts` and `UserResponseDTO` in Spring Boot.
+   - Configured `VITE_TELEGRAM_BOT_NAME` in `frontend/.env`, accessed securely via `import.meta.env.VITE_TELEGRAM_BOT_NAME`.
+   - Updated `UserProfileModal.tsx` with dynamic visual states: displays a distinct blue button (*"Connect with Telegram"*) linking to `https://t.me/${botName}?start=${user.id}` if unlinked, and an emerald green button (*"Telegram connected"*) if already linked.
+
+---
+
 ## 📅 2026-08-30 - (Sprint 4) - AI Token Rate Limiting Architecture, Calendar-Based Resets, Enum Strategy & HTTP 429 Security Boundary
 
 ### 💡 Key Concepts Learned & Architectural Decisions

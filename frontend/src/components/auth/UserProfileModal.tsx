@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, LogOut, Mail, Bookmark } from 'lucide-react';
+import { X, LogOut, Mail, Bookmark, Send } from 'lucide-react';
 import type { UserProfile } from '../../types/user';
 
 interface UserProfileModalProps {
@@ -33,6 +33,18 @@ export const UserProfileModal: React.FC<React.PropsWithChildren<UserProfileModal
   }, [isOpen]);
 
   if (!isOpen) return null;
+
+        const handleConnectTelegram = () => {
+          const botUserName = import.meta.env.VITE_TELEGRAM_BOT_NAME || `NutritionTracker_2Bot`;
+
+          if (user.telegramChatId) {
+            // If connected opens chat with the user
+            window.open(`https://t.me/${botUserName}`, `_blank`);
+          } else {
+            // If not connected, opens Deep Link with the UUID to connect the user
+            window.open(`https://t.me/${botUserName}?start=${user.id}`, `_blank`);
+          }
+        };
 
   return (
     <div
@@ -109,6 +121,21 @@ export const UserProfileModal: React.FC<React.PropsWithChildren<UserProfileModal
             <span>Manage Favorites</span>
           </button>
         )}
+
+        {/* Telegram Chat Action Button */}
+        <button
+          type="button"
+          onClick={handleConnectTelegram}
+          className={`w-full py-3 rounded-2xl font-bold text-sm border transition-all active:scale-95 flex items-center justify-center space-x-2 mb-2.5 cursor-pointer shadow-2xs ${
+            user.telegramChatId
+              ?  'bg-emerald-500/10 text-emerald-400 border-emerald-500/20 hover:bg-emerald-500/20'
+              : 'bg-[#229ED9]/10 text-[#229ED9] border-[#229ED9]/20 hover:bg-[#229ED9]/20'
+          }`}
+        >
+          <Send className="w-4 h-4 text-blue-500" />
+          <span>{user.telegramChatId ? 'Telegram connected' : 'Link telegram'}</span>
+          </button>
+
 
         {/* Sign Out Action Button */}
         <button
