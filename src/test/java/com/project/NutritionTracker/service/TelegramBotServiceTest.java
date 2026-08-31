@@ -59,7 +59,7 @@ public class TelegramBotServiceTest {
                 entryService
         ));
         lenient().doReturn(null).when(service).execute(any(SendMessage.class));
-        lenient().doNothing().when(service).replyWithEntry(any(), any());
+        lenient().doNothing().when(service).replyWithEntry(any(), any(), any());
         lenient().doNothing().when(service).replyQuotaFinished(any());
     }
 
@@ -158,7 +158,7 @@ public class TelegramBotServiceTest {
         verify(quotaService).saveQuota(userId, AiFeatureType.ENTRY_AI);
         verify(aiMealService).parseMealFromText(userId, "200g chicken and rice");
         verify(entryService).createEntry(any(EntryRequestDTO.class), eq(userId));
-        verify(service).replyWithEntry(entryResponse, chatId);
+        verify(service).replyWithEntry(entryResponse, chatId, userId);
     }
 
     @Test

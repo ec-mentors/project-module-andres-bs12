@@ -16,4 +16,6 @@ public interface GoalRepository extends JpaRepository<Goal, UUID> {
     Optional<Goal> findByUserAndStartDate(User user, LocalDate startDare);
 
     List<Goal> findAllByUser(User user);
+
+    Optional<Goal> findFirstByUserOrderByStartDateDesc(User user);
 }

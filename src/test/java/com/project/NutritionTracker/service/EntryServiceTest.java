@@ -1,13 +1,16 @@
 package com.project.NutritionTracker.service;
 
+import com.project.NutritionTracker.dto.DailyProgressDTO;
 import com.project.NutritionTracker.dto.EntryRequestDTO;
 import com.project.NutritionTracker.dto.EntryResponseDTO;
 import com.project.NutritionTracker.enums.MealType;
 import com.project.NutritionTracker.exception.NotFoundException;
 import com.project.NutritionTracker.mapper.EntryMapper;
 import com.project.NutritionTracker.model.Entry;
+import com.project.NutritionTracker.model.Goal;
 import com.project.NutritionTracker.model.User;
 import com.project.NutritionTracker.repository.EntryRepository;
+import com.project.NutritionTracker.repository.GoalRepository;
 import com.project.NutritionTracker.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -37,6 +40,9 @@ public class EntryServiceTest {
 
     @Mock
     private EntryMapper mapper;
+
+    @Mock
+    private GoalRepository gRepository;
 
     @InjectMocks
     private EntryService service;
@@ -295,6 +301,60 @@ public class EntryServiceTest {
         verify(repository, times(1)).findById(sampleId);
         verify(repository, never()).save(sampleEntry);
         verify(mapper, never()).toResponseDTO(sampleEntry);
+    }
+
+    // ---------- getLeftToday ----------
+
+    @Test
+    void getLeftToday_Success() {
+        Goal sampleGoal = new Goal(UUID.randomUUID(), sampleUser, LocalDate.now(), 2000, 200.0, 65.0, 150.0);
+        LocalDateTime startOfDay = LocalDate.now().atStartOfDay();
+        LocalDateTime endOfDay = LocalDate.now().atTime(LocalTime.MAX);
+
+        when(uRepository.findById(sampleUserId)).thenReturn(Optional.of(sampleUser));
+        when(repository.findByUserAndCreatedOnBetween(sampleUser, startOfDay, endOfDay)).thenReturn(List.of(sampleEntry));
+        when(mapper.toResponseDTO(sampleEntry)).thenReturn(sampleEntryResponseDTO);
+        when(gRepository.findFirstByUserOrderByStartDateDesc(sampleUser)).thenReturn(Optional.of(sampleGoal));
+
+        DailyProgressDTO progress = service.getLeftToday(sampleUserId);
+
+        assertNotNull(progress);
+        assertEquals(2000 - sampleEntryResponseDTO.kcal(), progress.remainingKcal());
+        assertEquals(Math.max(0.0, 200.0 - sampleEntryResponseDTO.carbs()), progress.remainingCarbs());
+        assertEquals(Math.max(0.0, 65.0 - sampleEntryResponseDTO.fat()), progress.remainingFat());
+        assertEquals(Math.max(0.0, 150.0 - sampleEntryResponseDTO.protein()), progress.remainingProtein());
+
+        verify(uRepository, times(2)).findById(sampleUserId);
+        verify(gRepository, times(1)).findFirstByUserOrderByStartDateDesc(sampleUser);
+    }
+
+    @Test
+    void getLeftToday_ThrowsIAE_WhenUserIdIsNull() {
+        assertThrows(IllegalArgumentException.class, () -> service.getLeftToday(null));
+        verify(uRepository, never()).findById(any());
+        verify(gRepository, never()).findFirstByUserOrderByStartDateDesc(any());
+    }
+
+    @Test
+    void getLeftToday_ThrowsNFE_WhenUserNotFound() {
+        when(uRepository.findById(sampleUserId)).thenReturn(Optional.empty());
+        assertThrows(NotFoundException.class, () -> service.getLeftToday(sampleUserId));
+        verify(uRepository, times(1)).findById(sampleUserId);
+        verify(gRepository, never()).findFirstByUserOrderByStartDateDesc(any());
+    }
+
+    @Test
+    void getLeftToday_ThrowsNFE_WhenGoalNotFound() {
+        LocalDateTime startOfDay = LocalDate.now().atStartOfDay();
+        LocalDateTime endOfDay = LocalDate.now().atTime(LocalTime.MAX);
+
+        when(uRepository.findById(sampleUserId)).thenReturn(Optional.of(sampleUser));
+        when(repository.findByUserAndCreatedOnBetween(sampleUser, startOfDay, endOfDay)).thenReturn(List.of());
+        when(gRepository.findFirstByUserOrderByStartDateDesc(sampleUser)).thenReturn(Optional.empty());
+
+        assertThrows(NotFoundException.class, () -> service.getLeftToday(sampleUserId));
+        verify(uRepository, times(2)).findById(sampleUserId);
+        verify(gRepository, times(1)).findFirstByUserOrderByStartDateDesc(sampleUser);
     }
 
 }

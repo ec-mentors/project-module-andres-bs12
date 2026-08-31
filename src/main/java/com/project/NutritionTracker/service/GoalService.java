@@ -1,11 +1,14 @@
 package com.project.NutritionTracker.service;
 
+import com.project.NutritionTracker.dto.DailyProgressDTO;
 import com.project.NutritionTracker.dto.GoalRequestDTO;
 import com.project.NutritionTracker.dto.GoalResponseDTO;
 import com.project.NutritionTracker.exception.NotFoundException;
 import com.project.NutritionTracker.mapper.GoalMapper;
+import com.project.NutritionTracker.model.Entry;
 import com.project.NutritionTracker.model.Goal;
 import com.project.NutritionTracker.model.User;
+import com.project.NutritionTracker.repository.EntryRepository;
 import com.project.NutritionTracker.repository.GoalRepository;
 import com.project.NutritionTracker.repository.UserRepository;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -14,7 +17,9 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 
@@ -50,7 +55,7 @@ public class GoalService {
     public GoalResponseDTO updateGoal(UUID id, GoalRequestDTO dto) {
         Goal goal = repository.findById(id).orElseThrow(() -> new NotFoundException("Goal not found"));
         if (dto == null) {
-            throw  new IllegalArgumentException("New Goal can't be null");
+            throw new IllegalArgumentException("New Goal can't be null");
         }
         // Doesn't update the user
         goal.setCarbs(dto.carbs());
@@ -65,7 +70,7 @@ public class GoalService {
     @PreAuthorize("#userId == principal.id")
     public GoalResponseDTO getGoalByUserAndDate(UUID userId, LocalDate date) {
         if (userId == null) {
-            throw  new IllegalArgumentException("new user can't be null");
+            throw new IllegalArgumentException("new user can't be null");
         }
 
 
@@ -80,7 +85,7 @@ public class GoalService {
     public List<GoalResponseDTO> findAllGoalsByUser(UUID userId) {
 
         if (userId == null) {
-            throw  new IllegalArgumentException("User can't be null");
+            throw new IllegalArgumentException("User can't be null");
         }
 
         User user = uRepository.findById(userId).orElseThrow(() -> new NotFoundException("User not found with id: " + userId));
@@ -90,5 +95,4 @@ public class GoalService {
                 .map(mapper::toResponseDTO)
                 .toList();
     }
-
 }

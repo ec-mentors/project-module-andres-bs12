@@ -16,7 +16,55 @@ This document serves as a development and learning journal to record key concept
      - *Configuration Fallback Invariant:* Configured `telegram.bot.token=${TELEGRAM_BOT_TOKEN:}` in `application.properties`. The trailing colon `:` provides an empty default fallback, preventing application context crashes (`IllegalArgumentException: Could not resolve placeholder`) during unit tests or environments where the environment variable is not yet exported.
      - *IDE Property Warnings:* Clarified that IntelliJ IDEA highlights custom properties like `telegram.bot.token` in yellow because they are not part of Spring's built-in `@ConfigurationProperties` metadata; it is a cosmetic IDE hint, not a Java or Spring error.
 
-2. **Object-Oriented Design & The Adapter Pattern (`MultipartFileConvertor`):**
+2. **Spring Boot 3 Bootstrap Engine: `@Configuration` vs. `@Service` & The `TelegramBotsApi` Dependency Dance:**
+   - *The Core Difference Between `@Service` and `@Configuration`:*
+     - `@Service`: Contains my custom **business logic** (the "brain" that processes food, validates macros, and saves meals).
+     - `@Configuration`: Serves as the **assembly workshop / ignition switch** for third-party libraries (like Telegram, Security, AWS) that Spring does not own or auto-start out-of-the-box.
+   - *Why `@Service` alone did not start the bot in Spring Boot 3:*
+     - In legacy Spring Boot 2, the starter used old `spring.factories` auto-registration. In Spring Boot 3 (`3.4.2`), Spring requires an explicit `@Configuration` class to start the background Long Polling thread session. Without it, the `TelegramBotService` is just a passive object sitting in memory that never opens network sockets to Telegram.
+   - *How Spring Wires the Objects (The IoC Dance):*
+     - Step 1: Spring scans `@Service` and instantiates `TelegramBotService` with all its dependencies (`UserRepository`, `AiMealService`, `AiAudioService`, `AiQuotaService`, `EntryService`).
+     - Step 2: Spring scans `TelegramBotConfig` and executes the `@Bean` method `telegramBotsApi(TelegramBotService botService)`. Spring automatically passes the previously created `TelegramBotService` bean into `botService`.
+     - Step 3: Inside the method, `botsApi.registerBot(botService)` starts the `DefaultBotSession` polling daemon, connecting the live Telegram cloud stream to my `onUpdateReceived(Update update)` method.
+
+3. **Spring Security in Asynchronous Background Worker Threads (`SecurityContextHolder` & `ThreadLocal`):**
+   - *The Root Cause of `AuthenticationCredentialsNotFoundException`:*
+     - In web requests from React, incoming HTTP traffic passes through `GoogleAuthFilter`, which extracts the Google JWT token and sets `SecurityContextHolder.getContext().setAuthentication(auth)`.
+     - However, Telegram messages arrive on a background daemon worker thread (`[legram Executor]`). Because this thread did not originate from an HTTP request, its `SecurityContext` is completely empty (`null`).
+     - When `TelegramBotService` calls secured service methods annotated with `@PreAuthorize("isAuthenticated() && #userId == principal.id")` (such as `AiQuotaService.saveQuota` or `EntryService.getLeftToday`), Spring Security throws `AuthenticationCredentialsNotFoundException`.
+   - *The Solution (ThreadLocal Authentication):*
+     - Once the user entity is retrieved from PostgreSQL via `findByTelegramChatId(chatId)`, I construct a `UserPrincipal(user)` and `UsernamePasswordAuthenticationToken(principal, null, principal.getAuthorities())` and inject it into `SecurityContextHolder.getContext().setAuthentication(auth)`.
+     - *Understanding the "Invisible Backpack" (`ThreadLocal`):* Spring Security stores authentication in `ThreadLocal` storage attached to the executing thread. Any downstream method invocation inside the thread automatically inherits this identity without needing manual token passing.
+   - *Thread Pool Hygiene (`finally { SecurityContextHolder.clearContext(); }`):*
+     - Worker threads in thread pools are reused across different messages. Wrapping execution in `try-finally` and calling `SecurityContextHolder.clearContext()` guarantees no identity state leaks to subsequent user requests.
+   - *Command Execution Order Invariant:*
+     - Handlers for authenticated commands (such as `/left` or `/status`) must execute **after** setting the `SecurityContext` and resolving `userId`. Invoking service methods before authentication leaves `userId` as `null` and crashes with security exceptions.
+
+4. **Domain Integrity & Active Goal Lookup Optimization in PostgreSQL:**
+   - *The Problem with Daily Date Exact Matching (`findByUserAndStartDate(user, LocalDate.now())`):*
+     - In real life, users do not configure a new nutritional goal every single morning. A user defines their goal once and expects it to remain their active benchmark across consecutive days.
+     - Querying strictly by `LocalDate.now()` fails with `NotFoundException` if the goal was created on a previous date.
+   - *The Optimal PostgreSQL Query (`findFirstByUserOrderByStartDateDesc`):*
+     - The true domain definition of an active goal is **the most recent goal created by the user with `start_date <= today`**.
+     - Configured `Optional<Goal> findFirstByUserOrderByStartDateDesc(User user);` in `GoalRepository`, which translates to an indexed `SELECT * FROM goal WHERE user_id = ? ORDER BY start_date DESC LIMIT 1;` taking $<1\text{ms}$.
+   - *Zero Fake Data Policy:* Enforced `.orElseThrow(() -> new NotFoundException(...))` rather than generating fake or arbitrary default goals. Precision nutrition requires user-defined goals; if none exists, the bot guides the user to set their goal on the web dashboard.
+
+5. **Temporal Date-Range Filtering vs. All-Time Historical Aggregations:**
+   - *The Discrepancy Bug:* In early testing, Telegram reported `-368 kcal left` while the web dashboard reported `1,793 kcal left`.
+   - *Root Cause Analysis:* `getLeftToday` inadvertently invoked `findByUser(userId)` (which aggregates all meals logged throughout the entire account history) instead of `findTodayEntriesByUser(userId)` (which filters meals created between `LocalDate.now().atStartOfDay()` and `LocalDate.now().atTime(LocalTime.MAX)`).
+   - *Resolution:* Calling `findTodayEntriesByUser(userId)` isolates the calculation strictly to today's intake, synchronizing Telegram with the web dashboard.
+
+6. **Clean Architecture & Separation of Concerns (Presentation vs Business Logic):**
+   - *Pure Formatter Component (`TelegramMessageFormatter`):*
+     - Extracted string formatting out of `TelegramBotService` into `com.project.NutritionTracker.util.TelegramMessageFormatter`.
+     - `TelegramMessageFormatter.formatDailyProgress(dto)` is a pure function that returns styled markdown/emojis without coupling to Telegram transmission logic (`execute`).
+   - *Avoiding "Primitive Obsession" with Java Records (`DailyProgressDTO`):*
+     - Created an immutable Java record `DailyProgressDTO(remainingKcal, remainingCarbs, remainingFat, remainingProtein)` instead of returning positional lists (`List<Double>`).
+     - Eliminates fragile "magic indexes" (`list.get(0)`) and guarantees compile-time type safety.
+   - *Lower-Bound Clamping (`Math.max`):*
+     - Applied `Math.max(0.0, goal - consumed)` to prevent negative remaining macros when a user exceeds their daily targets.
+
+7. **Object-Oriented Design & The Adapter Pattern (`MultipartFileConvertor`):**
    - *The Architectural Challenge:* Telegram's API downloads files to the local disk as raw `java.io.File` objects. However, existing Spring AI services (`AiMealService.parseMealFromImage` and `AiAudioService.transcribe`) were originally designed for web uploads accepting Spring's `MultipartFile` interface.
    - *Preserving the Open-Closed Principle (OCP):* Rather than modifying or breaking working AI services, I created an Adapter class `MultipartFileConvertor` in the `util` package that implements `MultipartFile` (`MultipartFileConvertor implements MultipartFile`).
    - *Polymorphism in Action:* Because `MultipartFileConvertor` satisfies the `MultipartFile` interface contract, Java's compiler treats it as a 100% valid `MultipartFile`, allowing transparent reuse of existing AI vision and Whisper services with zero modifications.
@@ -25,7 +73,7 @@ This document serves as a development and learning journal to record key concept
      - `contentType`: Encapsulates the MIME format label (`"image/jpeg"` for photos, `"audio/ogg"` for voice notes) required by OpenAI vision and audio decoders.
    - *Java File API Nuances:* Learned that `file.length()` returns the exact file size in bytes, whereas `file.getTotalSpace()` returns the capacity of the entire disk partition. Furthermore, `new File("")` resolves to the root project directory in Java, which throws `IOException: Is a directory` when read as bytes.
 
-3. **Telegram Command Pattern & Media File Lifecycle:**
+8. **Telegram Command Pattern & Media File Lifecycle:**
    - *The Command Pattern (`GetFile` & `SendMessage`):* In the Telegram Bots library, operations are modeled as Command objects (`new GetFile(fileId)`, `new SendMessage(...)`) and dispatched across the network via a single unified executor method: `execute(command)`.
    - *The `fileId` Tracking Ticket:* Telegram does not embed heavy binary payloads inside the message JSON. Instead, Telegram stores media on its CDN and provides a lightweight tracking string (`fileId`). The bot exchanges this `fileId` with Telegram's servers (`new GetFile(fileId)`) to download the actual temporary file.
    - *Resolution Selection with `PhotoSize`:* Telegram generates multiple thumbnail resolutions for every uploaded photo. The `message.getPhoto()` list is ordered from lowest to highest resolution. Selecting the last element (`photos.get(photos.size() - 1)`) guarantees maximum visual fidelity for GPT-5.6 vision nutritional analysis.
@@ -34,7 +82,7 @@ This document serves as a development and learning journal to record key concept
      - Evaluated whether photos/audio should be permanently stored in AWS S3.
      - Decided on in-flight memory/temporary disk processing: bytes are analyzed by AI, the nutritional numbers are persisted in PostgreSQL, and the temporary file is immediately deleted (`localFile.delete()`). This incurs $0.00 in cloud storage costs and guarantees total user data privacy.
 
-4. **Multimodal AI Pipeline & Two-Step Relay Execution:**
+9. **Multimodal AI Pipeline & Two-Step Relay Execution:**
    - **Text Meals:** `message.getText()` $\rightarrow$ `aiMealService.parseMealFromText` $\rightarrow$ `AiMealResponseDTO` $\rightarrow$ `entryService.createEntry`.
    - **Photo Meals:** Download photo $\rightarrow$ `MultipartFileConvertor("image/jpeg", localFile)` $\rightarrow$ `aiMealService.parseMealFromImage` (GPT-5.6 Vision) $\rightarrow$ `entryService.createEntry` $\rightarrow$ `localFile.delete()`.
    - **Voice Note Relay (Whisper + GPT-5.6):**
@@ -42,20 +90,19 @@ This document serves as a development and learning journal to record key concept
      - Step 2: Transcribed text is passed to `aiMealService.parseMealFromText` to extract calories and macronutrients.
      - Step 3: Saved to PostgreSQL via `entryService.createEntry` $\rightarrow$ `localFile.delete()`.
 
-5. **Deep Linking & Identity Pairing Architecture (`/start <UUID>`):**
-   - *The Deep Linking Protocol:* Web links formatted as `https://t.me/Bot?start=<UUID>` trigger Telegram to open the chat and automatically dispatch the text message `/start <UUID>` when the user taps "Start".
-   - *Execution Order Invariant:* The `/start` command check must precede the `if (user.isEmpty())` guard clause. A new user has `telegram_chat_id = NULL` in PostgreSQL; checking `findByTelegramChatId` first would mistakenly block their account pairing attempt.
-   - *Single-Table Database Design:* Avoided redundant mapping tables by adding `telegram_chat_id BIGINT UNIQUE` directly to the `users` table. The `/start` handler parses the UUID, locates the user via `uRepository.findById(webUserId)`, assigns `user.setTelegramChatId(chatId)`, and persists it via `uRepository.save(user)`.
+10. **Deep Linking & Identity Pairing Architecture (`/start <UUID>`):**
+    - *The Deep Linking Protocol:* Web links formatted as `https://t.me/Bot?start=<UUID>` trigger Telegram to open the chat and automatically dispatch the text message `/start <UUID>` when the user taps "Start".
+    - *Execution Order Invariant:* The `/start` command check must precede the `if (user.isEmpty())` guard clause. A new user has `telegram_chat_id = NULL` in PostgreSQL; checking `findByTelegramChatId` first would mistakenly block their account pairing attempt.
+    - *Single-Table Database Design:* Avoided redundant mapping tables by adding `telegram_chat_id BIGINT UNIQUE` directly to the `users` table. The `/start` handler parses the UUID, locates the user via `uRepository.findById(webUserId)`, assigns `user.setTelegramChatId(chatId)`, and persists it via `uRepository.save(user)`.
 
-6. **Rate Limiting Integration & Friendly Telegram Feedback:**
-   - Integrated Sprint 4's `AiQuotaService.saveQuota(userId, AiFeatureType.ENTRY_AI)` before initiating AI processing across all three input modalities (photos, voice notes, text).
-   - Wrapped operations in `try-catch (AiQuotaExceededException e)`: when a user exhausts their daily 5 AI meals, the bot intercepts the exception and sends a polite Telegram message (`replyQuotaFinished`) without crashing or leaving the user in silence.
+11. **Rate Limiting Integration & Friendly Telegram Feedback:**
+    - Integrated Sprint 4's `AiQuotaService.saveQuota(userId, AiFeatureType.ENTRY_AI)` before initiating AI processing across all three input modalities (photos, voice notes, text).
+    - Wrapped operations in `try-catch (AiQuotaExceededException e)`: when a user exhausts their daily 5 AI meals, the bot intercepts the exception and sends a polite Telegram message (`replyQuotaFinished`) without crashing or leaving the user in silence.
 
-
-7**Frontend Integration (React, Vite & TypeScript):**
-   - Added `telegramChatId?: number | null` to `UserProfile` in `types/user.ts` and `UserResponseDTO` in Spring Boot.
-   - Configured `VITE_TELEGRAM_BOT_NAME` in `frontend/.env`, accessed securely via `import.meta.env.VITE_TELEGRAM_BOT_NAME`.
-   - Updated `UserProfileModal.tsx` with dynamic visual states: displays a distinct blue button (*"Connect with Telegram"*) linking to `https://t.me/${botName}?start=${user.id}` if unlinked, and an emerald green button (*"Telegram connected"*) if already linked.
+12. **Frontend Integration (React, Vite & TypeScript):**
+    - Added `telegramChatId?: number | null` to `UserProfile` in `types/user.ts` and `UserResponseDTO` in Spring Boot.
+    - Configured `VITE_TELEGRAM_BOT_NAME` in `frontend/.env`, accessed securely via `import.meta.env.VITE_TELEGRAM_BOT_NAME`.
+    - Updated `UserProfileModal.tsx` with dynamic visual states: displays a distinct blue button (*"Connect with Telegram"*) linking to `https://t.me/${botName}?start=${user.id}` if unlinked, and an emerald green button (*"Telegram connected"*) if already linked.
 
 ---
 
