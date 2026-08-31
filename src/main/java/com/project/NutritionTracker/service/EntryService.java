@@ -1,12 +1,15 @@
 package com.project.NutritionTracker.service;
 
+import com.project.NutritionTracker.dto.DailyProgressDTO;
 import com.project.NutritionTracker.dto.EntryRequestDTO;
 import com.project.NutritionTracker.dto.EntryResponseDTO;
 import com.project.NutritionTracker.exception.NotFoundException;
 import com.project.NutritionTracker.mapper.EntryMapper;
 import com.project.NutritionTracker.model.Entry;
+import com.project.NutritionTracker.model.Goal;
 import com.project.NutritionTracker.model.User;
 import com.project.NutritionTracker.repository.EntryRepository;
+import com.project.NutritionTracker.repository.GoalRepository;
 import com.project.NutritionTracker.repository.UserRepository;
 import org.apache.tomcat.util.net.openssl.ciphers.Authentication;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -18,6 +21,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -25,17 +29,20 @@ public class EntryService {
     private final EntryMapper mapper;
     private final EntryRepository repository;
     private final UserRepository uRepository;
+    private final GoalRepository gRepository;
 
-    public EntryService(EntryMapper mapper, EntryRepository repository, UserRepository uRepository) {
+
+    public EntryService(EntryMapper mapper, EntryRepository repository, UserRepository uRepository, GoalRepository gRepository) {
         this.mapper = mapper;
         this.repository = repository;
         this.uRepository = uRepository;
+        this.gRepository = gRepository;
     }
 
     @PreAuthorize("isAuthenticated() && #userId == principal.id")
     public List<EntryResponseDTO> findByUser(UUID userId) {
         if (userId == null) {
-            throw  new IllegalArgumentException("User can't be null");
+            throw new IllegalArgumentException("User can't be null");
         }
 
         User user = uRepository.findById(userId).orElseThrow(() -> new NotFoundException("User not found with id: " + userId));
@@ -102,6 +109,30 @@ public class EntryService {
         return mapper.toResponseDTO(entry);
     }
 
+    @PreAuthorize("#userId == principal.id")
+    public DailyProgressDTO getLeftToday(UUID userId) {
+
+        if (userId == null) {
+            throw new IllegalArgumentException("User can't be null");
+        }
+        User user = uRepository.findById(userId).orElseThrow(() -> new NotFoundException("User not found with id: " + userId));
+
+        var todayEntries = findTodayEntriesByUser(userId);
+
+        int consumedKcal = todayEntries.stream().mapToInt(EntryResponseDTO::kcal).sum();
+        double consumedCarbs = todayEntries.stream().mapToDouble(EntryResponseDTO::carbs).sum();
+        double consumedFat = todayEntries.stream().mapToDouble(EntryResponseDTO::fat).sum();
+        double consumedProtein = todayEntries.stream().mapToDouble(EntryResponseDTO::protein).sum();
+
+        Goal goal = gRepository.findFirstByUserOrderByStartDateDesc(user).orElseThrow(() -> new NotFoundException("No goal found fot user. please set your goals first"));
+
+        Integer remainingKcal = goal.getKcal() - consumedKcal;
+        double remainingCarbs = Math.max(0.0, goal.getCarbs() - consumedCarbs);
+        double remainingFat = Math.max(0.0, goal.getFat() - consumedFat);
+        double remainingProtein = Math.max(0.0, goal.getProtein() - consumedProtein);
+
+        return new DailyProgressDTO(remainingKcal, remainingCarbs, remainingFat, remainingProtein);
+    }
 
 
 }
