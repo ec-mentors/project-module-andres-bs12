@@ -63,13 +63,13 @@ public class UserControllerTest {
     void setUp() {
         sampleId = UUID.randomUUID();
         sampleEmail = "text@example.com";
-        sampleResponseDTO = new UserResponseDTO("John", sampleId, "Doe", sampleEmail, LocalDateTime.of(2026, 8, 1, 12, 0), "google-123");
+        sampleResponseDTO = new UserResponseDTO("John", sampleId, "Doe", sampleEmail, LocalDateTime.of(2026, 8, 1, 12, 0), "google-123", null);
         sampleRequestDTO = new UserRequestDTO("John", "Doe", sampleEmail, "google-123");
 
         // Sample 2
         sampleId2 = UUID.randomUUID();
         sampleEmail2 = "felixwhite@gmail.com";
-        sampleResponseDTO2 = new UserResponseDTO("Felix", sampleId2, "White", sampleEmail2, LocalDateTime.of(2026, 8, 1, 12, 0), "googleId1234");
+        sampleResponseDTO2 = new UserResponseDTO("Felix", sampleId2, "White", sampleEmail2, LocalDateTime.of(2026, 8, 1, 12, 0), "googleId1234", null);
         sampleRequestDTO2 = new UserRequestDTO("Felix", "White", sampleEmail2, "googleId1234");
     }
 
@@ -156,7 +156,7 @@ public class UserControllerTest {
     @Test
     @DisplayName("PUT /api/user/{id} - Success (200)")
     void updateUser_ShouldReturn200_AndUserResponseDTO() throws Exception {
-        UserResponseDTO updatedResponse = new UserResponseDTO("Felix", sampleId, "White", sampleEmail, LocalDateTime.of(2026, 8, 1, 12, 0), "google-123");
+        UserResponseDTO updatedResponse = new UserResponseDTO("Felix", sampleId, "White", sampleEmail, LocalDateTime.of(2026, 8, 1, 12, 0), "google-123", null);
         when(userService.updateUser(sampleId, sampleRequestDTO2)).thenReturn(updatedResponse);
 
         mockMvc.perform(put("/api/user/{id}", sampleId)
