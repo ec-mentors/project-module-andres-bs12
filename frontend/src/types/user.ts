@@ -6,4 +6,5 @@ export interface UserProfile {
   googleId?: string;
   pictureUrl?: string;
   role?: string;
+  telegramChatId?: number | null;
 }
