@@ -16,7 +16,18 @@ This document serves as a development and learning journal to record key concept
      - *Configuration Fallback Invariant:* Configured `telegram.bot.token=${TELEGRAM_BOT_TOKEN:}` in `application.properties`. The trailing colon `:` provides an empty default fallback, preventing application context crashes (`IllegalArgumentException: Could not resolve placeholder`) during unit tests or environments where the environment variable is not yet exported.
      - *IDE Property Warnings:* Clarified that IntelliJ IDEA highlights custom properties like `telegram.bot.token` in yellow because they are not part of Spring's built-in `@ConfigurationProperties` metadata; it is a cosmetic IDE hint, not a Java or Spring error.
 
-2. **Object-Oriented Design & The Adapter Pattern (`MultipartFileConvertor`):**
+2. **Spring Boot 3 Bootstrap Engine: `@Configuration` vs. `@Service` & The `TelegramBotsApi` Dependency Dance:**
+   - *The Core Difference Between `@Service` and `@Configuration`:*
+     - `@Service`: Contains my custom **business logic** (the "brain" that processes food, validates macros, and saves meals).
+     - `@Configuration`: Serves as the **assembly workshop / ignition switch** for third-party libraries (like Telegram, Security, AWS) that Spring does not own or auto-start out-of-the-box.
+   - *Why `@Service` alone did not start the bot in Spring Boot 3:*
+     - In legacy Spring Boot 2, the starter used old `spring.factories` auto-registration. In Spring Boot 3 (`3.4.2`), Spring requires an explicit `@Configuration` class to start the background Long Polling thread session. Without it, the `TelegramBotService` is just a passive object sitting in memory that never opens network sockets to Telegram.
+   - *How Spring Wires the Objects (The IoC Dance):*
+     - Step 1: Spring scans `@Service` and instantiates `TelegramBotService` with all its dependencies (`UserRepository`, `AiMealService`, `AiAudioService`, `AiQuotaService`, `EntryService`).
+     - Step 2: Spring scans `TelegramBotConfig` and executes the `@Bean` method `telegramBotsApi(TelegramBotService botService)`. Spring automatically passes the previously created `TelegramBotService` bean into `botService`.
+     - Step 3: Inside the method, `botsApi.registerBot(botService)` starts the `DefaultBotSession` polling daemon, connecting the live Telegram cloud stream to my `onUpdateReceived(Update update)` method.
+
+3. **Object-Oriented Design & The Adapter Pattern (`MultipartFileConvertor`):**
    - *The Architectural Challenge:* Telegram's API downloads files to the local disk as raw `java.io.File` objects. However, existing Spring AI services (`AiMealService.parseMealFromImage` and `AiAudioService.transcribe`) were originally designed for web uploads accepting Spring's `MultipartFile` interface.
    - *Preserving the Open-Closed Principle (OCP):* Rather than modifying or breaking working AI services, I created an Adapter class `MultipartFileConvertor` in the `util` package that implements `MultipartFile` (`MultipartFileConvertor implements MultipartFile`).
    - *Polymorphism in Action:* Because `MultipartFileConvertor` satisfies the `MultipartFile` interface contract, Java's compiler treats it as a 100% valid `MultipartFile`, allowing transparent reuse of existing AI vision and Whisper services with zero modifications.

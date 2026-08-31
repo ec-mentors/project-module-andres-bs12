@@ -9,8 +9,11 @@ import com.project.NutritionTracker.enums.MealType;
 import com.project.NutritionTracker.exception.AiQuotaExceededException;
 import com.project.NutritionTracker.model.User;
 import com.project.NutritionTracker.repository.UserRepository;
+import com.project.NutritionTracker.security.UserPrincipal;
 import com.project.NutritionTracker.util.MultipartFileConvertor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
@@ -22,6 +25,7 @@ import org.telegram.telegrambots.meta.api.objects.PhotoSize;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
+import java.security.Security;
 import java.util.UUID;
 
 @Service
@@ -30,7 +34,7 @@ public class TelegramBotService extends TelegramLongPollingBot {
     private final String botUserName;
     private final AiMealService aiMealService;
     private final AiAudioService aiAudioService;
-    private final AiQuotaService quotaServicel;
+    private final AiQuotaService quotaService;
     private final EntryService entryService;
 
     public TelegramBotService(
@@ -43,7 +47,7 @@ public class TelegramBotService extends TelegramLongPollingBot {
         this.botUserName = botUserName;
         this.aiMealService = aiMealService;
         this.aiAudioService = aiAudioService;
-        this.quotaServicel = quotaServicel;
+        this.quotaService = quotaServicel;
         this.entryService = entryService;
     }
 
@@ -65,7 +69,6 @@ public class TelegramBotService extends TelegramLongPollingBot {
         var message = update.getMessage();
         var chatId = update.getMessage().getChatId();
         var user = uRepository.findByTelegramChatId(chatId);
-
 
         // Check if it's the first time of a registered user, login into wsp
         if (message.hasText() && message.getText().startsWith("/start")) {
@@ -106,12 +109,20 @@ public class TelegramBotService extends TelegramLongPollingBot {
             return;
         }
 
+        User currentUser = user.get();
         userId = user.get().getId();
 
+        // AUTH to let Telegram pass security when user is correct
+        UserPrincipal principal = new UserPrincipal(currentUser);
+        // getAuthorities has ROLE_USER ROLE_ADMIN
+        var auth = new UsernamePasswordAuthenticationToken(principal, null, principal.getAuthorities());
+        SecurityContextHolder.getContext().setAuthentication(auth);
+
+        try {
         // Photos
         try {
             if (message.hasPhoto()) {
-                quotaServicel.saveQuota(userId, AiFeatureType.ENTRY_AI);
+                quotaService.saveQuota(userId, AiFeatureType.ENTRY_AI);
 
                 // First I get a list with different sizes, them I get the best photo
                 PhotoSize bestPhoto = message.getPhoto().get(message.getPhoto().size() - 1);
@@ -164,7 +175,7 @@ public class TelegramBotService extends TelegramLongPollingBot {
         // Text
         try {
             if (message.hasText()) {
-                quotaServicel.saveQuota(userId, AiFeatureType.ENTRY_AI);
+                quotaService.saveQuota(userId, AiFeatureType.ENTRY_AI);
                 AiMealResponseDTO meal = aiMealService.parseMealFromText(userId, message.getText());
                 EntryRequestDTO entryRequestDTO = new EntryRequestDTO(
                         meal.mealName(),
@@ -195,7 +206,7 @@ public class TelegramBotService extends TelegramLongPollingBot {
         if (message.hasVoice()) {
             try {
                 // First check if there are credits left
-                quotaServicel.saveQuota(userId, AiFeatureType.ENTRY_AI);
+                quotaService.saveQuota(userId, AiFeatureType.ENTRY_AI);
 
                 String fileId = message.getVoice().getFileId();
                 // Get the file
@@ -246,6 +257,9 @@ public class TelegramBotService extends TelegramLongPollingBot {
                     throw new RuntimeException(ex);
                 }
             }
+        }
+    } finally {
+            SecurityContextHolder.clearContext();
         }
     }
 
