@@ -13,7 +13,10 @@ public class TelegramBotConfig {
     @Bean
     public TelegramBotsApi telegramBotsApi(TelegramBotService botService) throws TelegramApiException {
         TelegramBotsApi botsApi = new TelegramBotsApi(DefaultBotSession.class);
-        botsApi.registerBot(botService);
+        if (botService.getBotToken() != null && !botService.getBotToken().isBlank()
+                && botService.getBotUsername() != null && !botService.getBotUsername().isBlank()) {
+            botsApi.registerBot(botService);
+        }
         return botsApi;
     }
 }
