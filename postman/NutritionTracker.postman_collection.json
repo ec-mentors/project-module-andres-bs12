@@ -2,7 +2,7 @@
 	"info": {
 		"_postman_id": "cc7c9d40-9686-4e3e-a312-e639bcb2be95",
 		"name": "NutritionTracker",
-		"description": "Colección completa de NutritionTracker con autenticación JWT de 30 días, variables encadenadas y suites de pruebas automatizadas.",
+		"description": "Complete NutritionTracker API collection with 30-day JWT authentication, dynamic variable chaining, and automated test assertions.",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
 	"item": [
