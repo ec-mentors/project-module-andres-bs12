@@ -10,6 +10,7 @@ import com.project.NutritionTracker.model.Entry;
 import com.project.NutritionTracker.model.FavoriteMeal;
 import com.project.NutritionTracker.model.User;
 import com.project.NutritionTracker.repository.UserRepository;
+import com.project.NutritionTracker.security.JwtTokenProvider;
 import com.project.NutritionTracker.service.FavoriteMealService;
 import com.project.NutritionTracker.service.UserService;
 import org.junit.jupiter.api.BeforeEach;
@@ -56,6 +57,9 @@ public class FavoriteMealControllerTest {
 
     @MockitoBean
     private UserRepository userRepository;
+
+    @MockitoBean
+    private JwtTokenProvider jwtTokenProvider;
 
     private UUID sampleUserId;
     private UUID sampleFavoriteMealId;

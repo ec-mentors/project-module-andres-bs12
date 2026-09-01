@@ -67,7 +67,7 @@ public class GoalService {
         return mapper.toResponseDTO(repository.save(goal));
     }
 
-    @PreAuthorize("#userId == principal.id")
+    @PreAuthorize("isAuthenticated() && #userId == principal.id")
     public GoalResponseDTO getGoalByUserAndDate(UUID userId, LocalDate date) {
         if (userId == null) {
             throw new IllegalArgumentException("new user can't be null");
@@ -81,7 +81,7 @@ public class GoalService {
         return mapper.toResponseDTO(goal);
     }
 
-    @PreAuthorize("#userId == principal.id")
+    @PreAuthorize("isAuthenticated() && #userId == principal.id")
     public List<GoalResponseDTO> findAllGoalsByUser(UUID userId) {
 
         if (userId == null) {

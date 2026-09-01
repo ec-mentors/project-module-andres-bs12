@@ -255,6 +255,7 @@ public class UserServiceTest {
         assertEquals(sampleResponseDTO, result.userResponseDTO());
         assertEquals("mocked-jwt-token", result.token());
         verify(repository, never()).save(any());
+        verify(jwtTokenProvider).generateToken(sampleUser);
     }
 
     @Test
@@ -271,6 +272,7 @@ public class UserServiceTest {
         assertEquals(sampleResponseDTO, result.userResponseDTO());
         assertEquals("mocked-jwt-token", result.token());
         verify(repository, times(1)).save(sampleUser);
+        verify(jwtTokenProvider).generateToken(sampleUser);
     }
 
     @Test

@@ -5,6 +5,7 @@ import com.project.NutritionTracker.dto.EntryResponseDTO;
 import com.project.NutritionTracker.enums.MealType;
 import com.project.NutritionTracker.exception.NotFoundException;
 import com.project.NutritionTracker.repository.UserRepository;
+import com.project.NutritionTracker.security.JwtTokenProvider;
 import com.project.NutritionTracker.service.EntryService;
 import com.project.NutritionTracker.service.UserService;
 import org.junit.jupiter.api.BeforeEach;
@@ -46,6 +47,9 @@ public class EntryControllerTest {
 
     @MockitoBean
     private UserRepository userRepository;
+
+    @MockitoBean
+    private JwtTokenProvider jwtTokenProvider;
 
     // User ID
     private UUID sampleUserId;

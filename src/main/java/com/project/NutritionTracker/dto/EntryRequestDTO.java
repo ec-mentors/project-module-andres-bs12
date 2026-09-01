@@ -25,7 +25,6 @@ public record EntryRequestDTO(
         @Min(value = 0, message = "Protein cannot be negative")
         Double protein,
 
-        @NotNull(message = "MealType is required")
         MealType mealType
 ) {
 }
