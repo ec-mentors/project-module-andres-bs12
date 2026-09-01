@@ -1,8 +1,10 @@
 package com.project.NutritionTracker.controller;
 
+import com.project.NutritionTracker.dto.AuthResponseDTO;
 import com.project.NutritionTracker.dto.UserRequestDTO;
 import com.project.NutritionTracker.dto.UserResponseDTO;
 import com.project.NutritionTracker.exception.NotFoundException;
+import com.project.NutritionTracker.security.JwtTokenProvider;
 import com.project.NutritionTracker.service.UserService;
 import com.project.NutritionTracker.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -45,6 +47,9 @@ public class UserControllerTest {
 
     @MockitoBean
     private UserRepository userRepository;
+
+    @MockitoBean
+    private JwtTokenProvider jwtTokenProvider;
 
 
     private UUID sampleId;
@@ -189,17 +194,19 @@ public class UserControllerTest {
 
     @Test
     @DisplayName("POST /api/user/auth/google - Success (200)")
-    void authWithGoogle_ShouldReturn200_AndUserResponseDTO() throws Exception {
+    void authWithGoogle_ShouldReturn200_AndAuthResponseDTO() throws Exception {
         String googleIdToken = "google-token-123";
-        when(userService.verifyAndProcessGoogleToken(googleIdToken)).thenReturn(sampleResponseDTO);
+        AuthResponseDTO sampleAuthResponse = new AuthResponseDTO(sampleResponseDTO, "sample-jwt-token");
+        when(userService.verifyAndProcessGoogleToken(googleIdToken)).thenReturn(sampleAuthResponse);
 
         mockMvc.perform(post("/api/user/auth/google")
                         .contentType(MediaType.TEXT_PLAIN)
                         .content(googleIdToken))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(sampleId.toString()))
-                .andExpect(jsonPath("$.firstName").value("John"))
-                .andExpect(jsonPath("$.email").value(sampleEmail));
+                .andExpect(jsonPath("$.token").value("sample-jwt-token"))
+                .andExpect(jsonPath("$.userResponseDTO.id").value(sampleId.toString()))
+                .andExpect(jsonPath("$.userResponseDTO.firstName").value("John"))
+                .andExpect(jsonPath("$.userResponseDTO.email").value(sampleEmail));
 
         verify(userService).verifyAndProcessGoogleToken(googleIdToken);
     }

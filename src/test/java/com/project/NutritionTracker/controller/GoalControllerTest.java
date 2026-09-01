@@ -4,6 +4,7 @@ import com.project.NutritionTracker.dto.GoalRequestDTO;
 import com.project.NutritionTracker.dto.GoalResponseDTO;
 import com.project.NutritionTracker.exception.NotFoundException;
 import com.project.NutritionTracker.repository.UserRepository;
+import com.project.NutritionTracker.security.JwtTokenProvider;
 import com.project.NutritionTracker.service.GoalService;
 import com.project.NutritionTracker.service.UserService;
 import org.junit.jupiter.api.BeforeEach;
@@ -46,6 +47,9 @@ public class GoalControllerTest {
 
     @MockitoBean
     private UserRepository userRepository;
+
+    @MockitoBean
+    private JwtTokenProvider jwtTokenProvider;
 
     // User ID
     private UUID sampleUserId;

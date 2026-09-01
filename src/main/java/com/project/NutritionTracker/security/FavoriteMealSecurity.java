@@ -6,7 +6,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.UUID;
 
-@Component
+@Component("favoriteMealSecurity")
 @RequiredArgsConstructor
 public class FavoriteMealSecurity {
 

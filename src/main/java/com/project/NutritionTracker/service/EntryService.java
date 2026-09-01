@@ -3,6 +3,7 @@ package com.project.NutritionTracker.service;
 import com.project.NutritionTracker.dto.DailyProgressDTO;
 import com.project.NutritionTracker.dto.EntryRequestDTO;
 import com.project.NutritionTracker.dto.EntryResponseDTO;
+import com.project.NutritionTracker.enums.MealType;
 import com.project.NutritionTracker.exception.NotFoundException;
 import com.project.NutritionTracker.mapper.EntryMapper;
 import com.project.NutritionTracker.model.Entry;
@@ -60,11 +61,14 @@ public class EntryService {
 
         entry.setUser(user);
         entry.setCreatedOn(LocalDateTime.now());
+        if (entry.getMealType() == null) {
+            entry.setMealType(inferMealType(entry.getCreatedOn()));
+        }
         Entry savedEntry = repository.save(entry);
         return mapper.toResponseDTO(savedEntry);
     }
 
-    @PreAuthorize("@entrySecurity.isOwner(#id, principal)")
+    @PreAuthorize("isAuthenticated() && @entrySecurity.isOwner(#id, principal)")
     public void removeEntry(UUID id) {
         if (repository.existsById(id)) {
             repository.deleteById(id);
@@ -73,7 +77,7 @@ public class EntryService {
         }
     }
 
-    @PreAuthorize("#userId == principal.id")
+    @PreAuthorize("isAuthenticated() && #userId == principal.id")
     public List<EntryResponseDTO> findTodayEntriesByUser(UUID userId) {
         if (userId == null) {
             throw new IllegalArgumentException("UserId can't be null");
@@ -103,13 +107,16 @@ public class EntryService {
         entry.setMealName(dto.mealName());
         entry.setProtein(dto.protein());
         entry.setKcal(dto.kcal());
+        if (dto.mealType() != null) {
+            entry.setMealType(dto.mealType());
+        }
 
         repository.save(entry);
 
         return mapper.toResponseDTO(entry);
     }
 
-    @PreAuthorize("#userId == principal.id")
+    @PreAuthorize("isAuthenticated() && #userId == principal.id")
     public DailyProgressDTO getLeftToday(UUID userId) {
 
         if (userId == null) {
@@ -132,6 +139,23 @@ public class EntryService {
         double remainingProtein = Math.max(0.0, goal.getProtein() - consumedProtein);
 
         return new DailyProgressDTO(remainingKcal, remainingCarbs, remainingFat, remainingProtein);
+    }
+
+    private MealType inferMealType(LocalDateTime createdOn) {
+        if (createdOn == null) {
+            return MealType.LUNCH;
+        }
+        LocalTime timeCreated = createdOn.toLocalTime();
+        if (timeCreated.isBefore(LocalTime.NOON)) {
+            return MealType.BREAKFAST;
+        }
+        if (timeCreated.isBefore(LocalTime.of(16, 0))) {
+            return MealType.LUNCH;
+        }
+        if (timeCreated.isBefore(LocalTime.of(19, 0))) {
+            return MealType.SNACK;
+        }
+        return MealType.DINNER;
     }
 
 

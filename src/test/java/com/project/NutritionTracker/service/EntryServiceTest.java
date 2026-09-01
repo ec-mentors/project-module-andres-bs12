@@ -145,6 +145,23 @@ public class EntryServiceTest {
     }
 
     @Test
+    void createEntry_InfersMealType_WhenNotProvided() {
+        EntryRequestDTO dtoWithoutMealType = new EntryRequestDTO("Oats", 300, 40.0, 8.0, 12.0, null);
+        Entry entityWithoutMealType = new Entry(sampleId, sampleUser, "Oats", "MANUAL", null, 300, 40.0, 8.0, 12.0, null);
+        when(uRepository.findById(sampleUserId)).thenReturn(Optional.of(sampleUser));
+        when(mapper.toEntity(dtoWithoutMealType)).thenReturn(entityWithoutMealType);
+        when(repository.save(entityWithoutMealType)).thenReturn(entityWithoutMealType);
+        when(mapper.toResponseDTO(entityWithoutMealType)).thenReturn(sampleEntryResponseDTO);
+
+        var result = service.createEntry(dtoWithoutMealType, sampleUserId);
+
+        assertNotNull(result);
+        assertNotNull(entityWithoutMealType.getMealType());
+        assertNotNull(entityWithoutMealType.getCreatedOn());
+        verify(repository).save(entityWithoutMealType);
+    }
+
+    @Test
     void createEntry_throwsIAE_WhenEntryRequestDTOIsNull() {
 
         assertThrows(IllegalArgumentException.class, () -> service.createEntry(null, sampleUserId));
@@ -264,8 +281,8 @@ public class EntryServiceTest {
 
     @Test
     void updateEntry() {
-        EntryRequestDTO newEntryRequestDTO = new EntryRequestDTO( "Chicken",99900, 950.0, 915.0, 930.0, MealType.BREAKFAST);
-        EntryResponseDTO newEntryResponseDTO = new EntryResponseDTO(sampleId, "Chicken", "Telegram",  LocalDateTime.now(), 99900, 950.0, 915.0, 930.0, MealType.BREAKFAST);
+        EntryRequestDTO newEntryRequestDTO = new EntryRequestDTO( "Chicken",99900, 950.0, 915.0, 930.0, MealType.LUNCH);
+        EntryResponseDTO newEntryResponseDTO = new EntryResponseDTO(sampleId, "Chicken", "Telegram",  LocalDateTime.now(), 99900, 950.0, 915.0, 930.0, MealType.LUNCH);
 
         when(repository.findById(sampleId)).thenReturn(Optional.of(sampleEntry));
         when(repository.save(sampleEntry)).thenReturn(sampleEntry);
@@ -275,6 +292,8 @@ public class EntryServiceTest {
 
         assertNotNull(response);
         assertEquals(newEntryResponseDTO, response);
+        assertEquals("Chicken", sampleEntry.getMealName());
+        assertEquals(MealType.LUNCH, sampleEntry.getMealType());
 
         verify(repository, times(1)).findById(sampleId);
         verify(repository, times(1)).save(sampleEntry);

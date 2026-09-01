@@ -8,6 +8,7 @@ import com.project.NutritionTracker.dto.AiMealTextRequestDTO;
 import com.project.NutritionTracker.enums.*;
 import com.project.NutritionTracker.exception.AiQuotaExceededException;
 import com.project.NutritionTracker.repository.UserRepository;
+import com.project.NutritionTracker.security.JwtTokenProvider;
 import com.project.NutritionTracker.service.AiAudioService;
 import com.project.NutritionTracker.service.AiGoalService;
 import com.project.NutritionTracker.service.AiMealService;
@@ -56,6 +57,9 @@ public class AiControllerTest {
     // Needed to start up the test
     @MockitoBean
     private UserRepository userRepository;
+
+    @MockitoBean
+    private JwtTokenProvider jwtTokenProvider;
 
     @MockitoBean
     private AiMealService aiMealService;
