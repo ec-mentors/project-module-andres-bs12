@@ -1,11 +1,13 @@
 package com.project.NutritionTracker.service;
 
+import com.project.NutritionTracker.dto.AuthResponseDTO;
 import com.project.NutritionTracker.dto.UserRequestDTO;
 import com.project.NutritionTracker.dto.UserResponseDTO;
 import com.project.NutritionTracker.exception.NotFoundException;
 import com.project.NutritionTracker.mapper.UserMapper;
 import com.project.NutritionTracker.model.User;
 import com.project.NutritionTracker.repository.UserRepository;
+import com.project.NutritionTracker.security.JwtTokenProvider;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -28,6 +30,8 @@ public class UserServiceTest {
     private UserRepository repository;
     @Mock
     private UserMapper mapper;
+    @Mock
+    private JwtTokenProvider jwtTokenProvider;
     @InjectMocks
     private UserService service;
 
@@ -243,11 +247,13 @@ public class UserServiceTest {
     void ProcessGoogleAuth_ExistingUserLogsIn_WithoutSaving() {
         when(repository.findByGoogleId(sampleGoogleId)).thenReturn(Optional.of(sampleUser));
         when(mapper.toResponseDTO(sampleUser)).thenReturn(sampleResponseDTO);
+        when(jwtTokenProvider.generateToken(sampleUser)).thenReturn("mocked-jwt-token");
 
-        UserResponseDTO result = service.processGoogleAuth(sampleRequestDTO);
+        AuthResponseDTO result = service.processGoogleAuth(sampleRequestDTO);
 
         assertNotNull(result);
-        assertEquals(sampleResponseDTO, result);
+        assertEquals(sampleResponseDTO, result.userResponseDTO());
+        assertEquals("mocked-jwt-token", result.token());
         verify(repository, never()).save(any());
     }
 
@@ -257,10 +263,13 @@ public class UserServiceTest {
         when(mapper.toResponseDTO(sampleUser)).thenReturn(sampleResponseDTO);
         when(mapper.toEntity(sampleRequestDTO)).thenReturn(sampleUser);
         when(repository.save(sampleUser)).thenReturn(sampleUser);
+        when(jwtTokenProvider.generateToken(sampleUser)).thenReturn("mocked-jwt-token");
 
-        UserResponseDTO result = service.processGoogleAuth(sampleRequestDTO);
+        AuthResponseDTO result = service.processGoogleAuth(sampleRequestDTO);
 
         assertNotNull(result);
+        assertEquals(sampleResponseDTO, result.userResponseDTO());
+        assertEquals("mocked-jwt-token", result.token());
         verify(repository, times(1)).save(sampleUser);
     }
 
