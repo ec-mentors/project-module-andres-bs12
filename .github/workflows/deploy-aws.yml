@@ -101,8 +101,23 @@ jobs:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
+          command_timeout: 20m
+          script_stop: true
           script: |
+            set -euo pipefail
             echo "Starting container update on EC2..."
+
+            echo "=== Disk usage before prune ==="
+            df -h
+
+            echo "=== Freeing Docker disk (images/cache/stopped containers; volumes preserved) ==="
+            docker system prune -af
+            docker image prune -af
+            echo "Skipping docker volume prune to preserve any named DB volumes."
+
+            echo "=== Disk usage after prune ==="
+            df -h
+
             if [ -d "NutritionTracker" ]; then
               cd NutritionTracker
               git fetch origin
@@ -112,6 +127,7 @@ jobs:
               cd NutritionTracker
               git checkout ${{ github.sha }}
             fi
+
             docker build -t nutritiontracker-app:latest .
             docker stop nutrition-tracker-prod || true
             docker rm nutrition-tracker-prod || true
@@ -123,4 +139,11 @@ jobs:
               -e TELEGRAM_BOT_TOKEN="${{ secrets.TELEGRAM_BOT_TOKEN }}" \
               -e JWT_SECRET="${{ secrets.JWT_SECRET }}" \
               nutritiontracker-app:latest
+
+            if ! docker ps --filter name=nutrition-tracker-prod --filter status=running -q | grep -q .; then
+              echo "ERROR: nutrition-tracker-prod is not running after docker run"
+              docker logs nutrition-tracker-prod || true
+              exit 1
+            fi
+
             echo "✅ Container updated on EC2 successfully!"
