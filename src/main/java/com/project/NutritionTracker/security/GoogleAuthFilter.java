@@ -1,9 +1,7 @@
 package com.project.NutritionTracker.security;
 
-import com.project.NutritionTracker.dto.UserResponseDTO;
 import com.project.NutritionTracker.model.User;
 import com.project.NutritionTracker.repository.UserRepository;
-import com.project.NutritionTracker.service.UserService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -16,12 +14,13 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 import java.util.Optional;
+import java.util.UUID;
 
 @Component
 @AllArgsConstructor
 public class GoogleAuthFilter extends OncePerRequestFilter {
 
-    private final UserService userService;
+    private final JwtTokenProvider jwtTokenProvider;
     private final UserRepository userRepository;
 
     @Override
@@ -30,20 +29,22 @@ public class GoogleAuthFilter extends OncePerRequestFilter {
         String authHeader = request.getHeader("Authorization");
 
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
-            String googleIdToken = authHeader.substring(7); // Token batter
+            String jwtToken = authHeader.substring(7);
 
             try {
-                // verify token
-                UserResponseDTO userDTO = userService.verifyAndProcessGoogleToken(googleIdToken);
+                // Verify JWT token with our secret key
+                UUID id = jwtTokenProvider.validateTokenAndGetUserId(jwtToken);
 
-                Optional<User> userOptional = userRepository.findById(userDTO.id());
+                if (id != null) {
+                    Optional<User> userOptional = userRepository.findById(id);
 
-                if (userOptional.isPresent()) {
-                    UserPrincipal principal = new UserPrincipal(userOptional.get());
-                    UsernamePasswordAuthenticationToken auth =
-                            new UsernamePasswordAuthenticationToken(principal, null, principal.getAuthorities());
+                    if (userOptional.isPresent()) {
+                        UserPrincipal principal = new UserPrincipal(userOptional.get());
+                        UsernamePasswordAuthenticationToken auth =
+                                new UsernamePasswordAuthenticationToken(principal, null, principal.getAuthorities());
 
-                    SecurityContextHolder.getContext().setAuthentication(auth);
+                        SecurityContextHolder.getContext().setAuthentication(auth);
+                    }
                 }
             } catch (Exception e) {
                 SecurityContextHolder.clearContext();
@@ -54,7 +55,7 @@ public class GoogleAuthFilter extends OncePerRequestFilter {
     }
 
     @Override
-    protected boolean shouldNotFilter(HttpServletRequest request)  {
+    protected boolean shouldNotFilter(HttpServletRequest request) {
         return request.getServletPath().equals("/api/user/auth/google");
     }
 }

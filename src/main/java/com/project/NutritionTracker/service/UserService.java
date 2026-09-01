@@ -4,12 +4,15 @@ import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.gson.GsonFactory;
+import com.project.NutritionTracker.dto.AuthResponseDTO;
 import com.project.NutritionTracker.dto.UserRequestDTO;
 import com.project.NutritionTracker.dto.UserResponseDTO;
 import com.project.NutritionTracker.exception.NotFoundException;
 import com.project.NutritionTracker.mapper.UserMapper;
 import com.project.NutritionTracker.model.User;
 import com.project.NutritionTracker.repository.UserRepository;
+import com.project.NutritionTracker.security.JwtTokenProvider;
+import org.antlr.runtime.Token;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 
@@ -23,10 +26,12 @@ public class UserService {
 
     private final UserRepository repository;
     private final UserMapper mapper;
+    private final JwtTokenProvider jwtTokenProvider;
 
-    public UserService(UserRepository repository, UserMapper mapper) {
+    public UserService(UserRepository repository, UserMapper mapper, JwtTokenProvider jwtTokenProvider) {
         this.repository = repository;
         this.mapper = mapper;
+        this.jwtTokenProvider = jwtTokenProvider;
     }
 
     @PreAuthorize("hasRole('ADMIN')")
@@ -84,7 +89,7 @@ public class UserService {
 
     // This is like my login process, user exist then log in, doesn't exist then create it
     // This will get the data verified from the method "verifyAndProcessGoogleToken"
-    public UserResponseDTO processGoogleAuth(UserRequestDTO dto) {
+    public AuthResponseDTO processGoogleAuth(UserRequestDTO dto) {
 
         if (dto == null || dto.googleId() == null) {
             throw new IllegalArgumentException("Invalid Google authentication payload");
@@ -93,20 +98,24 @@ public class UserService {
         Optional<User> existingUser = repository.findByGoogleId(dto.googleId());
 
         if (existingUser.isPresent()) {
-            return mapper.toResponseDTO(existingUser.get());
+            UserResponseDTO userResponseDTO = mapper.toResponseDTO(existingUser.get());
+            String token = jwtTokenProvider.generateToken(existingUser.get());
+            return new AuthResponseDTO(userResponseDTO, token);
         }
 
         User newuser = mapper.toEntity(dto);
-
         // set the time
         newuser.setCreatedAt(LocalDateTime.now());
-        return mapper.toResponseDTO(repository.save(newuser));
+        User savedUser = repository.save(newuser);
+        UserResponseDTO userResponseDTO =  mapper.toResponseDTO(savedUser);
+        String token = jwtTokenProvider.generateToken(savedUser);
+        return new AuthResponseDTO(userResponseDTO, token);
     }
 
 
 
     // This method is not working yet since it will verify with google, for testable reason, it will not verify tokens yet
-    public UserResponseDTO verifyAndProcessGoogleToken(String googleIdToken) {
+    public AuthResponseDTO verifyAndProcessGoogleToken(String googleIdToken) {
         // 1. Check that is not empty
         if (googleIdToken == null || googleIdToken.isEmpty()) {
             throw new IllegalArgumentException("Token can't be empty");

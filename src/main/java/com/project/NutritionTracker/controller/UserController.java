@@ -1,5 +1,6 @@
 package com.project.NutritionTracker.controller;
 
+import com.project.NutritionTracker.dto.AuthResponseDTO;
 import com.project.NutritionTracker.dto.UserRequestDTO;
 import com.project.NutritionTracker.dto.UserResponseDTO;
 import com.project.NutritionTracker.exception.NotFoundException;
@@ -32,8 +33,8 @@ public class UserController {
 
     // Request body, it's expecting a json object to be sent as key value
     @PostMapping("/auth/google")
-    public ResponseEntity<UserResponseDTO> authWithGoogle(@Valid  @RequestBody String googleId) {
-        UserResponseDTO response = service.verifyAndProcessGoogleToken(googleId); // not auth yet
+    public ResponseEntity<AuthResponseDTO> authWithGoogle(@Valid  @RequestBody String googleId) {
+        AuthResponseDTO response = service.verifyAndProcessGoogleToken(googleId); // not auth yet
 
         return ResponseEntity.ok(response); // code 200, converts java object to json
     }
