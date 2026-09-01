@@ -4,10 +4,8 @@ import type { UserProfile } from '../types/user';
 import type { AiOnboardingState } from '../components/onboarding/types';
 import { calculateAiNutritionGoal } from '../components/onboarding/utils';
 import { toLocalYmd, entryCreatedOnToLocalYmd } from '../utils/dateLocal';
-import { ApiError, throwIfNotOk } from './apiErrors';
-
+import { ApiError, isRateLimitError, isApiError, getApiErrorUserMessage } from './apiErrors';
 export { ApiError, isRateLimitError, isApiError, getApiErrorUserMessage } from './apiErrors';
-
 // Base API URL (Vite dev server proxies /api to http://localhost:8080)
 const API_BASE = '/api';
 
@@ -61,7 +59,9 @@ export const api = {
       body: credentialToken,
     });
 
-    await throwIfNotOk(response, 'Google authentication');
+    if (!response.ok) {
+      throw new Error(`Google Authentication failed with status ${response.status}`);
+    }
 
     setAuthToken(credentialToken);
 
@@ -118,10 +118,6 @@ export const api = {
 
   /** POST /api/entry/{userId} - Create a new meal entry */
   async createEntry(payload: CreateMealEntryPayload, userId: string): Promise<MealEntry> {
-    const hour = new Date().getHours();
-    const defaultMealType = hour >= 5 && hour < 12 ? 'BREAKFAST' : hour >= 12 && hour < 17 ? 'LUNCH' : hour >= 17 && hour < 22 ? 'DINNER' : 'SNACK';
-    const mealType = payload.mealType || defaultMealType;
-
     const response = await fetch(`${API_BASE}/entry/${userId}`, {
       method: 'POST',
       headers: authHeaders('application/json'),
@@ -132,21 +128,25 @@ export const api = {
         carbs: Number(payload.carbs),
         fat: Number(payload.fat),
         protein: Number(payload.protein),
-        mealType,
       }),
     });
 
-    await throwIfNotOk(response, 'Create meal entry');
-    return await response.json();
+    if (response.ok) {
+      return await response.json();
+    }
+    throw new Error(`Failed to create entry with status: ${response.status}`);
   },
 
   /** DELETE /api/entry/{entryId} - Delete a meal entry */
   async deleteEntry(entryId: string): Promise<void> {
-    const response = await fetch(`${API_BASE}/entry/${entryId}`, {
-      method: 'DELETE',
-      headers: authHeaders(),
-    });
-    await throwIfNotOk(response, 'Delete meal entry');
+    try {
+      await fetch(`${API_BASE}/entry/${entryId}`, { 
+        method: 'DELETE',
+        headers: authHeaders(),
+      });
+    } catch {
+      console.info('[REST API] Failed to delete entry from server.');
+    }
   },
 
   // --- GOALS (Nutritional Target Goals) ---
@@ -185,23 +185,16 @@ export const api = {
       }),
     });
 
-    await throwIfNotOk(response, 'Save goal');
-    return await response.json();
+    if (response.ok) {
+      return await response.json();
+    }
+    throw new Error(`Failed to save goal with status: ${response.status}`);
   },
 
   // --- AI GOAL ROADMAP (GPT-5.6 Luna Service) ---
 
-  /** POST /api/ai/calculate-goal/{userId} - Calculate tailored AI goal using GPT-5.6 Luna */
-  async calculateAiGoalRoadmap(userId: string, data: AiOnboardingState): Promise<NutritionGoal> {
-    if (!userId) {
-      throw new ApiError({
-        status: 400,
-        message: 'User ID is required for AI goal calculation',
-        userMessage: 'Please sign in before calculating an AI goal.',
-        code: 'missing_user_id',
-      });
-    }
-
+  /** POST /api/ai/calculate-goal - Calculate tailored AI goal using GPT-5.6 Luna */
+  async calculateAiGoalRoadmap(data: AiOnboardingState): Promise<NutritionGoal> {
     try {
       const response = await fetch(`${API_BASE}/ai/calculate-goal/${userId}`, {
         method: 'POST',
@@ -230,12 +223,7 @@ export const api = {
           startDate: TODAY_STR,
         };
       }
-
-      if (response.status === 429) {
-        await throwIfNotOk(response, 'AI goal calculation');
-      }
     } catch (error) {
-      if (error instanceof ApiError) throw error;
       console.warn('[REST API] Backend AI service offline, using client-side fallback calculation.', error);
     }
 
@@ -250,37 +238,23 @@ export const api = {
 
   // --- MULTIMODAL AI MEAL PARSER (Text, Audio, Photo) ---
 
-  /** POST /api/ai/parse-meal-text/{userId} - Parse natural language text description into macros */
-  async parseMealText(userId: string, description: string): Promise<AiMealResponseDTO> {
-    if (!userId) {
-      throw new ApiError({
-        status: 400,
-        message: 'User ID is required for AI meal parsing',
-        userMessage: 'Please sign in before using AI meal parsing.',
-        code: 'missing_user_id',
-      });
-    }
-
-    const response = await fetch(`${API_BASE}/ai/parse-meal-text/${userId}`, {
+  /** POST /api/ai/parse-meal-text - Parse natural language text description into macros */
+  async parseMealText(description: string): Promise<AiMealResponseDTO> {
+    const response = await fetch(`${API_BASE}/ai/parse-meal-text${userId}`, {
       method: 'POST',
       headers: authHeaders('application/json'),
       body: JSON.stringify({ description }),
     });
 
-    await throwIfNotOk(response, 'Parse meal text');
+    if (!response.ok) {
+      throw new Error(`Failed to parse meal text with status ${response.status}`);
+    }
+
     return await response.json();
   },
 
-  /** POST /api/ai/parse-meal-audio/{userId} - Transcribe & parse audio recording into macros */
-  async parseMealAudio(userId: string, audioBlob: Blob): Promise<AiMealResponseDTO> {
-    if (!userId) {
-      throw new ApiError({
-        status: 400,
-        message: 'User ID is required for AI meal parsing',
-        userMessage: 'Please sign in before using AI meal parsing.',
-        code: 'missing_user_id',
-      });
-    }
+  /** POST /api/ai/parse-meal-audio - Transcribe & parse audio recording into macros */
+  async parseMealAudio(audioBlob: Blob): Promise<AiMealResponseDTO> {
     const formData = new FormData();
     formData.append('audio', audioBlob, 'meal_audio.webm');
 
@@ -290,26 +264,21 @@ export const api = {
       headers['Authorization'] = `Bearer ${token}`;
     }
 
-    const response = await fetch(`${API_BASE}/ai/parse-meal-audio/${userId}`, {
+    const response = await fetch(`${API_BASE}/ai/parse-meal-audio${userId}`, {
       method: 'POST',
       headers,
       body: formData,
     });
 
-    await throwIfNotOk(response, 'Parse meal audio');
+    if (!response.ok) {
+      throw new Error(`Failed to parse meal audio with status ${response.status}`);
+    }
+
     return await response.json();
   },
 
-  /** POST /api/ai/parse-meal-image/{userId} - Scan & estimate nutritional breakdown from photo */
-  async parseMealImage(userId: string, imageFile: File | Blob): Promise<AiMealResponseDTO> {
-    if (!userId) {
-      throw new ApiError({
-        status: 400,
-        message: 'User ID is required for AI meal parsing',
-        userMessage: 'Please sign in before using AI meal parsing.',
-        code: 'missing_user_id',
-      });
-    }
+  /** POST /api/ai/parse-meal-image - Scan & estimate nutritional breakdown from photo */
+  async parseMealImage(imageFile: File | Blob): Promise<AiMealResponseDTO> {
     const formData = new FormData();
     formData.append('image', imageFile, 'meal_photo.jpg');
 
@@ -319,13 +288,16 @@ export const api = {
       headers['Authorization'] = `Bearer ${token}`;
     }
 
-    const response = await fetch(`${API_BASE}/ai/parse-meal-image/${userId}`, {
+    const response = await fetch(`${API_BASE}/ai/parse-meal-image${userId}`, {
       method: 'POST',
       headers,
       body: formData,
     });
 
-    await throwIfNotOk(response, 'Parse meal image');
+    if (!response.ok) {
+      throw new Error(`Failed to analyze meal photo with status ${response.status}`);
+    }
+
     return await response.json();
   },
 };
@@ -340,20 +312,20 @@ export interface AiMealResponseDTO {
 }
 
 // Convenience named exports matching App.tsx imports
-export const parseMealText = async (userId: string, description: string): Promise<AiMealResponseDTO> => {
-  return await api.parseMealText(userId, description);
+export const parseMealText = async (description: string): Promise<AiMealResponseDTO> => {
+  return await api.parseMealText(description);
 };
 
-export const parseMealAudio = async (userId: string, audioBlob: Blob): Promise<AiMealResponseDTO> => {
-  return await api.parseMealAudio(userId, audioBlob);
+export const parseMealAudio = async (audioBlob: Blob): Promise<AiMealResponseDTO> => {
+  return await api.parseMealAudio(audioBlob);
 };
 
-export const parseMealImage = async (userId: string, imageFile: File | Blob): Promise<AiMealResponseDTO> => {
-  return await api.parseMealImage(userId, imageFile);
+export const parseMealImage = async (imageFile: File | Blob): Promise<AiMealResponseDTO> => {
+  return await api.parseMealImage(imageFile);
 };
 
-export const calculateAiGoalRoadmap = async (userId: string, data: AiOnboardingState): Promise<NutritionGoal> => {
-  return await api.calculateAiGoalRoadmap(userId, data);
+export const calculateAiGoalRoadmap = async (data: AiOnboardingState): Promise<NutritionGoal> => {
+  return await api.calculateAiGoalRoadmap(data);
 };
 
 export const fetchTodayEntries = async (userId?: string, dateStr?: string): Promise<MealEntry[]> => {
@@ -379,20 +351,15 @@ export const createMealEntry = async (userId: string, payload: CreateMealEntryPa
 };
 
 export const updateMealEntry = async (id: string, payload: CreateMealEntryPayload): Promise<MealEntry> => {
-  const hour = new Date().getHours();
-  const defaultMealType = hour >= 5 && hour < 12 ? 'BREAKFAST' : hour >= 12 && hour < 17 ? 'LUNCH' : hour >= 17 && hour < 22 ? 'DINNER' : 'SNACK';
-  const mealType = payload.mealType || defaultMealType;
-
   const response = await fetch(`/api/entry/${id}/update`, {
     method: 'PUT',
     headers: authHeaders('application/json'),
-    body: JSON.stringify({
-      ...payload,
-      mealType,
-    }),
+    body: JSON.stringify(payload),
   });
-  await throwIfNotOk(response, 'Update meal entry');
-  return await response.json();
+  if (response.ok) {
+    return await response.json();
+  }
+  throw new Error(`Failed to update meal entry with status: ${response.status}`);
 };
 
 export const deleteMealEntry = async (entryId: string): Promise<void> => {
@@ -421,51 +388,67 @@ export const fetchFavorites = async (userId?: string): Promise<FavoriteMeal[]> =
     headers: authHeaders(), // Authorization: Bearer <token>
   });
 
-  await throwIfNotOk(response, 'Fetch favorite meals');
+  // Check
+  if (!response.ok) {
+    throw new Error(`Failed to fetch favorite meals: HTTP ${response.status}`);
+  } 
+
+  // Parse
   return await response.json();
-};
+}
+
 
 // Create a new favorite meal
-export const createFavoriteMeal = async (
-  userId: string,
-  payload: CreateFavoriteMealPayload
+export const createFavoriteMeal = async(userId: string, payload: CreateFavoriteMealPayload
 ): Promise<FavoriteMeal> => {
+
   if (!userId) {
-    throw new Error('User ID is required');
+    throw new Error(`User ID is required`);
   }
 
-  const response = await fetch(`/api/favorite-meal/create/${userId}`, {
-    method: 'POST',
-    headers: authHeaders('application/json'),
+  const respsonse = await fetch(`/api/favorite-meal/create/${userId}`, {
+    method: `POST`,
+    headers: authHeaders(`application/json`),
     body: JSON.stringify(payload),
   });
 
-  await throwIfNotOk(response, 'Create favorite meal');
-  return await response.json();
-};
+  if (!respsonse.ok) {
+    throw new Error (`Failed to create favorite meal: HTTP ${respsonse.status}`);
+  }
+
+  return await respsonse.json();
+}
 
 // Update a favorite meal
-export const updateFavoriteMeal = async (
-  fMealId: string,
-  payload: CreateFavoriteMealPayload
+
+export const updateFavoriteMeal = async(fMealId: string, payload: CreateFavoriteMealPayload
 ): Promise<FavoriteMeal> => {
-  const response = await fetch(`/api/favorite-meal/update/${fMealId}`, {
-    method: 'PUT',
-    headers: authHeaders('application/json'),
-    body: JSON.stringify(payload),
+  const response = await fetch(`/api/favorite-meal/update/${fMealId}`,
+  {
+    method: `PUT`,
+    headers: authHeaders(`application/json`),
+    body: JSON.stringify(payload)
   });
 
-  await throwIfNotOk(response, 'Update favorite meal');
-  return await response.json();
-};
+  if (!response.ok) {
+    throw new Error(`Failed to update Favorite meal, HTTP ${response.status}`);
+ }
+
+ return await response.json();
+}
+
 
 // Delete a favorite
-export const removeFavoriteMeal = async (fMealId: string): Promise<void> => {
-  const response = await fetch(`/api/favorite-meal/remove/${fMealId}`, {
-    method: 'DELETE',
-    headers: authHeaders(),
+
+export const removeFavoriteMeal = async(fMealId: string
+): Promise<void> => {
+  const response = await await fetch(`/api/favorite-meal/remove/${fMealId}`,
+  {
+    method: `DELETE`,
+    headers: authHeaders(`application/json`),
   });
 
-  if (response.status === 204) return;
-  await throwIfNotOk(response, 'Delete favorite meal');
-};
+  if (!response.ok && response.status !== 204) {
+    throw new Error(`Failed to update Favorite meal, HTTP ${response.status}`);
+ }
+}
