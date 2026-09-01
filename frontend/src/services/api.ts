@@ -4,7 +4,6 @@ import type { UserProfile } from '../types/user';
 import type { AiOnboardingState } from '../components/onboarding/types';
 import { calculateAiNutritionGoal } from '../components/onboarding/utils';
 import { toLocalYmd, entryCreatedOnToLocalYmd } from '../utils/dateLocal';
-import { ApiError, isRateLimitError, isApiError, getApiErrorUserMessage } from './apiErrors';
 export { ApiError, isRateLimitError, isApiError, getApiErrorUserMessage } from './apiErrors';
 // Base API URL (Vite dev server proxies /api to http://localhost:8080)
 const API_BASE = '/api';
@@ -63,10 +62,10 @@ export const api = {
       throw new Error(`Google Authentication failed with status ${response.status}`);
     }
 
-    setAuthToken(credentialToken);
+    const data = await response.json();
+    setAuthToken(data.token);
 
-    const user: UserProfile = await response.json();
-    return user;
+    return data.userResponseDTO;
   },
 
   // --- ENTRIES (Meal Logs) ---
@@ -193,8 +192,8 @@ export const api = {
 
   // --- AI GOAL ROADMAP (GPT-5.6 Luna Service) ---
 
-  /** POST /api/ai/calculate-goal - Calculate tailored AI goal using GPT-5.6 Luna */
-  async calculateAiGoalRoadmap(data: AiOnboardingState): Promise<NutritionGoal> {
+  /** POST /api/ai/calculate-goal/{userId} - Calculate tailored AI goal using GPT-5.6 Luna */
+  async calculateAiGoalRoadmap(userId: string, data: AiOnboardingState): Promise<NutritionGoal> {
     try {
       const response = await fetch(`${API_BASE}/ai/calculate-goal/${userId}`, {
         method: 'POST',
@@ -238,9 +237,9 @@ export const api = {
 
   // --- MULTIMODAL AI MEAL PARSER (Text, Audio, Photo) ---
 
-  /** POST /api/ai/parse-meal-text - Parse natural language text description into macros */
-  async parseMealText(description: string): Promise<AiMealResponseDTO> {
-    const response = await fetch(`${API_BASE}/ai/parse-meal-text${userId}`, {
+  /** POST /api/ai/parse-meal-text/{userId} - Parse natural language text description into macros */
+  async parseMealText(userId: string, description: string): Promise<AiMealResponseDTO> {
+    const response = await fetch(`${API_BASE}/ai/parse-meal-text/${userId}`, {
       method: 'POST',
       headers: authHeaders('application/json'),
       body: JSON.stringify({ description }),
@@ -253,8 +252,8 @@ export const api = {
     return await response.json();
   },
 
-  /** POST /api/ai/parse-meal-audio - Transcribe & parse audio recording into macros */
-  async parseMealAudio(audioBlob: Blob): Promise<AiMealResponseDTO> {
+  /** POST /api/ai/parse-meal-audio/{userId} - Transcribe & parse audio recording into macros */
+  async parseMealAudio(userId: string, audioBlob: Blob): Promise<AiMealResponseDTO> {
     const formData = new FormData();
     formData.append('audio', audioBlob, 'meal_audio.webm');
 
@@ -264,7 +263,7 @@ export const api = {
       headers['Authorization'] = `Bearer ${token}`;
     }
 
-    const response = await fetch(`${API_BASE}/ai/parse-meal-audio${userId}`, {
+    const response = await fetch(`${API_BASE}/ai/parse-meal-audio/${userId}`, {
       method: 'POST',
       headers,
       body: formData,
@@ -277,8 +276,8 @@ export const api = {
     return await response.json();
   },
 
-  /** POST /api/ai/parse-meal-image - Scan & estimate nutritional breakdown from photo */
-  async parseMealImage(imageFile: File | Blob): Promise<AiMealResponseDTO> {
+  /** POST /api/ai/parse-meal-image/{userId} - Scan & estimate nutritional breakdown from photo */
+  async parseMealImage(userId: string, imageFile: File | Blob): Promise<AiMealResponseDTO> {
     const formData = new FormData();
     formData.append('image', imageFile, 'meal_photo.jpg');
 
@@ -288,7 +287,7 @@ export const api = {
       headers['Authorization'] = `Bearer ${token}`;
     }
 
-    const response = await fetch(`${API_BASE}/ai/parse-meal-image${userId}`, {
+    const response = await fetch(`${API_BASE}/ai/parse-meal-image/${userId}`, {
       method: 'POST',
       headers,
       body: formData,
@@ -312,20 +311,20 @@ export interface AiMealResponseDTO {
 }
 
 // Convenience named exports matching App.tsx imports
-export const parseMealText = async (description: string): Promise<AiMealResponseDTO> => {
-  return await api.parseMealText(description);
+export const parseMealText = async (userId: string, description: string): Promise<AiMealResponseDTO> => {
+  return await api.parseMealText(userId, description);
 };
 
-export const parseMealAudio = async (audioBlob: Blob): Promise<AiMealResponseDTO> => {
-  return await api.parseMealAudio(audioBlob);
+export const parseMealAudio = async (userId: string, audioBlob: Blob): Promise<AiMealResponseDTO> => {
+  return await api.parseMealAudio(userId, audioBlob);
 };
 
-export const parseMealImage = async (imageFile: File | Blob): Promise<AiMealResponseDTO> => {
-  return await api.parseMealImage(imageFile);
+export const parseMealImage = async (userId: string, imageFile: File | Blob): Promise<AiMealResponseDTO> => {
+  return await api.parseMealImage(userId, imageFile);
 };
 
-export const calculateAiGoalRoadmap = async (data: AiOnboardingState): Promise<NutritionGoal> => {
-  return await api.calculateAiGoalRoadmap(data);
+export const calculateAiGoalRoadmap = async (userId: string, data: AiOnboardingState): Promise<NutritionGoal> => {
+  return await api.calculateAiGoalRoadmap(userId, data);
 };
 
 export const fetchTodayEntries = async (userId?: string, dateStr?: string): Promise<MealEntry[]> => {
