@@ -4,6 +4,65 @@ This document serves as a development and learning journal to record key concept
 
 ---
 
+## 📅 2026-09-01 - (Sprint 6) - Enterprise JWT Authentication Architecture, OAuth2 IdP Decoupling, Postman/Newman Quality Gate & On-Demand AWS CI/CD
+
+### 💡 Key Concepts Learned & Architectural Decisions
+
+1. **Root Cause Analysis (RCA): The Limitations of Raw Google ID Tokens in Production & CI/CD:**
+   - *The Problem:* In earlier sprints, the frontend transmitted Google's raw OAuth ID token (`google_id_token`) on every single HTTP request (`Authorization: Bearer <google_id_token>`), and the Spring Boot filter called `userService.verifyAndProcessGoogleToken()` on each request.
+   - *Failure Vectors Identified:*
+     1. *Strict 60-Minute Hard Expiration:* Google ID tokens enforce a mandatory 3600-second (`exp`) lifetime. After 60 minutes, Google's cryptographic verifier rejects the token (`idToken == null`), dropping user sessions abruptly during navigation with `401/403` errors.
+     2. *Latency & Network Roundtrip Penalty:* Validating a raw Google token requires downloading and verifying Google's public key certificates over external HTTPS on every API call (`~200-400ms` latency penalty per request).
+     3. *Automated Testing (Postman / CI/CD) Deadlock:* Headless runners (Newman in GitHub Actions) cannot click interactive Google OAuth popups every 60 minutes, making automated integration testing impossible.
+   - *The Architectural Decision:* **Decoupled Identity Provider (IdP) from Session Authorization via the OAuth2 Token Exchange Pattern**.
+
+2. **The OAuth2 Token Exchange Pattern (Decoupling Google Login from App Authorization):**
+   - *The Architecture:*
+     - Google is used **strictly as an Identity Provider (IdP) during initial authentication** (`POST /api/user/auth/google`).
+     - Spring Boot verifies Google's token once, retrieves or persists the `User` in PostgreSQL, and generates an internal, cryptographically signed Application JWT (`JwtTokenProvider`) with a 30-day lifetime.
+     - All subsequent REST endpoints (`/api/entry`, `/api/goal`, `/api/favorite-meal`) authenticate via this internal JWT.
+   - *Benefits:*
+     - 100% support for any Google user worldwide to register with 1 click.
+     - Sub-millisecond verification ($<0.1\text{ms}$) in local server memory via HMAC-SHA256 without contacting external Google servers.
+     - Stable 30-day session lifetime for web clients and automated Postman test suites.
+
+3. **Enterprise Secrets Management & The 12-Factor App Standard:**
+   - *The Antipattern:* Hardcoding fallback secret keys, tokens, or database passwords in `application.properties` or source code files pushed to git.
+   - *The Enterprise Standard:* Externalize all secrets strictly via environment variables (`${JWT_SECRET}`, `${OPENAI_MEAL_PARSER_KEY}`, `${TELEGRAM_BOT_TOKEN}`).
+   - *Three-Layer Environment Isolation:*
+     - Codebase (`application.properties`): Defines clean placeholders without raw credentials (`jwt.secret=${JWT_SECRET}`).
+     - Local IDE (IntelliJ): Injected via Run Configurations (`JWT_SECRET=...`).
+     - Cloud / Production (AWS): Injected via private `.env` or container environment variables, keeping git repositories 100% clean and auditable.
+
+4. **Cryptographic JWT Engineering with JJWT (`JwtTokenProvider.java`):**
+   - *HMAC-SHA256 Key Derivation:* Converted secret strings to cryptographic byte arrays via `StandardCharsets.UTF_8` and `Keys.hmacShaKeyFor(keyBytes)` ensuring $\ge 256$ bits of entropy.
+   - *Token Fabrication (`Jwts.builder()`):* Configured `subject(user.getId().toString())`, `claim("email", ...)`, `claim("role", ...)`, `issuedAt(now)`, `expiration(expirationDate)`, and `signWith(key)`.
+   - *Defensive Token Parsing & Exception Trapping:*
+     - Utilized `Jwts.parser().verifyWith(key).build().parseSignedClaims(token).getPayload()`.
+     - Wrapped in `try-catch (JwtException | IllegalArgumentException)`: intercepted expired or forged tokens cleanly to return `null`, allowing security filters to issue polite `401 Unauthorized` without uncaught 500 crashes.
+
+5. **Entity Persistence Lifecycle & Generated Identifier Ordering:**
+   - *The Bug:* Attempting `jwtTokenProvider.generateToken(newuser)` before `repository.save(newuser)`.
+   - *Root Cause:* Newly instantiated JPA entities have `id = null` prior to database persistence. Invoking `.getId().toString()` triggers `NullPointerException`.
+   - *Invariant:* Execute `User savedUser = repository.save(newuser);` first so PostgreSQL assigns the generated `UUID`, then pass `savedUser` to both `UserMapper` and `JwtTokenProvider`.
+
+6. **Stateless Security Filter Architecture (`GoogleAuthFilter.java`):**
+   - Refactored `GoogleAuthFilter` to inject `JwtTokenProvider` and `UserRepository`.
+   - Extracted JWT bearer tokens, verified cryptographic signatures in memory, and populated `SecurityContextHolder` with `UserPrincipal` on authenticated requests.
+   - Enforced defensive null checks (`if (id != null)`) preventing unnecessary repository queries on malformed tokens.
+
+7. **Integration Testing: Controller Unit Tests (`MockMvc`) vs. End-to-End API Suites (`Postman / Newman`):**
+   - *The Core Difference:*
+     - `MockMvc` / `@WebMvcTest`: Fast, isolated tests with mocked services and simulated databases; validates routing, `@Valid` constraints, and HTTP status codes, but cannot catch real database constraints, SQL dialect bugs, or runtime container errors.
+     - `Postman` + `Newman`: True end-to-end integration tests hitting a live running Tomcat server on `localhost:8080` against a real PostgreSQL instance; validates multi-step workflows (User $\rightarrow$ Goal $\rightarrow$ Entry $\rightarrow$ Today Aggregation $\rightarrow$ Delete).
+
+8. **On-Demand CI/CD Architecture with GitHub Actions (`workflow_dispatch`) & AWS Quality Gate:**
+   - *On-Demand Triggering:* Configured `on: workflow_dispatch` in `.github/workflows/deploy-aws.yml` to give the developer manual control over when production is updated (via a single "Run workflow" button).
+   - *The Quality Gate Mechanism:* Spawns an ephemeral PostgreSQL container, boots Spring Boot, and runs Newman. If any test fails, deployment halts immediately (zero risk to production).
+   - *Zero-Downtime Deployment:* On successful tests, builds the multi-stage Docker image, publishes to Amazon ECR, and executes a rolling update on AWS (App Runner / EC2) with native HTTPS.
+
+---
+
 ## 📅 2026-08-31 - (Sprint 5) - Multimodal Telegram Bot Architecture, Long Polling, Deep Linking & Object-Oriented Adapter Pattern
 
 ### 💡 Key Concepts Learned & Architectural Decisions
