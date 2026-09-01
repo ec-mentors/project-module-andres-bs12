@@ -79,6 +79,7 @@ jobs:
           SPRING_DATASOURCE_USERNAME: testuser
           SPRING_DATASOURCE_PASSWORD: testpassword
           OPENAI_MEAL_PARSER_KEY: test-key-dummy
+          JWT_SECRET: super-secret-key-for-jwt-testing-minimum-256-bits-length-guaranteed
 
       - name: 📦 Empaquetar JAR de Spring Boot
         run: mvn package -DskipTests
@@ -101,6 +102,7 @@ jobs:
           SPRING_DATASOURCE_USERNAME: testuser
           SPRING_DATASOURCE_PASSWORD: testpassword
           OPENAI_MEAL_PARSER_KEY: test-key-dummy
+          JWT_SECRET: super-secret-key-for-jwt-testing-minimum-256-bits-length-guaranteed
 
       - name: 📬 Ejecutar Suite Automatizada de Postman con Newman
         run: |
