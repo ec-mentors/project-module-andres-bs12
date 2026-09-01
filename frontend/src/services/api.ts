@@ -376,6 +376,11 @@ export const updateGoal = async (userId: string, newGoal: NutritionGoal): Promis
 
 // --- FAVORITE MEALS ---
 
+/** Backend serializes MealType as lowercase (@JsonProperty); normalize to frontend MealType. */
+const normalizeFavoriteMeal = (meal: FavoriteMeal): FavoriteMeal => ({
+  ...meal,
+  mealType: String(meal.mealType ?? '').toUpperCase() as FavoriteMeal['mealType'],
+});
 
 // Fetch all favorite meals for a user
 export const fetchFavorites = async (userId?: string): Promise<FavoriteMeal[]> => {
@@ -390,12 +395,11 @@ export const fetchFavorites = async (userId?: string): Promise<FavoriteMeal[]> =
   // Check
   if (!response.ok) {
     throw new Error(`Failed to fetch favorite meals: HTTP ${response.status}`);
-  } 
+  }
 
-  // Parse
-  return await response.json();
-}
-
+  const data: FavoriteMeal[] = await response.json();
+  return Array.isArray(data) ? data.map(normalizeFavoriteMeal) : [];
+};
 
 // Create a new favorite meal
 export const createFavoriteMeal = async(userId: string, payload: CreateFavoriteMealPayload
@@ -415,8 +419,8 @@ export const createFavoriteMeal = async(userId: string, payload: CreateFavoriteM
     throw new Error (`Failed to create favorite meal: HTTP ${respsonse.status}`);
   }
 
-  return await respsonse.json();
-}
+  return normalizeFavoriteMeal(await respsonse.json());
+};
 
 // Update a favorite meal
 
@@ -431,11 +435,10 @@ export const updateFavoriteMeal = async(fMealId: string, payload: CreateFavorite
 
   if (!response.ok) {
     throw new Error(`Failed to update Favorite meal, HTTP ${response.status}`);
- }
+  }
 
- return await response.json();
-}
-
+  return normalizeFavoriteMeal(await response.json());
+};
 
 // Delete a favorite
 

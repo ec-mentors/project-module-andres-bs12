@@ -301,7 +301,10 @@ export const ManageFavoritesModal: React.FC<ManageFavoritesModalProps> = ({
 
   // --- FILTERING & SORTING LOGIC ---
   const filteredFavorites = favorites.filter((fav) => {
-    const matchesCategory = activeFilter === 'ALL' ? true : fav.mealType === activeFilter;
+    const matchesCategory =
+    activeFilter === 'ALL'
+      ? true
+      : String(fav.mealType || '').toUpperCase() === String(activeFilter || '').toUpperCase();
     const matchesSearch = !searchQuery.trim() || fav.mealName.toLowerCase().includes(searchQuery.trim().toLowerCase());
     return matchesCategory && matchesSearch;
   });
