@@ -9,6 +9,19 @@ name: 🚀 Test, Build & Deploy to AWS
 #   SPRING_DATASOURCE_URL, SPRING_DATASOURCE_USERNAME, SPRING_DATASOURCE_PASSWORD
 #   OPENAI_MEAL_PARSER_KEY, TELEGRAM_BOT_TOKEN, JWT_SECRET
 #   VITE_GOOGLE_CLIENT_ID - Google OAuth client ID (public; embedded in frontend build)
+#
+# Google OAuth — PUBLIC login for all users (Production mode):
+#   1. Buy a domain and point A record -> EC2 public IP
+#   2. On EC2: sudo bash scripts/ec2-setup-https.sh yourdomain.com
+#   3. Google Cloud Console -> OAuth Web client -> Authorized JavaScript origins:
+#        http://localhost:5173, http://localhost:8080
+#        https://YOUR_DOMAIN   (required for public production login)
+#   4. Authorized redirect URIs: https://YOUR_DOMAIN
+#   5. OAuth consent screen -> Publishing status: Production
+#      - App home page: https://YOUR_DOMAIN
+#      - Privacy policy: https://YOUR_DOMAIN/privacy.html
+#   6. Scopes: openid, email, profile only (no verification delay for basic scopes)
+#
 # Push to GHCR uses GITHUB_TOKEN (packages: write on this job).
 # ---------------------------------------------------------------------------
 
@@ -146,13 +159,14 @@ jobs:
           OPENAI_MEAL_PARSER_KEY: ${{ secrets.OPENAI_MEAL_PARSER_KEY }}
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          GOOGLE_OAUTH_CLIENT_ID: ${{ secrets.VITE_GOOGLE_CLIENT_ID }}
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
           command_timeout: 20m
           script_stop: true
-          envs: GHCR_PULL_USER,GHCR_PULL_TOKEN,IMAGE_REF,SPRING_DATASOURCE_URL,SPRING_DATASOURCE_USERNAME,SPRING_DATASOURCE_PASSWORD,OPENAI_MEAL_PARSER_KEY,TELEGRAM_BOT_TOKEN,JWT_SECRET
+          envs: GHCR_PULL_USER,GHCR_PULL_TOKEN,IMAGE_REF,SPRING_DATASOURCE_URL,SPRING_DATASOURCE_USERNAME,SPRING_DATASOURCE_PASSWORD,OPENAI_MEAL_PARSER_KEY,TELEGRAM_BOT_TOKEN,JWT_SECRET,GOOGLE_OAUTH_CLIENT_ID
           script: |
             set -euo pipefail
             echo "Starting container update on EC2 (pull-only, no local build)..."
@@ -177,6 +191,7 @@ jobs:
               -e OPENAI_MEAL_PARSER_KEY="$OPENAI_MEAL_PARSER_KEY" \
               -e TELEGRAM_BOT_TOKEN="$TELEGRAM_BOT_TOKEN" \
               -e JWT_SECRET="$JWT_SECRET" \
+              -e GOOGLE_OAUTH_CLIENT_ID="$GOOGLE_OAUTH_CLIENT_ID" \
               "$IMAGE_REF"
 
             if ! docker ps --filter name=nutrition-tracker-prod --filter status=running -q | grep -q .; then

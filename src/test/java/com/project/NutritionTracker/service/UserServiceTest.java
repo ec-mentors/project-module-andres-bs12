@@ -11,7 +11,6 @@ import com.project.NutritionTracker.security.JwtTokenProvider;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -32,7 +31,7 @@ public class UserServiceTest {
     private UserMapper mapper;
     @Mock
     private JwtTokenProvider jwtTokenProvider;
-    @InjectMocks
+
     private UserService service;
 
     private User sampleUser;
@@ -46,6 +45,12 @@ public class UserServiceTest {
 
     @BeforeEach
     void setUp() {
+        service = new UserService(
+                repository,
+                mapper,
+                jwtTokenProvider,
+                "test-google-client-id.apps.googleusercontent.com");
+
         sampleId = UUID.randomUUID();
         sampleEmail = "test@example.com";
         sampleGoogleId = "google-123";

@@ -183,6 +183,8 @@ export const GoogleLoginModal: React.FC<GoogleLoginModalProps> = ({
         {/* Security / Privacy Footer */}
         <p className={`text-xs font-medium mt-4 ${isLight ? 'text-slate-400' : 'text-zinc-500'}`}>
           Protected by Spring Security IDOR Authorization (ADR-02)
+          {' · '}
+          <a href="/privacy.html" className="underline hover:opacity-80">Privacy Policy</a>
         </p>
 
       </div>
