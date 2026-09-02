@@ -8,6 +8,7 @@ name: 🚀 Test, Build & Deploy to AWS
 #   EC2_HOST, EC2_USER, EC2_SSH_KEY
 #   SPRING_DATASOURCE_URL, SPRING_DATASOURCE_USERNAME, SPRING_DATASOURCE_PASSWORD
 #   OPENAI_MEAL_PARSER_KEY, TELEGRAM_BOT_TOKEN, JWT_SECRET
+#   VITE_GOOGLE_CLIENT_ID - Google OAuth client ID (public; embedded in frontend build)
 # Push to GHCR uses GITHUB_TOKEN (packages: write on this job).
 # ---------------------------------------------------------------------------
 
@@ -127,6 +128,8 @@ jobs:
         with:
           context: .
           push: true
+          build-args: |
+            VITE_GOOGLE_CLIENT_ID=${{ secrets.VITE_GOOGLE_CLIENT_ID }}
           tags: |
             ${{ env.IMAGE_NAME }}:${{ github.sha }}
             ${{ env.IMAGE_NAME }}:latest

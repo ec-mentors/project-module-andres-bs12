@@ -8,6 +8,10 @@ WORKDIR /app/frontend
 COPY frontend/package*.json ./
 RUN npm ci
 
+# Vite embeds VITE_* vars at build time (frontend/.env is excluded by .dockerignore)
+ARG VITE_GOOGLE_CLIENT_ID
+ENV VITE_GOOGLE_CLIENT_ID=$VITE_GOOGLE_CLIENT_ID
+
 # Copy frontend source code and compile static bundle
 COPY frontend/ ./
 RUN npm run build
