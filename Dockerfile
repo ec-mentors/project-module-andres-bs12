@@ -25,8 +25,8 @@ COPY src ./src
 # Copy compiled frontend dist into Spring Boot static resources
 COPY --from=frontend-builder /app/src/main/resources/static ./src/main/resources/static
 
-# Package executable JAR file skipping tests
-RUN mvn clean package -DskipTests
+# Package executable JAR; skip compiling/running tests (saves RAM in constrained builders)
+RUN mvn clean package -Dmaven.test.skip=true
 
 # ==========================================
 # STAGE 3: Minimal Runtime Image
