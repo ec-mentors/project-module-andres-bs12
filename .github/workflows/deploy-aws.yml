@@ -1,5 +1,30 @@
 name: 🚀 Test, Build & Deploy to AWS
 
+# ---------------------------------------------------------------------------
+# Required GitHub Actions secrets (EC2 pull from private GHCR):
+#   GHCR_PULL_USER  - GitHub username that owns/can read the package
+#   GHCR_PULL_TOKEN - PAT with read:packages (classic or fine-grained)
+# Existing secrets still required:
+#   EC2_HOST, EC2_USER, EC2_SSH_KEY
+#   SPRING_DATASOURCE_URL, SPRING_DATASOURCE_USERNAME, SPRING_DATASOURCE_PASSWORD
+#   OPENAI_MEAL_PARSER_KEY, TELEGRAM_BOT_TOKEN, JWT_SECRET
+#   VITE_GOOGLE_CLIENT_ID - Google OAuth client ID (public; embedded in frontend build)
+#
+# Google OAuth — PUBLIC login for all users (Production mode):
+#   1. Buy a domain and point A record -> EC2 public IP
+#   2. On EC2: sudo bash scripts/ec2-setup-https.sh yourdomain.com
+#   3. Google Cloud Console -> OAuth Web client -> Authorized JavaScript origins:
+#        http://localhost:5173, http://localhost:8080
+#        https://YOUR_DOMAIN   (required for public production login)
+#   4. Authorized redirect URIs: https://YOUR_DOMAIN
+#   5. OAuth consent screen -> Publishing status: Production
+#      - App home page: https://YOUR_DOMAIN
+#      - Privacy policy: https://YOUR_DOMAIN/privacy.html
+#   6. Scopes: openid, email, profile only (no verification delay for basic scopes)
+#
+# Push to GHCR uses GITHUB_TOKEN (packages: write on this job).
+# ---------------------------------------------------------------------------
+
 on:
   # Manual trigger to deploy to AWS on demand
   workflow_dispatch:
@@ -86,59 +111,90 @@ jobs:
       # and "Execute Automated Postman Test Suite with Newman".
 
   # =========================================================================
-  # STAGE 2: Deploy to AWS EC2 via SSH
+  # STAGE 2: Build image on GitHub Actions, push to GHCR, pull+run on EC2
   # =========================================================================
   deploy-to-aws:
-    name: 🌐 Deploy to AWS EC2
+    name: 🌐 Build GHCR & Deploy to AWS EC2
     runs-on: ubuntu-latest
     needs: [quality-gate-postman]
     if: always() && (needs.quality-gate-postman.result == 'success' || needs.quality-gate-postman.result == 'skipped')
+    permissions:
+      contents: read
+      packages: write
+
+    env:
+      IMAGE_NAME: ghcr.io/${{ github.repository }}
 
     steps:
-      - name: 🚀 Update AWS EC2 Container via SSH
+      - name: 📥 Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: 🔐 Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: 🐳 Build and Push Docker Image to GHCR
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          build-args: |
+            VITE_GOOGLE_CLIENT_ID=${{ secrets.VITE_GOOGLE_CLIENT_ID }}
+          tags: |
+            ${{ env.IMAGE_NAME }}:${{ github.sha }}
+            ${{ env.IMAGE_NAME }}:latest
+
+      - name: 🚀 Pull Image on EC2 and Restart Container
         uses: appleboy/ssh-action@v1.0.3
+        env:
+          GHCR_PULL_USER: ${{ secrets.GHCR_PULL_USER }}
+          GHCR_PULL_TOKEN: ${{ secrets.GHCR_PULL_TOKEN }}
+          IMAGE_REF: ${{ env.IMAGE_NAME }}:${{ github.sha }}
+          SPRING_DATASOURCE_URL: ${{ secrets.SPRING_DATASOURCE_URL }}
+          SPRING_DATASOURCE_USERNAME: ${{ secrets.SPRING_DATASOURCE_USERNAME }}
+          SPRING_DATASOURCE_PASSWORD: ${{ secrets.SPRING_DATASOURCE_PASSWORD }}
+          OPENAI_MEAL_PARSER_KEY: ${{ secrets.OPENAI_MEAL_PARSER_KEY }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          GOOGLE_OAUTH_CLIENT_ID: ${{ secrets.VITE_GOOGLE_CLIENT_ID }}
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
           command_timeout: 20m
           script_stop: true
+          envs: GHCR_PULL_USER,GHCR_PULL_TOKEN,IMAGE_REF,SPRING_DATASOURCE_URL,SPRING_DATASOURCE_USERNAME,SPRING_DATASOURCE_PASSWORD,OPENAI_MEAL_PARSER_KEY,TELEGRAM_BOT_TOKEN,JWT_SECRET,GOOGLE_OAUTH_CLIENT_ID
           script: |
             set -euo pipefail
-            echo "Starting container update on EC2..."
+            echo "Starting container update on EC2 (pull-only, no local build)..."
 
-            echo "=== Disk usage before prune ==="
-            df -h
-
-            echo "=== Freeing Docker disk (images/cache/stopped containers; volumes preserved) ==="
-            docker system prune -af
-            docker image prune -af
-            echo "Skipping docker volume prune to preserve any named DB volumes."
-
-            echo "=== Disk usage after prune ==="
-            df -h
-
-            if [ -d "NutritionTracker" ]; then
-              cd NutritionTracker
-              git fetch origin
-              git checkout ${{ github.sha }}
-            else
-              git clone https://github.com/ec-mentors/project-module-andres-bs12.git NutritionTracker
-              cd NutritionTracker
-              git checkout ${{ github.sha }}
+            if [ -z "${GHCR_PULL_USER:-}" ] || [ -z "${GHCR_PULL_TOKEN:-}" ]; then
+              echo "ERROR: GHCR_PULL_USER and GHCR_PULL_TOKEN secrets must be set for EC2 to pull from GHCR."
+              exit 1
             fi
 
-            docker build -t nutritiontracker-app:latest .
+            echo "$GHCR_PULL_TOKEN" | docker login ghcr.io -u "$GHCR_PULL_USER" --password-stdin
+
+            echo "Pulling $IMAGE_REF ..."
+            docker pull "$IMAGE_REF"
+            docker logout ghcr.io || true
+
             docker stop nutrition-tracker-prod || true
             docker rm nutrition-tracker-prod || true
-            docker run -d --name nutrition-tracker-prod -p 8080:8080 --restart always \
-              -e SPRING_DATASOURCE_URL="${{ secrets.SPRING_DATASOURCE_URL }}" \
-              -e SPRING_DATASOURCE_USERNAME="${{ secrets.SPRING_DATASOURCE_USERNAME }}" \
-              -e SPRING_DATASOURCE_PASSWORD="${{ secrets.SPRING_DATASOURCE_PASSWORD }}" \
-              -e OPENAI_MEAL_PARSER_KEY="${{ secrets.OPENAI_MEAL_PARSER_KEY }}" \
-              -e TELEGRAM_BOT_TOKEN="${{ secrets.TELEGRAM_BOT_TOKEN }}" \
-              -e JWT_SECRET="${{ secrets.JWT_SECRET }}" \
-              nutritiontracker-app:latest
+
+            # Bind only on localhost so public traffic must go through Nginx (HTTPS)
+            docker run -d --name nutrition-tracker-prod -p 127.0.0.1:8080:8080 --restart always \
+              -e SPRING_DATASOURCE_URL="$SPRING_DATASOURCE_URL" \
+              -e SPRING_DATASOURCE_USERNAME="$SPRING_DATASOURCE_USERNAME" \
+              -e SPRING_DATASOURCE_PASSWORD="$SPRING_DATASOURCE_PASSWORD" \
+              -e OPENAI_MEAL_PARSER_KEY="$OPENAI_MEAL_PARSER_KEY" \
+              -e TELEGRAM_BOT_TOKEN="$TELEGRAM_BOT_TOKEN" \
+              -e JWT_SECRET="$JWT_SECRET" \
+              -e GOOGLE_OAUTH_CLIENT_ID="$GOOGLE_OAUTH_CLIENT_ID" \
+              "$IMAGE_REF"
 
             if ! docker ps --filter name=nutrition-tracker-prod --filter status=running -q | grep -q .; then
               echo "ERROR: nutrition-tracker-prod is not running after docker run"
@@ -146,4 +202,6 @@ jobs:
               exit 1
             fi
 
-            echo "✅ Container updated on EC2 successfully!"
+            docker image prune -af || true
+
+            echo "✅ Container updated on EC2 successfully from GHCR!"

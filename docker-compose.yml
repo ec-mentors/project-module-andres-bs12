@@ -32,6 +32,7 @@ services:
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
       OPENAI_MEAL_PARSER_KEY: ${OPENAI_MEAL_PARSER_KEY}
       JWT_SECRET: ${JWT_SECRET:-super-secret-key-for-jwt-testing-minimum-256-bits-length-guaranteed}
+      GOOGLE_OAUTH_CLIENT_ID: ${GOOGLE_OAUTH_CLIENT_ID:-1087959369951-bku0n43d7onoujtri42s297a4eu93n4q.apps.googleusercontent.com}
       TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
     depends_on:
       db:

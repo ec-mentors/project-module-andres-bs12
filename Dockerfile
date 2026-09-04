@@ -8,6 +8,10 @@ WORKDIR /app/frontend
 COPY frontend/package*.json ./
 RUN npm ci
 
+# Vite embeds VITE_* vars at build time (frontend/.env is excluded by .dockerignore)
+ARG VITE_GOOGLE_CLIENT_ID
+ENV VITE_GOOGLE_CLIENT_ID=$VITE_GOOGLE_CLIENT_ID
+
 # Copy frontend source code and compile static bundle
 COPY frontend/ ./
 RUN npm run build
@@ -25,8 +29,8 @@ COPY src ./src
 # Copy compiled frontend dist into Spring Boot static resources
 COPY --from=frontend-builder /app/src/main/resources/static ./src/main/resources/static
 
-# Package executable JAR file skipping tests
-RUN mvn clean package -DskipTests
+# Package executable JAR; skip compiling/running tests (saves RAM in constrained builders)
+RUN mvn clean package -Dmaven.test.skip=true
 
 # ==========================================
 # STAGE 3: Minimal Runtime Image

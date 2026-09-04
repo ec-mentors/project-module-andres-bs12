@@ -13,10 +13,12 @@ import com.project.NutritionTracker.model.User;
 import com.project.NutritionTracker.repository.UserRepository;
 import com.project.NutritionTracker.security.JwtTokenProvider;
 import org.antlr.runtime.Token;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -27,11 +29,17 @@ public class UserService {
     private final UserRepository repository;
     private final UserMapper mapper;
     private final JwtTokenProvider jwtTokenProvider;
+    private final String googleOAuthClientId;
 
-    public UserService(UserRepository repository, UserMapper mapper, JwtTokenProvider jwtTokenProvider) {
+    public UserService(
+            UserRepository repository,
+            UserMapper mapper,
+            JwtTokenProvider jwtTokenProvider,
+            @Value("${google.oauth.client-id}") String googleOAuthClientId) {
         this.repository = repository;
         this.mapper = mapper;
         this.jwtTokenProvider = jwtTokenProvider;
+        this.googleOAuthClientId = googleOAuthClientId;
     }
 
     @PreAuthorize("hasRole('ADMIN')")
@@ -124,11 +132,11 @@ public class UserService {
         try {
             // Verifier object creation
             GoogleIdTokenVerifier verifier = new GoogleIdTokenVerifier.Builder(
-                    // Start the http client that the library will use to download the public keys
                     new NetHttpTransport(),
-                    // Start the Json parser
                     new GsonFactory()
-            ).build(); // build the verifier with the configuration
+            )
+                    .setAudience(Collections.singletonList(googleOAuthClientId))
+                    .build();
 
             // Verify if the token is valid. Check the signature with public keys, check the expiration date. If it's false returns null
             GoogleIdToken idToken = verifier.verify(googleIdToken);

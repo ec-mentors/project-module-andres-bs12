@@ -153,19 +153,23 @@ export const api = {
   /** GET /api/goal/user/{userId}/all - Get goals for user */
   async getLatestGoal(userId?: string): Promise<NutritionGoal | null> {
     if (!userId) return null;
-    try {
-      const response = await fetch(`${API_BASE}/goal/user/${userId}/all`, {
-        headers: authHeaders(),
-      });
-      if (response.ok) {
-        const goals: NutritionGoal[] = await response.json();
-        if (Array.isArray(goals) && goals.length > 0) {
-          return goals[goals.length - 1];
-        }
-        return null;
-      }
-    } catch {
-      console.info('[REST API] Error fetching goals from server.');
+
+    const response = await fetch(`${API_BASE}/goal/user/${userId}/all`, {
+      headers: authHeaders(),
+    });
+
+    // Auth failures must not be treated as "no goals" (that wrongly opens onboarding)
+    if (response.status === 401 || response.status === 403) {
+      throw new Error(`Unauthorized while fetching goals (${response.status})`);
+    }
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch goals with status: ${response.status}`);
+    }
+
+    const goals: NutritionGoal[] = await response.json();
+    if (Array.isArray(goals) && goals.length > 0) {
+      return goals[goals.length - 1];
     }
     return null;
   },
