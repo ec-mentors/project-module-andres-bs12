@@ -461,7 +461,38 @@ export const ManageFavoritesModal: React.FC<ManageFavoritesModalProps> = ({
                 sortedFavorites.map((fav) => (
                   <div
                     key={fav.id}
+                    role={onLogMeal ? 'button' : undefined}
+                    tabIndex={onLogMeal ? 0 : undefined}
+                    onClick={() => {
+                      if (!onLogMeal) return;
+                      onLogMeal({
+                        mealName: fav.mealName,
+                        kcal: Number(fav.kcal) || 0,
+                        protein: Number(fav.protein) || 0,
+                        carbs: Number(fav.carbs) || 0,
+                        fat: Number(fav.fat) || 0,
+                        source: 'MANUAL',
+                      });
+                      onClose();
+                    }}
+                    onKeyDown={(e) => {
+                      if (!onLogMeal) return;
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        onLogMeal({
+                          mealName: fav.mealName,
+                          kcal: Number(fav.kcal) || 0,
+                          protein: Number(fav.protein) || 0,
+                          carbs: Number(fav.carbs) || 0,
+                          fat: Number(fav.fat) || 0,
+                          source: 'MANUAL',
+                        });
+                        onClose();
+                      }
+                    }}
                     className={`p-3.5 sm:p-4 rounded-2xl border transition-all flex items-center justify-between gap-3 ${
+                      onLogMeal ? 'cursor-pointer' : ''
+                    } ${
                       isLight
                         ? 'bg-white border-slate-200/80 hover:border-slate-300 shadow-xs'
                         : 'bg-[#18181b] border-white/[0.08] hover:border-white/[0.14]'
@@ -566,7 +597,7 @@ export const ManageFavoritesModal: React.FC<ManageFavoritesModalProps> = ({
           }`}>
             <p className={`text-xs sm:text-sm font-medium ${isLight ? 'text-slate-500' : 'text-zinc-400'}`}>
               {onLogMeal
-                ? '💡 Tap "Log" on any favorite to add it to your daily intake, or tap "+ New Favorite" to create one.'
+                ? '💡 Tap a favorite (or "Log") to add it to your daily intake, or tap "+ New Favorite" to create one.'
                 : '💡 Tapping a favorite chip in the chat logs it with 1 single click.'}
             </p>
           </div>

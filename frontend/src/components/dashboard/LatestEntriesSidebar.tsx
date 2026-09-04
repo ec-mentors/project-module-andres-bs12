@@ -669,16 +669,25 @@ export const LatestEntriesSidebar: React.FC<LatestEntriesSidebarProps> = ({
                                 });
                               }
                             }}
-                            className={`p-2 rounded-xl transition-all active:scale-95 min-w-[44px] min-h-[44px] flex items-center justify-center cursor-pointer ${
+                            className={`relative group/favstar p-2 rounded-xl transition-all active:scale-95 min-w-[44px] min-h-[44px] flex items-center justify-center cursor-pointer ${
                               isFav
                                 ? 'text-amber-500 hover:bg-amber-500/10'
                                 : isLight
                                 ? 'hover:bg-slate-200 text-slate-400 hover:text-amber-500'
                                 : 'hover:bg-white/10 text-zinc-500 hover:text-amber-400'
                             }`}
-                            title={isFav ? 'Remove from favorites' : 'Add to favorites'}
+                            aria-label={isFav ? 'Remove from favorites' : 'Add to favorites'}
                           >
                             <Star className={`w-4 h-4 ${isFav ? 'fill-amber-500 text-amber-500' : 'stroke-[2]'}`} />
+                            {!isFav && (
+                              <span
+                                className={`pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-1 whitespace-nowrap text-[10px] font-medium tracking-tight opacity-0 group-hover/favstar:opacity-100 transition-opacity duration-150 z-20 ${
+                                  isLight ? 'text-slate-500' : 'text-zinc-400'
+                                }`}
+                              >
+                                Add to favorites
+                              </span>
+                            )}
                           </button>
 
                           <button

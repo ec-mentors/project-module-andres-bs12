@@ -172,7 +172,7 @@ export const MealDraftCard: React.FC<MealDraftCardProps> = ({
           <button
             type="button"
             onClick={handleFavoriteClick}
-            className={`p-2.5 rounded-2xl border transition-all active:scale-95 cursor-pointer shrink-0 flex items-center justify-center ${
+            className={`relative group/favstar p-2.5 rounded-2xl border transition-all active:scale-95 cursor-pointer shrink-0 flex items-center justify-center ${
               isFavActive
                 ? isLight
                   ? 'bg-amber-50 border-amber-300/80 text-amber-500 shadow-xs'
@@ -181,9 +181,18 @@ export const MealDraftCard: React.FC<MealDraftCardProps> = ({
                 ? 'bg-slate-100 hover:bg-slate-200 border-slate-200 text-slate-400 hover:text-amber-500'
                 : 'bg-white/5 hover:bg-white/10 border-white/[0.08] text-zinc-500 hover:text-amber-400'
             }`}
-            title={isFavActive ? 'Remove from favorites' : 'Add to favorite meals'}
+            aria-label={isFavActive ? 'Remove from favorites' : 'Add to favorites'}
           >
             <Star className={`w-4 h-4 sm:w-5 sm:h-5 ${isFavActive ? 'fill-amber-500 text-amber-500' : 'stroke-[2]'}`} />
+            {!isFavActive && (
+              <span
+                className={`pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-1 whitespace-nowrap text-[10px] font-medium tracking-tight opacity-0 group-hover/favstar:opacity-100 transition-opacity duration-150 z-20 ${
+                  isLight ? 'text-slate-500' : 'text-zinc-400'
+                }`}
+              >
+                Add to favorites
+              </span>
+            )}
           </button>
         )}
       </div>
