@@ -160,11 +160,11 @@ export const FavoriteMealsMockupBar: React.FC<FavoriteMealsMockupBarProps> = ({
                   ? 'bg-slate-50 hover:bg-slate-100 text-slate-600 border-slate-300'
                   : 'bg-white/[0.03] hover:bg-white/[0.08] text-zinc-400 hover:text-white border-white/[0.15]'
               }`}
-              title={favorites.length === 0 ? 'Add Favorites' : 'Create new favorite'}
-            >
-              <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-              <span>{favorites.length === 0 ? 'Add Favorites' : 'Add'}</span>
-            </button>
+            title="Add favorite"
+          >
+            <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+            <span>Add favorite</span>
+          </button>
           </div>
 
           {/* Settings button */}

@@ -107,14 +107,20 @@
 /*
  * Google Identity Services injects an iframe. Under dark pages the iframe
  * often paints a solid white box around the button after a short delay.
- * Force light color-scheme + clip to the pill shape.
+ * Force light color-scheme; keep min height so the 44px iframe is not clipped.
  */
 .google-gsi-btn {
   color-scheme: light;
   isolation: isolate;
+  min-height: 44px;
+  overflow: visible;
 }
 
-.google-gsi-btn > div,
+.google-gsi-btn > div {
+  max-width: 100% !important;
+  background: transparent !important;
+}
+
 .google-gsi-btn iframe {
   max-width: 100% !important;
   border: none !important;

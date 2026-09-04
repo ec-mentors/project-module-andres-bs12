@@ -72,6 +72,7 @@ export const GoogleLoginModal: React.FC<GoogleLoginModalProps> = ({
       width: 320,
       text: 'signin_with',
       logo_alignment: 'left',
+      locale: 'en',
     });
   }, [googleClientId, handleGoogleCredentialResponse]);
 
@@ -149,7 +150,7 @@ export const GoogleLoginModal: React.FC<GoogleLoginModalProps> = ({
         <div className="flex flex-col items-center justify-center min-h-[44px] my-2">
           <div
             ref={googleButtonRef}
-            className="google-gsi-btn flex justify-center w-full max-w-[320px] overflow-hidden rounded-full"
+            className="google-gsi-btn flex justify-center items-center w-full max-w-[320px] min-h-[44px] rounded-full"
           />
           
           {isLoggingIn && (

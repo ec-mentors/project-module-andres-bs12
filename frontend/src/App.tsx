@@ -364,19 +364,34 @@ export function App() {
         return;
       }
 
+      // Returning users (entries or favorites) without onboarded_* must not see first-time wizard
+      try {
+        const [existingEntries, existingFavorites] = await Promise.all([
+          fetchAllEntries(loggedUser.id),
+          fetchFavorites(loggedUser.id),
+        ]);
+        const looksReturning =
+          (existingEntries?.length ?? 0) > 0 || (existingFavorites?.length ?? 0) > 0;
+        if (looksReturning) {
+          localStorage.setItem(onboardedKey, 'true');
+          setToastMessage({
+            title: `Welcome back, ${loggedUser.firstName}!`,
+            desc: 'Could not load saved goals. You can set them from the header.',
+          });
+          return;
+        }
+      } catch {
+        // ignore heuristic errors — fall through to onboarding only for true first-time users
+      }
+
       setIsOnboardingOpen(true);
     } catch (err) {
-      // Network/auth errors must not reopen onboarding for returning users
+      // Network/auth errors must not reopen onboarding (returning users often lack onboarded_* until first successful goal load)
       console.error('Error verifying user goals upon login:', err);
-      if (localStorage.getItem(onboardedKey) === 'true') {
-        setToastMessage({
-          title: `Welcome back, ${loggedUser.firstName}!`,
-          desc: 'Signed in, but goals could not be loaded. Try refreshing.',
-        });
-      } else {
-        // First login and goals API failed — still open setup so the user can configure
-        setIsOnboardingOpen(true);
-      }
+      setToastMessage({
+        title: `Welcome, ${loggedUser.firstName}!`,
+        desc: 'Signed in, but goals could not be loaded. Try refreshing or use Set goals.',
+      });
     }
   };
 
