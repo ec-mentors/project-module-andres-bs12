@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { X, Lock } from 'lucide-react';
 import type { UserProfile } from '../../types/user';
 import { api } from '../../services/api';
@@ -36,6 +36,7 @@ export const GoogleLoginModal: React.FC<GoogleLoginModalProps> = ({
   const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
   const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
+  const googleButtonRef = useRef<HTMLDivElement>(null);
 
   const handleGoogleCredentialResponse = useCallback(async (response: { credential?: string }) => {
     if (!response.credential) return;
@@ -54,23 +55,25 @@ export const GoogleLoginModal: React.FC<GoogleLoginModalProps> = ({
   }, [onLoginSuccess, onClose]);
 
   const initGoogleOAuth = useCallback(() => {
-    if (!window.google || !googleClientId) return;
+    if (!window.google || !googleClientId || !googleButtonRef.current) return;
 
     window.google.accounts.id.initialize({
       client_id: googleClientId,
       callback: handleGoogleCredentialResponse,
     });
 
-    const buttonDiv = document.getElementById('google-button-container');
-    if (buttonDiv) {
-      window.google.accounts.id.renderButton(buttonDiv, {
-        theme: isLight ? 'outline' : 'filled_black',
-        size: 'large',
-        shape: 'pill',
-        width: 320,
-      });
-    }
-  }, [googleClientId, handleGoogleCredentialResponse, isLight]);
+    // Clear prior GIS markup to avoid stacked white wrappers on re-init
+    googleButtonRef.current.innerHTML = '';
+    window.google.accounts.id.renderButton(googleButtonRef.current, {
+      // outline avoids the white iframe chrome that filled_black gets under dark color-scheme
+      theme: 'outline',
+      size: 'large',
+      shape: 'pill',
+      width: 320,
+      text: 'signin_with',
+      logo_alignment: 'left',
+    });
+  }, [googleClientId, handleGoogleCredentialResponse]);
 
   useEffect(() => {
     if (!isOpen || !googleClientId) return;
@@ -85,7 +88,9 @@ export const GoogleLoginModal: React.FC<GoogleLoginModalProps> = ({
       script.onload = () => initGoogleOAuth();
       document.body.appendChild(script);
     } else if (window.google) {
-      initGoogleOAuth();
+      // Wait a tick so the ref is mounted after isOpen=true render
+      const t = window.setTimeout(() => initGoogleOAuth(), 0);
+      return () => window.clearTimeout(t);
     }
   }, [isOpen, googleClientId, initGoogleOAuth]);
 
@@ -107,8 +112,8 @@ export const GoogleLoginModal: React.FC<GoogleLoginModalProps> = ({
       <div 
         className={`border rounded-[32px] max-w-md w-full p-8 sm:p-10 shadow-2xl relative animate-in zoom-in-95 duration-200 text-center ${
           isLight
-            ? 'bg-white border-slate-200 text-slate-900 shadow-[0_20px_60px_rgba(0,0,0,0.15)] [color-scheme:light]'
-            : 'bg-[#121214] border-white/[0.08] text-white shadow-[0_20px_60px_rgba(0,0,0,0.9)] [color-scheme:dark]'
+            ? 'bg-white border-slate-200 text-slate-900 shadow-[0_20px_60px_rgba(0,0,0,0.15)]'
+            : 'bg-[#121214] border-white/[0.08] text-white shadow-[0_20px_60px_rgba(0,0,0,0.9)]'
         }`}
       >
         {/* Close Button */}
@@ -142,7 +147,10 @@ export const GoogleLoginModal: React.FC<GoogleLoginModalProps> = ({
 
         {/* Official Native Google SDK Button Container */}
         <div className="flex flex-col items-center justify-center min-h-[44px] my-2">
-          <div id="google-button-container" className="flex justify-center" />
+          <div
+            ref={googleButtonRef}
+            className="google-gsi-btn flex justify-center w-full max-w-[320px] overflow-hidden rounded-full"
+          />
           
           {isLoggingIn && (
             <p className="text-xs font-semibold text-zinc-400 mt-3 animate-pulse">

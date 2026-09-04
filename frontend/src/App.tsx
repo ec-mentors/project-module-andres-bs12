@@ -334,22 +334,49 @@ export function App() {
     setUser(loggedUser);
     setIsAuthOpen(false);
 
+    if (!loggedUser.id) {
+      console.error('Authenticated user has no id; skipping goal lookup');
+      return;
+    }
+
+    const onboardedKey = `onboarded_${loggedUser.id}`;
+
     try {
       // Check if user already has an established goal in PostgreSQL
       const existingGoal = await fetchGoal(loggedUser.id);
       if (existingGoal) {
         setGoal(existingGoal);
+        localStorage.setItem(onboardedKey, 'true');
         setToastMessage({
           title: `Welcome back, ${loggedUser.firstName}!`,
           desc: 'Your goals and meal progress are loaded.',
         });
+        return;
+      }
+
+      // Truly empty goals list (HTTP 200) → first-time setup
+      // If we previously completed onboarding but goals are missing, do not force the wizard again
+      if (localStorage.getItem(onboardedKey) === 'true') {
+        setToastMessage({
+          title: `Welcome back, ${loggedUser.firstName}!`,
+          desc: 'Could not load saved goals. You can set them from the header.',
+        });
+        return;
+      }
+
+      setIsOnboardingOpen(true);
+    } catch (err) {
+      // Network/auth errors must not reopen onboarding for returning users
+      console.error('Error verifying user goals upon login:', err);
+      if (localStorage.getItem(onboardedKey) === 'true') {
+        setToastMessage({
+          title: `Welcome back, ${loggedUser.firstName}!`,
+          desc: 'Signed in, but goals could not be loaded. Try refreshing.',
+        });
       } else {
-        // Brand new user without goals -> Launch initial Onboarding
+        // First login and goals API failed — still open setup so the user can configure
         setIsOnboardingOpen(true);
       }
-    } catch (err) {
-      console.error('Error verifying user goals upon login:', err);
-      setIsOnboardingOpen(true);
     }
   };
 

@@ -103,3 +103,20 @@
 .animate-border-beam {
   animation: border-beam-anim 6s linear infinite;
 }
+
+/*
+ * Google Identity Services injects an iframe. Under dark pages the iframe
+ * often paints a solid white box around the button after a short delay.
+ * Force light color-scheme + clip to the pill shape.
+ */
+.google-gsi-btn {
+  color-scheme: light;
+  isolation: isolate;
+}
+
+.google-gsi-btn > div,
+.google-gsi-btn iframe {
+  max-width: 100% !important;
+  border: none !important;
+  background: transparent !important;
+}

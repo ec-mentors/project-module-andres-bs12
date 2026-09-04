@@ -180,11 +180,13 @@ jobs:
 
             echo "Pulling $IMAGE_REF ..."
             docker pull "$IMAGE_REF"
+            docker logout ghcr.io || true
 
             docker stop nutrition-tracker-prod || true
             docker rm nutrition-tracker-prod || true
 
-            docker run -d --name nutrition-tracker-prod -p 8080:8080 --restart always \
+            # Bind only on localhost so public traffic must go through Nginx (HTTPS)
+            docker run -d --name nutrition-tracker-prod -p 127.0.0.1:8080:8080 --restart always \
               -e SPRING_DATASOURCE_URL="$SPRING_DATASOURCE_URL" \
               -e SPRING_DATASOURCE_USERNAME="$SPRING_DATASOURCE_USERNAME" \
               -e SPRING_DATASOURCE_PASSWORD="$SPRING_DATASOURCE_PASSWORD" \
